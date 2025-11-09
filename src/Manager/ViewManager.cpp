@@ -38,6 +38,22 @@ void ViewManager::PopView() {
 		Logger::GetInstance()->AddInfo("Only one or no view. Not popping view", typeid(ViewManager));
 }
 
+void ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
+	ViewStack.top()->OnSFMLEvent(event);
+}
+
+void ViewManager::OnDraw(sf::RenderWindow* window) {
+	ViewStack.top()->OnDraw();
+}
+
+void ViewManager::OnUpdate() {
+	ViewStack.top()->OnUpdate();
+}
+
+void ViewManager::GetViewKeybinds() {
+	// placeholder #TOIMPLEMENT
+}
+
 template<typename TView>
 	requires(std::is_base_of_v<Base::View, TView>)
 void ViewManager::RegisterView() {

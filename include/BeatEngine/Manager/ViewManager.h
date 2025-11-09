@@ -27,4 +27,10 @@ public:
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
 	void RegisterView();
+
+	void OnSFMLEvent(std::optional<sf::Event> event);
+	void OnDraw(sf::RenderWindow* window);
+	void OnUpdate();
+
+	void GetViewKeybinds();
 };

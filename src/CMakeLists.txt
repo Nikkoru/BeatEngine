@@ -12,13 +12,17 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Commands.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 )
-add_library(BeatEngine 
+
+set(SOURCES
 	"Logger.cpp"
 	"./Util/LogType.cpp"
 	"./Util/Commands.cpp"
 	"./Base/View.cpp"
 	"./Manager/ViewManager.cpp"	
 	"./Manager/EventManager.cpp"
+)
+add_library(BeatEngine 
+	${SOURCES}
 	${HEADERS}
 )
 
