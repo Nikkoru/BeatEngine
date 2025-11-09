@@ -2,6 +2,9 @@
 
 #include "Logger.h"
 
+
+std::shared_ptr<EventManager> EventManager::m_Instance = nullptr;
+
 template<typename TEvent>
 	requires(std::is_base_of_v<Base::Event, TEvent>)
 void EventManager::SubscribeView(std::type_index id, Callback callback) {

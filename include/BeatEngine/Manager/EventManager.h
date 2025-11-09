@@ -12,11 +12,11 @@ public:
 	using Callback = std::function<void(const std::shared_ptr<Base::Event>&)>;
 	using ExitCallback = std::function<void()>;
 private:
-	std::shared_ptr<EventManager> m_Instance = nullptr;
+	static std::shared_ptr<EventManager> m_Instance;
 public:
 	EventManager() = default;
 	~EventManager() = default;
-	std::shared_ptr<EventManager> GetInstance();
+	static std::shared_ptr<EventManager> GetInstance();
 public:
 	template<typename TEvent>
 		requires(std::is_base_of_v<Base::Event, TEvent>)
