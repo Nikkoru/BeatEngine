@@ -16,7 +16,7 @@ private:
 public:
 	EventManager() = default;
 	~EventManager() = default;
-	std::shared_ptr<EventManager>& GetInstance();
+	std::shared_ptr<EventManager> GetInstance();
 public:
 	template<typename TEvent>
 		requires(std::is_base_of_v<Base::Event, TEvent>)
@@ -29,7 +29,7 @@ public:
 	void SetExitCallback(ExitCallback callback);
 protected:
 	friend class ViewManager;
-	void UpdateMainView(std::type_index id);
+	void UpdateMainView(const std::type_index id);
 private:
 	std::unordered_map<std::type_index, std::unordered_map<std::type_index, std::vector<Callback>>> m_ViewSubscribers;
 	std::unordered_map<std::type_index, std::vector<Callback>> m_Subscribers;

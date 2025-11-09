@@ -32,7 +32,7 @@ void EventManager::Subscribe(Callback callback) {
 	m_Subscribers.at(eventID).emplace_back(std::move(callback));
 }
 
-std::shared_ptr<EventManager>& EventManager::GetInstance() {
+std::shared_ptr<EventManager> EventManager::GetInstance() {
 	if (m_Instance == nullptr)
 		m_Instance = std::make_shared<EventManager>();
 	return m_Instance;
