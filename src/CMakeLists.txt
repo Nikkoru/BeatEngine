@@ -3,14 +3,14 @@
 #
 
 set(HEADERS
-	"${PROJECT_SOURCE_DIR}/include/Base/Events/ViewEvent.h"
-	"${PROJECT_SOURCE_DIR}/include/Manager/EventManager.h" 
-	"${PROJECT_SOURCE_DIR}/include/Manager/ViewManager.h"
-	"${PROJECT_SOURCE_DIR}/include/Base.h"
-	"${PROJECT_SOURCE_DIR}/include/Base/Event.h"
-	"${PROJECT_SOURCE_DIR}/include/Base/View.h"
-	"${PROJECT_SOURCE_DIR}/include/Enum/Commands.h"
-	"${PROJECT_SOURCE_DIR}/include/Enum/LogType.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Events/ViewEvent.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h" 
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Event.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/View.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Commands.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 )
 add_library(BeatEngine 
 	"Logger.cpp"
@@ -31,4 +31,4 @@ target_link_libraries(${PROJECT_NAME}
 		ImGui-SFML::ImGui-SFML
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/BeatEngine")
