@@ -21,5 +21,5 @@ set(HEADER_SOURCE_DIR "${ROOT_BASE_DIR}/include")
 set(HEADER_DEST_DIR "${ROOT_BASE_DIR}/include")
 
 # Include sub-projects.
-add_subdirectory("BeatEngine")
 add_subdirectory("externals")
+add_subdirectory("src")
