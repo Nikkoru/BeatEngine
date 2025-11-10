@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Logger.h"
 
 #include <functional>
 #include <typeindex>

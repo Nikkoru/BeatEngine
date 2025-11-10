@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Base/View.h"
+#include "BeatEngine/Logger.h"
 
 #include <functional>
 #include <memory>
