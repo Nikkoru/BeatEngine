@@ -44,9 +44,17 @@ public:
 		requires(std::is_base_of_v<Base::View, TView>)
 	void RegisterView() {
 		auto ID = std::type_index(typeid(TView));
-		auto fabric = ([ID]() -> std::unique_ptr<Base::View> { return std::make_unique<TView>(ID); });
+		FabricCallback fabric = ([ID]() -> std::unique_ptr<Base::View> { return std::make_unique<TView>(ID); });
 
 		Logger::GetInstance()->AddInfo(std::format("Registing {}", typeid(TView).raw_name()), typeid(ViewManager));
+
+		bool firstView = ViewFabrics.empty();
+
+		if (ViewFabrics.find(ID) == ViewFabrics.end()) {
+			ViewFabrics.try_emplace(ID, fabric);
+			if (firstView)
+				MainView = ID;
+		}
 	}
 
 	void OnSFMLEvent(std::optional<sf::Event> event);
