@@ -8,8 +8,10 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Events/ViewEvent.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Signals/ViewSignals.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Event.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/View.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Signal.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Commands.h"
@@ -17,13 +19,16 @@ set(HEADERS
 )
 
 set(SOURCES
-	"Logger.cpp"
-	"./Util/LogType.cpp"
-	"./Util/Commands.cpp"
-	"./Base/View.cpp"
 	"./Manager/ViewManager.cpp"	
 	"./Manager/EventManager.cpp"
 	"./Manager/SignalManager.cpp"
+	
+	"./Base/View.cpp"
+	
+	"./Util/LogType.cpp"
+	"./Util/Commands.cpp"
+	
+	"Logger.cpp"
 )
  add_library(BeatEngine 
 	${SOURCES}

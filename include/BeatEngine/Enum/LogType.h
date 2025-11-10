@@ -11,12 +11,7 @@ enum class LogType : uint8_t {
 	Error,
 	Critical,
 	DebugTarget,
-
 	NoLogs = 99,
-	Command,
-	CommandInfo,
-	CommandWarning,
-	CommandError,
 	None = 255
 };
 
@@ -31,8 +26,9 @@ private:
 	{ LogType::Info, "Info" },
 	{ LogType::Warning, "Warning" },
 	{ LogType::Error, "Error" },
+	{ LogType::Critical, "Critical" },
+	{ LogType::DebugTarget, "Debug Target" },
 	{ LogType::NoLogs, "No Logs" },
-	{ LogType::None, "None"},
-	{ LogType::DebugTarget, "Debug Target" }
+	{ LogType::None, "None"}
 	};
 };

@@ -2,6 +2,7 @@
 
 #include "BeatEngine/Base/View.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Manager/EventManager.h"
 
 #include <functional>
 #include <memory>
@@ -30,7 +31,9 @@ public:
 				ViewStack.push(ViewFabrics[ID]());
 				MainView = ViewStack.top()->ID;
 
-				Logger::GetInstance()->AddInfo(std::format("{} pushed!", typeid(TView).raw_name()), typeid(ViewManager));
+				Logger::GetInstance()->AddInfo(std::format("{} pushed!", ID.name()), typeid(ViewManager));
+
+				EventManager::GetInstance()->Send(std::make_shared<ViewPushEvent>(MainView));
 			}
 			else
 				Logger::GetInstance()->AddError("View not registed. You need to register the view with RegisterView<TView>()", typeid(ViewManager));
@@ -38,15 +41,17 @@ public:
 		else
 			Logger::GetInstance()->AddError("No fabrics found", typeid(ViewManager));
 	}
+	void PushView(std::type_index viewID);
+
 	void PopView();
 
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
 	void RegisterView() {
 		auto ID = std::type_index(typeid(TView));
-		FabricCallback fabric = ([ID]() -> std::unique_ptr<Base::View> { return std::make_unique<TView>(ID); });
+		FabricCallback fabric = ([]() -> std::unique_ptr<Base::View> { return std::make_unique<TView>(); });
 
-		Logger::GetInstance()->AddInfo(std::format("Registing {}", typeid(TView).raw_name()), typeid(ViewManager));
+		Logger::GetInstance()->AddInfo(std::format("Registing {}", typeid(TView).name()), typeid(ViewManager));
 
 		bool firstView = ViewFabrics.empty();
 
