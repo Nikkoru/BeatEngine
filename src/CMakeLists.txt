@@ -35,4 +35,4 @@ target_link_libraries(${PROJECT_NAME}
 		ImGui-SFML::ImGui-SFML
 )
 
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include/BeatEngine")
+target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")

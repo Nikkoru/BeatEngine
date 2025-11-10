@@ -4,18 +4,18 @@
 #include <map>
 #include <string>
 
-enum class Commands : uint8_t {
+enum class Command : uint8_t {
 	SetFpsLimit,
 	Unknown = 255
 };
 
 class CommandUtils {
 public:
-	static std::string GetCommandString(const Commands command);
-	static Commands GetCommandFromString(const std::string& str);
-	static std::map<Commands, std::string> GetStringMap() { return _CommandString; }
+	static std::string GetCommandString(const Command command);
+	static Command GetCommandFromString(const std::string& str);
+	static std::map<Command, std::string> GetStringMap() { return _CommandString; }
 private:
-	static inline const std::map<Commands, std::string> _CommandString = {
-		{ Commands::SetFpsLimit, "setFpsLimit" }
+	static inline const std::map<Command, std::string> _CommandString = {
+		{ Command::SetFpsLimit, "setFpsLimit" }
 	};
 };

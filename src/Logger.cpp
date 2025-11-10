@@ -1,5 +1,5 @@
-#include "Logger.h"
-#include "Enum/LogType.h"
+#include "BeatEngine/Logger.h"
+#include "BeatEngine/Enum/LogType.h"
 
 #include <chrono>
 #include <ctime>

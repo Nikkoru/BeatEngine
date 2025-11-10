@@ -1,6 +1,6 @@
-#include "Manager/EventManager.h"
+#include "BeatEngine/Manager/EventManager.h"
 
-#include "Logger.h"
+#include "BeatEngine/Logger.h"
 
 
 std::shared_ptr<EventManager> EventManager::m_Instance = nullptr;

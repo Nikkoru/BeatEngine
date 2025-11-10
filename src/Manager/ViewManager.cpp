@@ -1,11 +1,11 @@
-#include "Manager/ViewManager.h"
+#include "BeatEngine/Manager/ViewManager.h"
 
 #include <format>
 
-#include "Manager/EventManager.h"
-#include "Base/Event.h"
-#include "Base/Events/ViewEvent.h"
-#include "Logger.h"
+#include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Base/Events/ViewEvent.h"
+#include "BeatEngine/Logger.h"
 
 ViewManager::ViewManager() : MainView(typeid(nullptr)) {
 	

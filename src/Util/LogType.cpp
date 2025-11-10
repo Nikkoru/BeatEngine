@@ -1,4 +1,4 @@
-#include "Enum/LogType.h"
+#include "BeatEngine/Enum/LogType.h"
 
 std::string LogTypeUtils::TypeToString(const LogType type) {
 	if (_TypeString.contains(type))

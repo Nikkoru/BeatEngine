@@ -4,26 +4,26 @@
 
 #include <typeindex>
 
-class ViewPopEvent : Base::Event {
+class ViewPopEvent : public Base::Event {
 public:
 	ViewPopEvent() : Base::Event(typeid(ViewPopEvent)) {}
 };
 
-class ViewPushEvent : Base::Event {
+class ViewPushEvent : public Base::Event {
 public:
 	std::type_index ViewID;
 public:
 	ViewPushEvent(std::type_index id) : Base::Event(typeid(ViewPushEvent)), ViewID(id) {}
 };
 
-class ViewSuspendEvent : Base::Event {
+class ViewSuspendEvent : public Base::Event {
 public:
 	std::type_index ViewID;
 public:
 	ViewSuspendEvent(std::type_index id) : Base::Event(typeid(ViewSuspendEvent)), ViewID(id) {}
 };
 
-class ViewUnsuspendEvent : Base::Event {
+class ViewUnsuspendEvent : public Base::Event {
 public:
 	std::type_index ViewID;
 public:

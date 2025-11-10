@@ -8,9 +8,8 @@
 #include <imgui.h>
 #include <memory>
 
-#include "Enum/Commands.h"
-#include "Enum/LogType.h"
-
+#include "BeatEngine/Enum/Commands.h"
+#include "BeatEngine/Enum/LogType.h"
 
 class Logger {
 public:
