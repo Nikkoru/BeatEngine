@@ -19,27 +19,21 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	std::string formattedLog;
 
-	if (logType == LogType::Command || logType == LogType::CommandInfo)
-		formattedLog = "# " + log;
-	else if (logType == LogType::CommandWarning || logType == LogType::CommandError)
-		formattedLog = log;
-	else {
-		auto nowTp = std::chrono::system_clock::now();
-		std::time_t nowTime_t = std::chrono::system_clock::to_time_t(nowTp);
-		std::tm* now = std::localtime(&nowTime_t);
-		char nowStr[80];
-		std::strftime(nowStr, sizeof(nowStr), "%T", now);
+	auto nowTp = std::chrono::system_clock::now();
+	std::time_t nowTime_t = std::chrono::system_clock::to_time_t(nowTp);
+	std::tm* now = std::localtime(&nowTime_t);
+	char nowStr[80];
+	std::strftime(nowStr, sizeof(nowStr), "%T", now);
 
-		if (caller != "") {
-			formattedLog = std::format("{} [{}] {} ({})", nowStr, LogTypeUtils::TypeToString(logType), log, caller);
-		}
-		else
-			formattedLog = std::format("{} [{}] {}", nowStr, LogTypeUtils::TypeToString(logType), log);
-		if (logType == LogType::Error)
-			std::cerr << formattedLog << std::endl;
-		else
-			std::cout << formattedLog << std::endl;
+	if (caller != "") {
+		formattedLog = std::format("{} [{}] {} ({})", nowStr, LogTypeUtils::TypeToString(logType), log, caller);
 	}
+	else
+		formattedLog = std::format("{} [{}] {}", nowStr, LogTypeUtils::TypeToString(logType), log);
+	if (logType == LogType::Error)
+		std::cerr << formattedLog << std::endl;
+	else
+		std::cout << formattedLog << std::endl;
 
 	m_Logs.push_back({ logType, formattedLog });
 }
