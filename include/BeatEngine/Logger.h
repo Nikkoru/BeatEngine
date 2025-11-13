@@ -7,6 +7,7 @@
 #include <typeindex>
 #include <imgui.h>
 #include <memory>
+#include <ctime>
 
 #include "BeatEngine/Enum/Commands.h"
 #include "BeatEngine/Enum/LogType.h"

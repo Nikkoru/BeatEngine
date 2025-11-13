@@ -15,6 +15,8 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/ChronoHelper.h"
+
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Commands.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 )
@@ -26,6 +28,7 @@ set(SOURCES
 	
 	"./Base/View.cpp"
 	
+	"./Util/ChronoHelper.cpp"
 	"./Util/LogType.cpp"
 	"./Util/Commands.cpp"
 	

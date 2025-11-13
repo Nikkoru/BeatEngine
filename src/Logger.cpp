@@ -1,12 +1,13 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Enum/LogType.h"
+#include "BeatEngine/Util/ChronoHelper.h"
 
-#include <chrono>
-#include <ctime>
 #include <iostream>
 #include <cstdarg>
 #include <format>
 #include <utility>
+#include <chrono>
+#include <ctime>
 
 std::shared_ptr<Logger> Logger::m_Instance = nullptr;
 
@@ -20,8 +21,9 @@ void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	std::string formattedLog;
 
 	auto nowTp = std::chrono::system_clock::now();
-	std::time_t nowTime_t = std::chrono::system_clock::to_time_t(nowTp);
-	std::tm* now = std::localtime(&nowTime_t);
+	std::time_t nowT = std::chrono::system_clock::to_time_t(nowTp);
+
+	std::tm* now = std::localtime(&nowT);
 	char nowStr[80];
 	std::strftime(nowStr, sizeof(nowStr), "%T", now);
 
@@ -35,7 +37,7 @@ void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	else
 		std::cout << formattedLog << std::endl;
 
-	m_Logs.push_back({ nowTime_t, { logType, formattedLog } });
+	m_Logs.push_back({ nowT, { logType, formattedLog } });
 }
 
 void Logger::AddLog(std::string log, LogType logType, std::type_index caller) {

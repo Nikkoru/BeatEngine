@@ -27,8 +27,7 @@ ViewManager::ViewManager() : MainView(typeid(nullptr)) {
 }
 
 void ViewManager::PushView(std::type_index viewID) {
-	if (ViewStack.empty()) {
-
+	if (ViewFabrics.empty()) {
 		if (ViewFabrics.contains(viewID)) {
 			ViewStack.push(ViewFabrics[viewID]());
 			MainView = ViewStack.top()->ID;
