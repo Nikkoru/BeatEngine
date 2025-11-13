@@ -33,6 +33,9 @@ void EventManager::Send(const std::shared_ptr<Base::Event> event) {
 			Logger::GetInstance()->AddWarning("No global subscribers for event", typeid(EventManager));
 	else
 		Logger::GetInstance()->AddWarning("No global subscribers registered", typeid(EventManager));
+
+	if (eventID == typeid(GameExitEvent) && m_ExitCallback)
+		m_ExitCallback();
 }
 
 void EventManager::SetExitCallback(ExitCallback callback) {

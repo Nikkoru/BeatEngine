@@ -12,6 +12,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Event.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/View.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Signal.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Commands.h"

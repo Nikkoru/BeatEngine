@@ -2,7 +2,7 @@
 
 #include "BeatEngine/Logger.h"
 
-std::shared_ptr<SignalManager> m_Instance = nullptr;
+std::shared_ptr<SignalManager> SignalManager::m_Instance = nullptr;
 
 std::shared_ptr<SignalManager> SignalManager::GetInstance() {
 	if (m_Instance == nullptr)
