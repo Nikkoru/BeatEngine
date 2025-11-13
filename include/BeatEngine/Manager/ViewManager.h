@@ -3,6 +3,7 @@
 #include "BeatEngine/Base/View.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Event/ViewEvent.h"
 
 #include <functional>
 #include <memory>

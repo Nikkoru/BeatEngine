@@ -35,7 +35,7 @@ void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	else
 		std::cout << formattedLog << std::endl;
 
-	m_Logs.push_back({ now, { logType, formattedLog } });
+	m_Logs.push_back({ nowTime_t, { logType, formattedLog } });
 }
 
 void Logger::AddLog(std::string log, LogType logType, std::type_index caller) {
@@ -86,7 +86,7 @@ void Logger::AddCritical(std::string log, std::type_index caller) {
 	AddLog(log, LogType::Critical, caller);
 }
 
-std::vector<std::pair<std::tm*, std::pair<LogType, std::string>>> Logger::GetLogs() const {
+std::vector<std::pair<std::time_t, std::pair<LogType, std::string>>> Logger::GetLogs() const {
 	return m_Logs;
 }
 

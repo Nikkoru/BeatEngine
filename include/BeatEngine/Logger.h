@@ -29,11 +29,11 @@ public:
 	void AddCritical(std::string log, std::string caller = "");
 	void AddCritical(std::string log, std::type_index caller);
 
-	std::vector<std::pair<std::tm*, std::pair<LogType, std::string>>> GetLogs() const;
+	std::vector<std::pair<std::time_t, std::pair<LogType, std::string>>> GetLogs() const;
 
 	void ClearLogs();
 public:
-	std::vector<std::pair<std::tm*, std::pair<LogType, std::string>>> m_Logs;
+	std::vector<std::pair<std::time_t, std::pair<LogType, std::string>>> m_Logs;
 private:
 	static std::shared_ptr<Logger> m_Instance;
 };
