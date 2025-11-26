@@ -1,17 +1,25 @@
 #include "BeatEngine/Base/View.h"
 
 bool Base::View::operator==(const View& other) const {
-	return this->ID == other.ID;
+	return this->b_ID == other.b_ID;
 }
 
 void Base::View::OnSuspend() {
-	m_Suspended = true;
+	b_mSuspended = true;
 }
 
 void Base::View::OnResume() {
-	m_Suspended = false;
+	b_mSuspended = false;
 }
 
 bool Base::View::IsSuspended() const {
-	return m_Suspended;
+	return b_mSuspended;
+}
+
+void Base::View::SetAssetManager(AssetManager* assetMgr) {
+	this->b_mAssetMgr = assetMgr;
+}
+
+void Base::View::SetSettingsManager(SettingsManager* settingsMgr) {
+	this->b_mSettingsMgr = settingsMgr;
 }

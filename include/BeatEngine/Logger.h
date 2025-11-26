@@ -9,7 +9,6 @@
 #include <memory>
 #include <ctime>
 
-#include "BeatEngine/Enum/Commands.h"
 #include "BeatEngine/Enum/LogType.h"
 
 class Logger {

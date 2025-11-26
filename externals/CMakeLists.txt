@@ -32,5 +32,23 @@ FetchContent_Declare(ImGui-SFML
         SYSTEM)
 FetchContent_MakeAvailable(ImGui-SFML)
 
+# Fetch PortAudio
+FetchContent_Declare(portaudio
+        GIT_REPOSITORY https://github.com/PortAudio/portaudio
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(portaudio)
+
 # Making ImGuiMultiContextCompositor
 # add_subdirectory(imgui-multicontext-compositor)
+
+FetchContent_Declare(samplerate
+    GIT_REPOSITORY https://github.com/libsndfile/libsamplerate
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(samplerate)
+
+# Making miniaudio
+add_subdirectory("miniaudio")

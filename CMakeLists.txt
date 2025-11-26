@@ -23,3 +23,4 @@ set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 # Include sub-projects.
 add_subdirectory("externals")
 add_subdirectory("src")
+add_subdirectory("test")

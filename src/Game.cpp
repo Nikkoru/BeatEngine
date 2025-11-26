@@ -1,0 +1,155 @@
+#include "BeatEngine/Game.h"
+
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <imgui-sfml.h>
+
+#include "BeatEngine/Logger.h"
+#include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/Asset/Sound.h"
+#include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Settings/GameSettings.h"
+
+Game::Game() {
+	InitSettings();
+	InitAssets();
+	InitSystems();
+	InitWindow();
+	InitViews();
+	InitKeybinds();
+	SubscribeToGameEvent();
+	SubscribeToGameSignals();
+}
+
+Game::~Game() {
+	delete m_ViewMgr;
+	delete m_SystemMgr;
+	delete m_AssetMgr;
+
+	delete m_Window;
+}
+
+void Game::Run() {
+	Logger::GetInstance()->AddInfo("Game started!", typeid(Game));
+
+	if (!m_ViewMgr->HasActiveViews())
+		m_ViewMgr->Push(m_ViewMgr->MainView);
+
+	m_SettingsMgr->ReadConfig(m_SettingsPath);
+
+	while (this->m_Window->isOpen()) {
+		while (const auto event = this->m_Window->pollEvent()) {
+			// ImGui::SFML::ProcessEvent(*m_Window, *event);
+			if (event->is<sf::Event::Closed>())
+				this->m_Window->close();
+			if (auto data = event->getIf<sf::Event::Resized>()) {
+				m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(data->size.x), static_cast<float>(data->size.y) }));
+				m_Window->setView(m_View);
+			}
+
+			if (!this->m_ViewMgr->OnSFMLEvent(event)) {
+				this->m_Window->close();
+				break;
+			}
+		}
+		this->Update();
+		this->Draw();
+		this->Display();
+	}
+}
+
+void Game::SetConfigPath(std::filesystem::path path) {
+	this->m_SettingsPath = path;
+}
+
+void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
+	if (globalAssets.empty())
+		return;
+	for (auto& [type, vecPath] : globalAssets) {
+		switch (type) {
+		case AssetType::Texture:
+			for (auto& path : vecPath)
+				m_AssetMgr->Load<Texture>(path);
+			break;
+		case AssetType::AudioStream:
+			break; // TOIMPLEMENT
+		case AssetType::Sound:
+			for (auto& path : vecPath)
+				m_AssetMgr->Load<Sound>(path);
+			break;
+		case AssetType::Font:
+			for (auto& path : vecPath)
+				m_AssetMgr->Load<Font>(path);
+		}
+	}
+}
+
+void Game::Display() {
+	m_Window->display();
+}
+
+void Game::Draw() {
+	m_Window->clear();
+
+	// m_AnimationMgr->DrawActiveAnimation(m_DeltaClock);
+	if (!m_ViewMgr->OnDraw(m_Window))
+		m_Window->close();
+}
+
+void Game::Update() {
+	auto deltaTime = m_Clock.restart().asSeconds();
+
+	if (!this->m_ViewMgr->OnUpdate(deltaTime)) {
+		this->m_Window->close();
+		return;
+	}
+	this->m_SystemMgr->Update(deltaTime);
+}
+
+void Game::InitSettings() {
+	Logger::GetInstance()->AddInfo("Initializing settings...", typeid(Game));
+	this->m_SettingsMgr = new SettingsManager;
+
+	m_SettingsMgr->RegisterSettingsData<GameSettings>();
+}
+
+void Game::InitViews() {
+	Logger::GetInstance()->AddInfo("Initializing views...", typeid(Game));
+	this->m_ViewMgr = new ViewManager;
+	this->m_ViewMgr->SetGlobalAssetManager(m_AssetMgr);
+}
+
+void Game::InitSystems() {
+	Logger::GetInstance()->AddInfo("Initializing systems...", typeid(Game));
+	this->m_SystemMgr = new SystemManager;
+}
+
+void Game::InitAssets() {
+	Logger::GetInstance()->AddInfo("Initializing assets...", typeid(Game));
+	this->m_AssetMgr = new AssetManager;
+}
+
+void Game::InitWindow() {
+	Logger::GetInstance()->AddInfo("Initializing window...", typeid(Game));
+
+	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
+
+	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
+
+	this->m_Window = new sf::RenderWindow(sf::VideoMode(gameSettings->WindowSize), "BeatEngine Game");
+	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
+	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
+	this->m_Window->setView(m_View);
+}
+
+void Game::InitKeybinds() {
+	Logger::GetInstance()->AddInfo("Initializing keybinds... (not really)", typeid(Game));
+}
+
+void Game::SubscribeToGameEvent() {
+	Logger::GetInstance()->AddInfo("Subscribing to game events...", typeid(Game));
+}
+
+void Game::SubscribeToGameSignals() {
+	Logger::GetInstance()->AddInfo("Subscribing to game signals...", typeid(Game));
+}

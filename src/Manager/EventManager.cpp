@@ -29,11 +29,6 @@ void EventManager::Send(const std::shared_ptr<Base::Event> event) {
 		if (m_Subscribers.contains(eventID))
 			for (Callback& callback : m_Subscribers.at(eventID))
 				callback(event);
-		else
-			Logger::GetInstance()->AddWarning("No global subscribers for event", typeid(EventManager));
-	else
-		Logger::GetInstance()->AddWarning("No global subscribers registered", typeid(EventManager));
-
 }
 
 void EventManager::SetExitCallback(ExitCallback callback) {
