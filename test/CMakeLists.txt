@@ -15,6 +15,7 @@ target_link_libraries(BeatEngineTest
 	ImGui-SFML::ImGui-SFML
 	miniaudio
 	portaudio
+	samplerate
 )
 
 target_link_options(BeatEngineTest PRIVATE "$<$<CONFIG:Debug>:/DEBUG>") 
@@ -23,3 +24,7 @@ set_property(TARGET BeatEngineTest PROPERTY CXX_STANDARD 23)
 target_compile_features(BeatEngineTest PRIVATE cxx_std_23)
 
 target_include_directories(BeatEngineTest PRIVATE "${HEADER_SOURCE_DIR}")
+target_include_directories(BeatEngineTest PRIVATE "${PROJECT_SOURCE_DIR}/externals/miniaudio")
+target_include_directories(BeatEngineTest PRIVATE "${portaudio_SOURCE_DIR}/include")
+target_include_directories(BeatEngineTest PRIVATE "${miniaudio_SOURCE_DIR}")
+target_include_directories(BeatEngineTest PRIVATE "${samplerate_SOURCE_DIR}/include")

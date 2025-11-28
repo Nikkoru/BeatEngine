@@ -49,7 +49,7 @@ namespace Base {
 			asset.m_AssetID = m_AssetID;
 			return asset;
 		}
-		explicit operator bool() const {
+		explicit operator bool() {
 			return m_AssetID != 0;
 		}
 	public:
@@ -59,7 +59,7 @@ namespace Base {
 
 			return newAsset;
 		}
-		inline std::shared_ptr<T> Get() const {
+		inline std::shared_ptr<T> Get() {
 			return m_Ptr.lock();
 		}
 	};

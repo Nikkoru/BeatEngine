@@ -32,6 +32,14 @@ FetchContent_Declare(ImGui-SFML
         SYSTEM)
 FetchContent_MakeAvailable(ImGui-SFML)
 
+# Fetch miniaudio
+FetchContent_Declare(miniaudio
+        GIT_REPOSITORY https://github.com/mackron/miniaudio
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(miniaudio)
+
 # Fetch PortAudio
 FetchContent_Declare(portaudio
         GIT_REPOSITORY https://github.com/PortAudio/portaudio
@@ -51,4 +59,4 @@ FetchContent_Declare(samplerate
 FetchContent_MakeAvailable(samplerate)
 
 # Making miniaudio
-add_subdirectory("miniaudio")
+# add_subdirectory("miniaudio")

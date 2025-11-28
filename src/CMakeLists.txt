@@ -23,6 +23,8 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/ViewSignals.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/AudioSignals.h"
+
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
@@ -34,6 +36,7 @@ set(HEADERS
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/ChronoHelper.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UID.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Math.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Exception.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UIHelper.h"
 	
@@ -104,10 +107,10 @@ target_link_libraries(${PROJECT_NAME}
 		ImGui-SFML::ImGui-SFML
 		portaudio
 		miniaudio
+		samplerate
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/externals/miniaudio")
-target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
-target_include_directories(${PROJECT_NAME} PUBLIC "${samplerate_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")

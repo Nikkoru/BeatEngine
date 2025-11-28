@@ -20,6 +20,18 @@ bool UID::operator==(const UID& other) {
 	return other.m_UID == m_UID;
 }
 
+bool UID::operator!=(const UID& other) {
+	return other.m_UID != m_UID;
+}
+
+bool UID::operator==(const int& other) {
+	return m_UID == other;
+}
+
+bool UID::operator!=(const int& other) {
+	return m_UID != other;
+}
+
 UID::operator uint32_t() {
 	return m_UID;
 }

@@ -6,6 +6,7 @@
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Asset/AudioStream.h"
 
 #include "BeatEngine/Logger.h"
 
@@ -132,6 +133,54 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 	else {
 		Logger::GetInstance()->AddError("Directory dosen't exist: \"" + path.string() + "\"", typeid(AssetManager));
 		return Base::AssetHandle<Sound>();
+	}
+}
+template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const fs::path& path, std::type_index viewID) {
+	if (fs::exists(path)) {
+		std::string name = path.stem().string();
+		std::string fullpath = path.string();
+
+		Base::AssetHandle<AudioStream> handle;
+
+		bool global = viewID == typeid(nullptr);
+		bool exists = false;
+
+		if (global) {
+			if (m_GlobalAssets.contains(name)) {
+				exists = true;
+			}
+		}
+		else {
+			if (!m_ViewAssets.contains(viewID))
+				m_ViewAssets[viewID];
+			if (m_ViewAssets.at(viewID).contains(name)) {
+				exists = true;
+			}
+		}
+
+		if (!exists) {
+			ma_result result;
+			ma_decoder decoder;
+			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
+			
+			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
+
+			if (result != MA_SUCCESS) {
+				THROW_RUNTIME_ERROR("failed");
+				ma_decoder_uninit(&decoder);
+			}
+
+			auto stream = std::make_shared<AudioStream>(decoder, decoder.outputSampleRate, m_AudioSampleRate);
+
+			handle = Base::AssetHandle<AudioStream>(stream);
+
+			m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
+		}
+		return handle;
+	}
+	else {
+		Logger::GetInstance()->AddError("Directory dosen't exist: \"" + path.string() + "\"", typeid(AssetManager));
+		return Base::AssetHandle<AudioStream>();
 	}
 }
 template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& path, std::type_index viewID) {

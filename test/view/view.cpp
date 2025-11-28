@@ -4,13 +4,20 @@
 #include <format>
 
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Asset/AudioStream.h"
+
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/AudioSignals.h"
 
 TestView::TestView(AssetManager* assetMgr) : Base::View(assetMgr, typeid(TestView)), m_Button(), m_FPSDeltaTimeText(), m_ProgressBar(0, 100) {
-	auto handle = b_mAssetMgr->Get<Font>(std::string("main-font"));
-	m_Font = handle.Get();
+	auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
+	m_Font = fontHandle.Get();
 	m_Button.SetFont(*m_Font);
 
-	m_Button.SetOnLClick([this]() { progress = 0; m_ProgressBar.Update(0); });
+	auto musicHandle = b_mAssetMgr->Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
+	SignalManager::GetInstance()->Send(std::make_shared<PlayAudioStreamSignal>(musicHandle));
+
+	m_Button.SetOnLClick([this]() { progress = 0; m_ProgressBar.UpdateProgress(progress); m_ProgressBar.Update(0); });
 }
 void TestView::OnDraw(sf::RenderWindow* window) {
 	auto& font = m_Font->GetSFMLFont();

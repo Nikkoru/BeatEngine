@@ -26,7 +26,7 @@ int main() {
 			{
 				"assets/sounds/test-sound.mp3"
 			}
-		}
+		},
 	});
 
 	game.Run();

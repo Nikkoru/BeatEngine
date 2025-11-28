@@ -17,6 +17,7 @@ private:
 	SystemManager* m_SystemMgr = nullptr;
 	AssetManager* m_AssetMgr = nullptr;
 	SettingsManager* m_SettingsMgr = nullptr;
+	AudioManager* m_AudioMgr = nullptr;
 private:
 	sf::RenderWindow* m_Window = nullptr;
 	sf::View m_View;
@@ -78,6 +79,8 @@ private:
 	void Update();
 private:
 	void InitSettings();
+
+	void InitAudio();
 	/// <summary>
 	/// Initializes the internal ViewManager.
 	/// </summary>

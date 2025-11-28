@@ -8,10 +8,12 @@
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
 Game::Game() {
 	InitSettings();
+	InitAudio();
 	InitAssets();
 	InitSystems();
 	InitWindow();
@@ -25,6 +27,7 @@ Game::~Game() {
 	delete m_ViewMgr;
 	delete m_SystemMgr;
 	delete m_AssetMgr;
+	delete m_AudioMgr;
 
 	delete m_Window;
 }
@@ -72,7 +75,9 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 				m_AssetMgr->Load<Texture>(path);
 			break;
 		case AssetType::AudioStream:
-			break; // TOIMPLEMENT
+			for (auto& path : vecPath)
+				m_AssetMgr->Load<AudioStream>(path);
+			break;
 		case AssetType::Sound:
 			for (auto& path : vecPath)
 				m_AssetMgr->Load<Sound>(path);
@@ -111,6 +116,11 @@ void Game::InitSettings() {
 	this->m_SettingsMgr = new SettingsManager;
 
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
+}
+
+void Game::InitAudio() {
+	Logger::GetInstance()->AddInfo("Initializing audio...", typeid(Game));
+	this->m_AudioMgr = new AudioManager;
 }
 
 void Game::InitViews() {

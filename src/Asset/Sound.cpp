@@ -22,3 +22,43 @@ std::array<float, 2> Sound::GetFrame(uint64_t frame) const {
 
 	return dataFrame;
 }
+
+void Sound::SetVolume(float vol) {
+	m_Volume = vol;
+}
+
+void Sound::SetPitch(float pitch) {
+	m_Pitch = pitch;
+}
+
+float Sound::GetVolume() const {
+	return m_Volume;
+}
+
+float Sound::GetPitch() const {
+	return m_Pitch;
+}
+
+bool Sound::IsPlaying() const {
+	return m_Playing;
+}
+
+void Sound::Play() {
+	m_Playing = true;
+}
+
+std::array<float, 2> Sound::GetNextFrame() {
+	std::array<float, 2> frame = { 0, 0 };
+	if (m_CurrentFrame < m_FrameCount) {
+		frame = GetFrame(m_CurrentFrame);
+
+		float left = frame[0] * m_Volume;
+		float right = frame[1] * m_Volume;
+
+		m_CurrentFrame++;
+	}
+	else
+		m_Playing = false;
+
+	return frame;
+}
