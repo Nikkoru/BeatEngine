@@ -50,7 +50,6 @@ void SettingsManager::WriteConfig(fs::path path) {
 	if (file.is_open()) {
 		for (auto& [id, settings] : m_Settings)
 			file << settings->Write() << std::endl;
-		file << "a";
 	}
 	file.close();
 }

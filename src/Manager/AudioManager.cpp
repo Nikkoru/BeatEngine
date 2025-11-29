@@ -108,7 +108,7 @@ int AudioManager::AudioCallback(
 	}
 
 	for (size_t i = 0; i < framesPerBuffer * 2; i++)
-		out[i] = static_cast<int16_t>(std::clamp<float>(mixBuffer[i], -1.0, 1.0) * 32767.0f);
+		out[i] = static_cast<int16_t>(std::clamp<float>(mixBuffer[i], -1.0, 1.0) * _this->m_SampleRate);
 
 	return paContinue;
 }

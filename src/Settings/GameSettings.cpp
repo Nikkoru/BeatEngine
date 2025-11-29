@@ -19,6 +19,7 @@ void GameSettings::Read(const char* line) {
 std::string GameSettings::Write() {
 	std::string config;
 
+	config += m_SettingsTag + "\n";
 	config += std::format("fpsLimit={}", FpsLimit) + "\n";
 	config += std::format("windowPos={},{}", WindowPosition.x, WindowPosition.y) + "\n";
 	config += std::format("windowSize={},{}", WindowSize.x, WindowSize.y);

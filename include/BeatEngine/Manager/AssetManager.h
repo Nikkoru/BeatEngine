@@ -26,7 +26,7 @@ private:
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
 private:
-	uint64_t m_AudioSampleRate = 43000;
+	uint64_t m_AudioSampleRate = 48000;
 public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)

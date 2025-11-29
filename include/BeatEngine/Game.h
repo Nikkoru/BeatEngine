@@ -60,6 +60,19 @@ public:
 	}
 
 	void UseImGui(bool show);
+	sf::Window* GetWindow();
+
+	void PreloadSettings();
+
+	void SaveSettings();
+
+	template<typename TSettings>
+		requires(std::is_base_of_v<Base::Settings, TSettings>)
+	std::shared_ptr<TSettings> GetSettings() {
+		auto base = m_SettingsMgr->GetSettings(typeid(TSettings));
+
+		return std::static_pointer_cast<TSettings>(base);
+	}
 
 	void SetConfigPath(std::filesystem::path path);
 public:

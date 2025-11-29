@@ -69,6 +69,18 @@ void Game::UseImGui(bool show) {
 	m_UseImGui = show;
 }
 
+sf::Window* Game::GetWindow() {
+	return m_Window;
+}
+
+void Game::PreloadSettings() {
+	m_SettingsMgr->ReadConfig(m_SettingsPath);
+}
+
+void Game::SaveSettings() {
+	m_SettingsMgr->WriteConfig(m_SettingsPath);
+}
+
 void Game::SetConfigPath(std::filesystem::path path) {
 	this->m_SettingsPath = path;
 }
