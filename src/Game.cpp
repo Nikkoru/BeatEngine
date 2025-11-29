@@ -30,6 +30,8 @@ Game::~Game() {
 	delete m_AudioMgr;
 
 	delete m_Window;
+
+	ImGui::SFML::Shutdown();
 }
 
 void Game::Run() {
@@ -42,7 +44,9 @@ void Game::Run() {
 
 	while (this->m_Window->isOpen()) {
 		while (const auto event = this->m_Window->pollEvent()) {
-			// ImGui::SFML::ProcessEvent(*m_Window, *event);
+			if (m_UseImGui)
+				ImGui::SFML::ProcessEvent(*m_Window, *event);
+
 			if (event->is<sf::Event::Closed>())
 				this->m_Window->close();
 			if (auto data = event->getIf<sf::Event::Resized>()) {
@@ -59,6 +63,10 @@ void Game::Run() {
 		this->Draw();
 		this->Display();
 	}
+}
+
+void Game::UseImGui(bool show) {
+	m_UseImGui = show;
 }
 
 void Game::SetConfigPath(std::filesystem::path path) {
@@ -90,6 +98,9 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 }
 
 void Game::Display() {
+	if (m_UseImGui)
+		ImGui::SFML::Render(*m_Window);
+
 	m_Window->display();
 }
 
@@ -102,7 +113,11 @@ void Game::Draw() {
 }
 
 void Game::Update() {
-	auto deltaTime = m_Clock.restart().asSeconds();
+	auto sfDelta = m_Clock.restart();
+	auto deltaTime = sfDelta.asSeconds();
+
+	if (m_UseImGui)
+		ImGui::SFML::Update(*m_Window, sfDelta);
 
 	if (!this->m_ViewMgr->OnUpdate(deltaTime)) {
 		this->m_Window->close();

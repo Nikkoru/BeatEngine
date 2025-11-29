@@ -22,6 +22,8 @@ private:
 	sf::RenderWindow* m_Window = nullptr;
 	sf::View m_View;
 	sf::Clock m_Clock;
+
+	bool m_UseImGui = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
@@ -57,6 +59,8 @@ public:
 		m_SettingsMgr->RegisterSettingsData<TSettings>();
 	}
 
+	void UseImGui(bool show);
+
 	void SetConfigPath(std::filesystem::path path);
 public:
 	/// <summary>
@@ -64,7 +68,7 @@ public:
 	/// </summary>
 	/// <param name="globalAssets">a map containing the asset type and the path of the asset</param>
 	void LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets);
-private:
+public:
 	/// <summary>
 	/// Performs a display operation.
 	/// </summary>
