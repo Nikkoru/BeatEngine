@@ -35,6 +35,9 @@ public:
 
 	std::shared_ptr<Base::Settings> GetSettings(std::string tag);
 	std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
+
+	void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
+	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);
 private:
 	char* GetTextData(fs::path path);
 };

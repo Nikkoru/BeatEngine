@@ -76,6 +76,32 @@ std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::type_index set
 	THROW_RUNTIME_ERROR(msg);
 }
 
+void SettingsManager::SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings) {
+	for (auto& [id, _] : m_Settings) {
+		if (id == settingsID) {
+			m_Settings.try_emplace(id, settings);
+			return;
+		}
+	}
+
+	std::string msg = std::format("Unable to get: \"{}\"", settingsID.name());
+	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	THROW_RUNTIME_ERROR(msg);
+}
+
+void SettingsManager::SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings) {
+	for (auto& [id, _] : m_Settings) {
+		if (tag == settings->GetTag()) {
+			m_Settings.try_emplace(id, settings);
+			return;
+		}
+	}
+
+	std::string msg = "Unable to get settings with tag: \"" + tag + "\"";
+	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	THROW_RUNTIME_ERROR(msg);
+}
+
 char* SettingsManager::GetTextData(fs::path path) {
 	std::ifstream file(path);
 

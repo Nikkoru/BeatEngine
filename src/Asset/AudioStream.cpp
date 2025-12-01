@@ -54,6 +54,9 @@ void AudioStream::FillBuffers() {
 
             if (m_SrcData.output_frames_gen == 0 && m_LastBufferRound) {
                 m_Playing = false;
+
+                m_Erase = true;
+
                 m_LastBufferRound = false;
 
                 break;
@@ -64,8 +67,8 @@ void AudioStream::FillBuffers() {
 	}
 }
 
-AudioStream::AudioStream(ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate) 
-    : m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate) {
+AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, uint64_t totalFrameCount)
+    : m_Name(name), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalFrameCount(totalFrameCount) {
 
     m_SrcRatio = static_cast<double>(m_TargetSampleRate)  / static_cast<double>(m_DefaultSampleRate);
     m_OutputFrameCount = static_cast<uint64_t>(m_SrcRatio * m_DataBufferFrameCount + 256);
@@ -183,6 +186,10 @@ void AudioStream::Resume() {
     m_Playing = true;
 }
 
+std::string AudioStream::GetName() const {
+    return m_Name;
+}
+
 float AudioStream::GetVolume() const {
     return m_Volume;
 }
@@ -193,4 +200,8 @@ bool AudioStream::IsLooping() const {
 
 bool AudioStream::IsPlaying() const {
     return m_Playing;
+}
+
+bool AudioStream::Erase() const {
+    return m_Erase;
 }

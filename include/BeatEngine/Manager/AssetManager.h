@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <cstdint>
 #include <format>
+
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
@@ -46,7 +47,7 @@ public:
 		else {
 			if (m_ViewAssets.contains(viewID)) {
 				if (m_ViewAssets.at(viewID).contains(assetName))
-					return Base::AssetHandle<TAsset>::Cast(m_GlobalAssets.at(assetName).Handle);
+					return Base::AssetHandle<TAsset>::Cast(m_ViewAssets.at(viewID).at(assetName).Handle);
 				else {
 					std::string msg = "Asset not found: \"" + assetName + "\"";
 					Logger::GetInstance()->AddCritical(msg, typeid(AssetManager));
@@ -60,4 +61,5 @@ public:
 			}
 		}
 	}
+	bool Has(std::string name, const std::type_index viewID = typeid(nullptr));
 };

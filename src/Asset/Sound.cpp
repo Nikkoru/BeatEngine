@@ -1,6 +1,6 @@
 #include "BeatEngine/Asset/Sound.h"
 
-Sound::Sound(std::vector<float> data, uint64_t frameCount, uint64_t sampleRate) : m_Data(data), m_FrameCount(frameCount), m_SampleRate(sampleRate) {
+Sound::Sound(std::string name, std::vector<float> data, uint64_t frameCount, uint64_t sampleRate) : m_Name(name), m_Data(data), m_FrameCount(frameCount), m_SampleRate(sampleRate) {
 
 }
 
@@ -29,6 +29,10 @@ void Sound::SetVolume(float vol) {
 
 void Sound::SetPitch(float pitch) {
 	m_Pitch = pitch;
+}
+
+std::string Sound::GetName() const {
+	return m_Name;
 }
 
 float Sound::GetVolume() const {

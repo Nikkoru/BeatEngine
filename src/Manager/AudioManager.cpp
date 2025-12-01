@@ -69,8 +69,6 @@ int AudioManager::AudioCallback(
 
 	std::vector<float> mixBuffer(framesPerBuffer * 2, 0);
 
-
-
 	if (!_this->m_Sounds.empty()) {
 		for (size_t frame = 0; frame < framesPerBuffer; frame++) {
 			for (auto it = _this->m_Sounds.begin(); it != _this->m_Sounds.end();) {
@@ -101,8 +99,11 @@ int AudioManager::AudioCallback(
 					mixBuffer[frame * 2 + 1] += streamFrame[1];
 					it++;
 				}
-				else
-					it = _this->m_Streams.erase(it);
+				else {
+					if (stream->Erase())
+						it = _this->m_Streams.erase(it);
+				}
+				
 			}
 		}
 	}
@@ -218,8 +219,13 @@ AudioManager::AudioManager() {
 
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
-		if (audioSignal->m_AudioStreamHandle) {
-			auto audioStream = audioSignal->m_AudioStreamHandle.Get();
+		if (audioSignal->AudioStreamHandle) {
+			auto audioStream = audioSignal->AudioStreamHandle.Get();
+			for (auto& stream : m_Streams) {
+				if (stream->GetName() == audioStream->GetName())
+					StopStream(stream);
+			}
+
 			PlayStream(audioStream);
 		}
 		else {
@@ -229,14 +235,31 @@ AudioManager::AudioManager() {
 	});
 	SignalManager::GetInstance()->RegisterCallback<StopAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<StopAudioStreamSignal>(sig);
-		auto audioStream = audioSignal->m_AudioStreamHandle.Get();
+		auto nameStream = audioSignal->AudioStreamName;
 
-		StopStream(audioStream);
+		StopStream(nameStream);
+	});
+	SignalManager::GetInstance()->RegisterCallback<PauseAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
+		auto audioSignal = std::static_pointer_cast<PauseAudioStreamSignal>(sig);
+		auto& nameStream = audioSignal->AudioStreamName;
+
+		for (auto& stream : m_Streams) {
+			if (stream->GetName() == nameStream) {
+				if (stream->IsPlaying())
+					stream->Pause();
+				else
+					stream->Resume();
+
+				return;
+			}
+		}
+
+		Logger::GetInstance()->AddError("AudioStream \"" + nameStream + "\" was not found; did you add it to the queue", typeid(AudioManager));
 	});
 	SignalManager::GetInstance()->RegisterCallback<PlaySoundSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlaySoundSignal>(sig);
 
-		PlaySound(audioSignal->m_Sound);
+		PlaySound(audioSignal->SoundToPlay);
 	});
 }
 
@@ -258,7 +281,7 @@ void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
 }
 
 void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
-	Logger::GetInstance()->AddInfo("Adding AudioStream onto the queue", typeid(AudioManager));
+	Logger::GetInstance()->AddInfo("Adding \"" + stream->GetName() + "\"onto the queue", typeid(AudioManager));
 
 	size_t write = m_StreamWriteIndex.load();
 	size_t nextWrite = (write + 1) % MAX_PENDING_STREAMS;
@@ -271,6 +294,8 @@ void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
 }
 
 void AudioManager::StopStream(std::shared_ptr<AudioStream> stream) {
+	std::string streamName = stream->GetName();
+
 	size_t write = m_StreamRemoveWriteIndex.load();
 	size_t nextWrite = (write + 1) % MAX_PENDING_STREAMS;
 
@@ -278,6 +303,17 @@ void AudioManager::StopStream(std::shared_ptr<AudioStream> stream) {
 		m_PendingRemovalStreams[write] = std::move(stream);
 
 		m_StreamRemoveWriteIndex.store(nextWrite, std::memory_order_release);
+	}
+
+	Logger::GetInstance()->AddInfo("Stoped \"" + streamName + "\"", typeid(AudioManager));
+}
+
+void AudioManager::StopStream(std::string streamName) {
+	for (auto& stream : m_Streams) {
+		if (stream->GetName() == streamName) {
+			StopStream(stream);
+			return;
+		}
 	}
 }
 

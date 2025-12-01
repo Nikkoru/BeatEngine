@@ -48,6 +48,7 @@ public:
 	void PlaySound(std::shared_ptr<Sound> sound);
 	void PlayStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::shared_ptr<AudioStream> stream);
+	void StopStream(std::string streamName);
 
 	bool AllSoundsDone() const;
 };

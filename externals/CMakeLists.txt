@@ -58,5 +58,12 @@ FetchContent_Declare(samplerate
     SYSTEM)
 FetchContent_MakeAvailable(samplerate)
 
+set(BUILD_TESTING OFF)
+FetchContent_Declare(libsndfile
+    GIT_REPOSITORY https://github.com/libsndfile/libsndfile
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(libsndfile)
 # Making miniaudio
 # add_subdirectory("miniaudio")

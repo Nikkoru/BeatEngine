@@ -6,6 +6,7 @@
 
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Manager/AudioManager.h"
 
 class ViewManager;
 
@@ -17,6 +18,7 @@ namespace Base {
 		bool b_mSuspended = false;
 		AssetManager* b_mAssetMgr = nullptr;
 		SettingsManager* b_mSettingsMgr = nullptr;
+		AudioManager* b_mAudioMgr = nullptr;
 	private:
 		friend class ViewManager;
 	public:
@@ -27,16 +29,14 @@ namespace Base {
 		/// </summary>
 		View() : b_ID(typeid(nullptr)) {}
 		/// <summary>
-		/// Creates a view with a derivated view type_index
+		/// Creates a view with a derivated view type_index an a pointer to the managers
 		/// </summary>
 		/// <param name="id">the derivated view type_index</param>
-		View(std::type_index id) : b_ID(id) {}
-		/// <summary>
-		/// Creates a view with a derivated view type_index an a pointer to the AssetManager
-		/// </summary>
-		/// <param name="assetMgr">the AssetManager</param>
-		/// <param name="id">the derivated view type_index</param>
-		View(AssetManager* assetMgr, std::type_index id) : b_ID(id), b_mAssetMgr(assetMgr) {}
+		/// <param name="assetMgr">the AssetManager pointer</param>
+		/// <param name="settingsMgr">the SettingsManager pointer</param>
+		/// <param name="audioMgr">the AudioManager pointer</param>
+		View(std::type_index id, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr) 
+			: b_ID(id), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr) {}
 
 		virtual ~View() = default;
 	public:

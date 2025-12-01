@@ -5,6 +5,7 @@
 #include <miniaudio.h>
 #include <samplerate.h>
 #include <vector>
+#include <string>
 #include <array>
 #include <atomic>
 #include <thread>
@@ -13,6 +14,8 @@
 
 class AudioStream : public Base::Asset {
 private:
+	std::string m_Name = "";
+
 	ma_decoder m_Decoder;
 	SRC_STATE* m_SrcState;
 	SRC_DATA m_SrcData;
@@ -32,6 +35,8 @@ private:
 	std::atomic<bool> m_IsBufferReady[2]{ false ,false };
 
 	int m_CurrentBuffer = 0;
+	uint64_t m_TotalFrameCount = -1;
+
 	uint64_t m_CurrentFrame = 0;
 	uint64_t m_ResampledFrameCount = 0;
 	uint64_t m_BufferedFrameCount[2] = { 0, 0 };
@@ -40,12 +45,13 @@ private:
 	float m_Pan = 0.0f;
 
 	bool m_Playing = false;
+	bool m_Erase = false;
 	bool m_Loop = false;
 	bool m_LastBufferRound = false;
 private:
 	void FillBuffers();
 public:
-	AudioStream(ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate);
+	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, uint64_t totalFrameCount = -1);
 	~AudioStream() override;
 
 	std::array<float, 2> GetNextFrame();
@@ -58,7 +64,10 @@ public:
 	void Stop();
 	void Resume();
 
+	std::string GetName() const;
 	float GetVolume() const;
 	bool IsLooping() const;
 	bool IsPlaying() const;
+
+	bool Erase() const;
 };

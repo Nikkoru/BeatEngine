@@ -28,6 +28,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/GameEvent.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Texture.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Sound.h"
@@ -100,6 +101,7 @@ add_library(BeatEngine
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
+
 target_link_libraries(${PROJECT_NAME} 
 	PRIVATE 
 		sfml-graphics 
@@ -107,10 +109,12 @@ target_link_libraries(${PROJECT_NAME}
 		ImGui-SFML::ImGui-SFML
 		portaudio
 		miniaudio
+		sndfile
 		samplerate
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/externals/miniaudio")
+target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")

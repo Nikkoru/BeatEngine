@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics.hpp>
 #include <miniaudio.h>
+#include <sndfile.h>
 
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
@@ -92,6 +93,8 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 			ma_decoder decoder;
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 48000);
 
+			
+			
 			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
 
 			if (result != MA_SUCCESS) {
@@ -100,6 +103,8 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 				ma_decoder_uninit(&decoder);
 				THROW_RUNTIME_ERROR(msg);
 			}
+
+
 
 			uint64_t frameCount = 0;
 			std::vector<float> data;
@@ -118,7 +123,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 				THROW_RUNTIME_ERROR(msg);
 			}
 
-			auto sound = std::make_shared<Sound>(data, frameCount, m_AudioSampleRate);
+			auto sound = std::make_shared<Sound>(name, data, frameCount, m_AudioSampleRate);
 
 			handle = Base::AssetHandle<Sound>(sound);
 
@@ -162,6 +167,20 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			ma_result result;
 			ma_decoder decoder;
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
+
+			SF_INFO sfInfo;
+
+			sf_count_t totalFrames = -1;
+
+			auto sndFile = sf_open(fullpath.c_str(), SFM_READ, &sfInfo);
+			if (sndFile) {
+				totalFrames = sfInfo.frames;
+			}
+			else {
+				// sfInfo
+			}
+			sf_close(sndFile);
+
 			
 			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
 
@@ -170,7 +189,7 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 				ma_decoder_uninit(&decoder);
 			}
 
-			auto stream = std::make_shared<AudioStream>(decoder, decoder.outputSampleRate, m_AudioSampleRate);
+			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, static_cast<uint64_t>(totalFrames));
 
 			handle = Base::AssetHandle<AudioStream>(stream);
 
@@ -226,5 +245,18 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 	else {
 		Logger::GetInstance()->AddError("Directory doesn't exist: \"" + path.string() + "\"", typeid(AssetManager));
 		return Base::AssetHandle<Font>();
+	}
+}
+
+bool AssetManager::Has(std::string name, const std::type_index viewID) {
+	bool global = viewID == typeid(nullptr);
+
+	if (global)
+		return m_GlobalAssets.contains(name);
+	else {
+		if (m_ViewAssets.contains(viewID))
+			return m_ViewAssets.at(viewID).contains(name);
+		else
+			return false;
 	}
 }

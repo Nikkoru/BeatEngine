@@ -3,12 +3,15 @@
 #include "BeatEngine/Base/Asset.h"
 
 #include <vector>
+#include <string>
 #include <cstdint>
 #include <array>
 
 class AudioManager;
 class Sound : public Base::Asset {
 private:
+	std::string m_Name = "";
+
 	std::vector<float> m_Data;
 	uint64_t m_FrameCount = 0;
 	uint64_t m_SampleRate = 0;
@@ -19,9 +22,8 @@ private:
 	float m_Pitch = 1.0f;
 
 	bool m_Playing = false;
-
 public:
-	Sound(std::vector<float> data, uint64_t frameCount, uint64_t sampleRate);
+	Sound(std::string name, std::vector<float> data, uint64_t frameCount, uint64_t sampleRate);
 	uint64_t GetFrameCount() const;
 	uint64_t GetSampleRate() const;
 	std::array<float, 2> GetFrame(uint64_t frame) const;
@@ -29,6 +31,7 @@ public:
 	void SetVolume(float vol);
 	void SetPitch(float pitch);
 
+	std::string GetName() const;
 	float GetVolume() const;
 	float GetPitch() const;
 	bool IsPlaying() const;

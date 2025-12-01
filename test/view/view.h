@@ -8,6 +8,9 @@
 class TestView : public Base::View {
 private:
 	UI::Button m_Button;
+	UI::Button m_Play;
+	UI::Button m_Pause;
+	UI::Button m_Stop;
 	UI::ProgressBar m_ProgressBar;
 
 	std::string m_FPSDeltaTimeText;
@@ -18,7 +21,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(AssetManager* assetMgr);
+	TestView(AssetManager* assetMgr, AudioManager* audioMgr, SettingsManager* settingsMgr);
 	~TestView() override = default;
 public:
 	void OnDraw(sf::RenderWindow* window) override;
