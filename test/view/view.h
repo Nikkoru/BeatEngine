@@ -21,7 +21,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(AssetManager* assetMgr, AudioManager* audioMgr, SettingsManager* settingsMgr);
+	TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr);
 	~TestView() override = default;
 public:
 	void OnDraw(sf::RenderWindow* window) override;

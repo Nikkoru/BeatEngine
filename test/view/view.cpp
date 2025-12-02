@@ -9,7 +9,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
 
-TestView::TestView(AssetManager* assetMgr, AudioManager* audioMgr, SettingsManager* settingsMgr) : Base::View(typeid(TestView), assetMgr, settingsMgr, audioMgr), m_Button(), m_Play(), m_Pause(), m_FPSDeltaTimeText(), m_ProgressBar(0, 100) {
+TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr) : Base::View(typeid(TestView), assetMgr, settingsMgr, audioMgr), m_Button(), m_Play(), m_Pause(), m_FPSDeltaTimeText(), m_ProgressBar(0, 100) {
 	auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
 	m_Font = fontHandle.Get();
 

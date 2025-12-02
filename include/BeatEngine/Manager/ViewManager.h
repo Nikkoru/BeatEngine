@@ -14,7 +14,7 @@
 
 class ViewManager {
 public:
-	using FabricCallback = std::function<std::unique_ptr<Base::View>(AssetManager*, AudioManager*, SettingsManager*)>;
+	using FabricCallback = std::function<std::unique_ptr<Base::View>(AssetManager*, SettingsManager*, AudioManager*)>;
 public:
 	std::unordered_map<std::type_index, FabricCallback> ViewFabrics;
 	std::stack<std::unique_ptr<Base::View>> ViewStack;
@@ -40,8 +40,8 @@ public:
 		requires(std::is_base_of_v<Base::View, TView>)
 	void RegisterView() {
 		auto ID = std::type_index(typeid(TView));
-		FabricCallback fabric = ([](AssetManager* assetMgr, AudioManager* audioMgr, SettingsManager* settingsMgr) 
-			-> std::unique_ptr<Base::View> { return std::make_unique<TView>(assetMgr, audioMgr, settingsMgr); });
+		FabricCallback fabric = ([](AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr)
+			-> std::unique_ptr<Base::View> { return std::make_unique<TView>(assetMgr, settingsMgr, audioMgr); });
 
 		Logger::GetInstance()->AddInfo(std::format("Registing {}", typeid(TView).name()), typeid(ViewManager));
 
