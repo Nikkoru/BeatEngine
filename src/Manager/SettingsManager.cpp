@@ -45,6 +45,8 @@ void SettingsManager::ReadConfig(fs::path path) {
 }
 
 void SettingsManager::WriteConfig(fs::path path) {
+	Logger::GetInstance()->AddInfo("Writing config", typeid(SettingsManager));
+
 	std::ofstream file(path);
 
 	if (file.is_open()) {
@@ -100,6 +102,13 @@ void SettingsManager::SetSettings(std::string tag, std::shared_ptr<Base::Setting
 	std::string msg = "Unable to get settings with tag: \"" + tag + "\"";
 	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
 	THROW_RUNTIME_ERROR(msg);
+}
+
+void SettingsManager::SetDefaults() {
+	Logger::GetInstance()->AddInfo("Setting defaults...", typeid(SettingsManager));
+
+	for (auto& [index, settings] : m_Settings)
+		settings->SetDefaults();
 }
 
 char* SettingsManager::GetTextData(fs::path path) {

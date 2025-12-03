@@ -16,8 +16,8 @@ int main() {
 
 	auto settings = game.GetSettings<GameSettings>();
 
-	game.GetWindow()->setFramerateLimit(settings->FpsLimit);
-	game.GetWindow()->setSize(settings->WindowSize);
+	// game.GetWindow()->setFramerateLimit(settings->FpsLimit);
+	game.SetWindowSize(settings->WindowSize);
 
 	game.LoadGlobalAssets({
 		{

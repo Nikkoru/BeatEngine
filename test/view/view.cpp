@@ -9,7 +9,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
 
-TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr) : Base::View(typeid(TestView), assetMgr, settingsMgr, audioMgr), m_Button(), m_Play(), m_Pause(), m_FPSDeltaTimeText(), m_ProgressBar(0, 100) {
+TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr) : Base::View(typeid(TestView), assetMgr, settingsMgr, audioMgr), m_Button(), m_Play(), m_Pause(), m_FPSDeltaTimeText(), m_ProgressBar(0, 200) {
 	auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
 	m_Font = fontHandle.Get();
 
@@ -41,7 +41,7 @@ TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioMa
 		if (b_mAssetMgr->Has("test-music", typeid(TestView)))
 			musicHandle = b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView));
 		else
-			musicHandle = b_mAssetMgr->Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
+				musicHandle = b_mAssetMgr->Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
 
 		SignalManager::GetInstance()->Send(std::make_shared<StopAudioStreamSignal>(musicHandle)); 
 	});
@@ -93,15 +93,15 @@ void TestView::OnSFMLEvent(std::optional<sf::Event> event) {
 void TestView::OnUpdate(float dt) {
 	m_Timer += dt;
 	
-	if (m_Timer >= 0.25) {
+	if (m_Timer >= 0.1) {
 		m_Timer = 0;
 		progress += 0.5;
 
-		if (progress <= 100)
+		if (progress <= m_ProgressBar.GetMaxValue())
 			m_ProgressBar.UpdateProgress(progress);
 	}	
 
-	m_FPSDeltaTimeText = std::format("dt {:.2f}\nFPS {:.2f}", dt, 1 / dt);
+	m_FPSDeltaTimeText = std::format("dt {:.3f}\nFPS {:.2f}", dt, 1 / dt);
 
 	m_Button.SetPosition({ 5, 100 });
 	m_Button.SetSize({ 80, 30 });

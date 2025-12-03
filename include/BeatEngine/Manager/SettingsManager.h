@@ -38,6 +38,8 @@ public:
 
 	void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
 	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);
+
+	void SetDefaults();
 private:
 	char* GetTextData(fs::path path);
 };

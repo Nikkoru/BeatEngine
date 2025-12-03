@@ -40,7 +40,11 @@ void Game::Run() {
 	if (!m_ViewMgr->HasActiveViews())
 		m_ViewMgr->Push(m_ViewMgr->MainView);
 
-	m_SettingsMgr->ReadConfig(m_SettingsPath);
+
+	if (!m_Preloaded) {
+		m_SettingsMgr->ReadConfig(m_SettingsPath);
+		ApplyBaseSettings();
+	}
 
 	while (this->m_Window->isOpen()) {
 		while (const auto event = this->m_Window->pollEvent()) {
@@ -73,7 +77,13 @@ sf::Window* Game::GetWindow() {
 	return m_Window;
 }
 
+void Game::SetWindowSize(sf::Vector2u size) {
+	m_Window->setSize(size);
+}
+
 void Game::PreloadSettings() {
+	m_Preloaded = true;
+
 	m_SettingsMgr->ReadConfig(m_SettingsPath);
 }
 
@@ -138,6 +148,16 @@ void Game::Update() {
 	this->m_SystemMgr->Update(deltaTime);
 }
 
+void Game::ApplyBaseSettings() {
+	auto gameSettings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+
+	m_Window->setFramerateLimit(gameSettings->FpsLimit);
+	m_Window->setSize(gameSettings->WindowSize);
+
+	if (gameSettings->WindowPosition != sf::Vector2i(-1, -1))
+		m_Window->setPosition(gameSettings->WindowPosition);
+}
+
 void Game::InitSettings() {
 	Logger::GetInstance()->AddInfo("Initializing settings...", typeid(Game));
 	this->m_SettingsMgr = new SettingsManager;
@@ -177,6 +197,8 @@ void Game::InitWindow() {
 	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
 	this->m_Window->setView(m_View);
+
+	ImGui::SFML::Init(*m_Window);
 }
 
 void Game::InitKeybinds() {

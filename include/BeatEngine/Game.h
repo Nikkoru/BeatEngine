@@ -24,6 +24,8 @@ private:
 	sf::Clock m_Clock;
 
 	bool m_UseImGui = false;
+
+	bool m_Preloaded = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
@@ -62,6 +64,8 @@ public:
 	void UseImGui(bool show);
 	sf::Window* GetWindow();
 
+	void SetWindowSize(sf::Vector2u size);
+
 	void PreloadSettings();
 
 	void SaveSettings();
@@ -94,6 +98,8 @@ public:
 	/// Perfoms a update operation.
 	/// </summary>
 	void Update();
+private:
+	void ApplyBaseSettings();
 private:
 	void InitSettings();
 
