@@ -1,6 +1,10 @@
 #pragma once
 
 #include "BeatEngine/Base/Signal.h"
+#include "BeatEngine/View/ViewLayer.h"
+
+#include <memory>
+#include <string>
 
 class ViewPushSignal : public Base::Signal {
 public:
@@ -30,4 +34,14 @@ public:
 	ViewUnsuspendSignal() : Base::Signal(typeid(ViewUnsuspendSignal)) {}
 	ViewUnsuspendSignal(std::type_index id) : Base::Signal(typeid(ViewUnsuspendSignal)), ViewID(id) {}
 	~ViewUnsuspendSignal() override = default;
+};
+
+// Layer signals
+
+class ViewAddGlobalLayerSignal : public Base::Signal {
+public:
+	std::shared_ptr<ViewLayer> Layer;
+public:
+	ViewAddGlobalLayerSignal(std::shared_ptr<ViewLayer> layer) 
+		: Base::Signal(typeid(ViewAddGlobalLayerSignal)), Layer(layer) {}
 };

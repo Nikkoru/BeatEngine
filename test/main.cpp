@@ -6,6 +6,8 @@
 
 #include "view/view.h"
 #include "system/system.h"
+#include "layer/globalLayer.h"
+
 int main() {
 	Game game;
 
@@ -18,6 +20,7 @@ int main() {
 
 	// game.GetWindow()->setFramerateLimit(settings->FpsLimit);
 	game.SetWindowSize(settings->WindowSize);
+	game.SetWindowTitle("Now you can change the title!");
 
 	game.LoadGlobalAssets({
 		{
@@ -33,6 +36,8 @@ int main() {
 			}
 		},
 	});
+
+	game.AddGlobalLayer<GlobalTestLayerUI>();
 
 	game.SaveSettings();
 

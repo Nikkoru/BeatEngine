@@ -1,0 +1,29 @@
+#include "BeatEngine/UI/UILayer.h"
+
+UILayer::UILayer(sf::Vector2f size, sf::Vector2f position) {
+}
+
+void UILayer::SetLayerBackPanel() {
+	m_BackPanel = std::make_shared<UIPanel>();
+}
+
+void UILayer::SetLayerBackPanel(std::shared_ptr<UIPanel> backPanel) {
+	m_BackPanel = backPanel;
+}
+
+void UILayer::OnSFMLEvent(std::optional<sf::Event> event) {
+	if (m_Root && !m_Hidden)
+		m_Root->OnSFMLEvent(event);
+}
+
+void UILayer::Update(float dt) {
+	if (m_Root && !m_Hidden)
+		m_Root->Update(dt);
+}
+
+void UILayer::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+	//m_BackPanel->Draw(window);
+	if (m_Root && !m_Hidden)
+		target.draw(*m_Root);
+}
+

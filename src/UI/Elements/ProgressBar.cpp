@@ -45,7 +45,7 @@ void UI::ProgressBar::SetBackColor(sf::Color color) {
 	m_LayoutRect.setFillColor(color);
 }
 
-void UI::ProgressBar::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void UI::ProgressBar::OnDraw(sf::RenderTarget& target, sf::RenderStates states) const {
 	target.draw(m_LayoutRect);
 	target.draw(m_InnerRect);
 }

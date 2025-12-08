@@ -10,12 +10,28 @@ void UIClickeable::SetOnLClick(std::function<void()> func) {
 	this->OnLClick = func;
 }
 
+void UIClickeable::SetOnMClick(std::function<void()> func) {
+	this->OnMClick = func;
+}
+
 void UIClickeable::SetOnHover(std::function<void()> func) {
 	this->OnHover = func;
 }
 
 void UIClickeable::SetOnUnHover(std::function<void()> func) {
 	this->OnUnHover = func;
+}
+
+void UIClickeable::EventHandler(std::optional<sf::Event> event) {
+	if (!event.has_value())
+		return;
+	
+	if (auto data = event->getIf<sf::Event::MouseMoved>())
+		OnMouseMove(data->position);
+	if (auto data = event->getIf<sf::Event::MouseButtonPressed>())
+		OnMousePressed(data->button, data->position);
+	if (auto data = event->getIf<sf::Event::MouseButtonReleased>())
+		OnMouseReleased(data->button, data->position);
 }
 
 void UIClickeable::OnMouseMove(sf::Vector2i position) {
@@ -30,6 +46,9 @@ void UIClickeable::OnMouseMove(sf::Vector2i position) {
 			OnUnHover();
 	}
 	m_Hovered = currentlyHovered;
+
+	if (m_Active)
+		m_Active = currentlyHovered;
 }
 
 void UIClickeable::OnMousePressed(sf::Mouse::Button button, sf::Vector2i position) {
@@ -41,11 +60,8 @@ void UIClickeable::OnMousePressed(sf::Mouse::Button button, sf::Vector2i positio
 		if (OnActive)
 			OnActive();
 	}
-	else {
-		if (OnUnHover)
-			OnUnHover();
-		m_Hovered = false;
-	}
+
+	m_Hovered = currentlyHovered;
 }
 
 void UIClickeable::OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position) {

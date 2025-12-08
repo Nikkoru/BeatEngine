@@ -40,6 +40,6 @@ namespace UI {
 
 		void Update(float dt) override;
 
-		void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const override;
+		void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	};
 }

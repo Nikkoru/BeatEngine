@@ -7,6 +7,9 @@
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/Manager/UIManager.h"
+
+#include "BeatEngine/View/ViewLayerStack.h"
 
 class ViewManager;
 
@@ -19,6 +22,9 @@ namespace Base {
 		AssetManager* b_mAssetMgr = nullptr;
 		SettingsManager* b_mSettingsMgr = nullptr;
 		AudioManager* b_mAudioMgr = nullptr;
+		UIManager* b_mUIMgr = nullptr;
+	protected:
+		ViewLayerStack b_mLayerStack;
 	private:
 		friend class ViewManager;
 	public:
@@ -35,11 +41,12 @@ namespace Base {
 		/// <param name="assetMgr">the AssetManager pointer</param>
 		/// <param name="settingsMgr">the SettingsManager pointer</param>
 		/// <param name="audioMgr">the AudioManager pointer</param>
-		View(std::type_index id, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr) 
-			: b_ID(id), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr) {}
+		/// <param name="uiMgr">the UIManager pointer</param>
+		View(std::type_index id, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr, UIManager* uiMgr = nullptr) 
+			: b_ID(id), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr), b_mUIMgr(uiMgr) {}
 
 		virtual ~View() = default;
-	public:
+	public: // Events
 		/// <summary>
 		/// Notifies the view to draw to the given window.
 		/// </summary>
@@ -68,12 +75,14 @@ namespace Base {
 		/// </summary>
 		/// <returns>the suspended status</returns>
 		bool IsSuspended() const;
-	private:
+	private: // Setters 
 		/// <summary>
 		/// Sets the AssetManager of the manager
 		/// </summary>
 		/// <param name="assetMgr">the AssetManager</param>
 		void SetAssetManager(AssetManager* assetMgr);
 		void SetSettingsManager(SettingsManager* settingsMgr);
+		void SetAudioManager(AudioManager* audioMgr);
+		void SetUIManager(UIManager* uiMgr);
 	};
 }

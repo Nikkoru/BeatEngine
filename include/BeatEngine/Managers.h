@@ -8,3 +8,4 @@
 #include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/ViewManager.h"
+#include "BeatEngine/Manager/UIManager.h"

@@ -11,6 +11,8 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AssetManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SystemManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AudioManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Managers.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Event.h"
@@ -21,6 +23,10 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Asset.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayer.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.inl"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/ViewSignals.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/AudioSignals.h"
@@ -46,6 +52,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Alignment.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIElement.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIClickeable.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIPanel.h"
@@ -66,9 +73,13 @@ set(SOURCES
 	"Manager/SystemManager.cpp"
 	"Manager/SettingsManager.cpp"
 	"Manager/AudioManager.cpp"
+	"Manager/UIManager.cpp"	
 
 	"Base/View.cpp"
 	
+	"View/ViewLayer.cpp"
+	"View/ViewLayerStack.cpp"
+
 	"Asset/Sound.cpp"
 	"Asset/AudioStream.cpp"
 	"Asset/Font.cpp" 
@@ -92,6 +103,7 @@ set(SOURCES
 	"Settings/GameSettings.cpp"
  
 	"Logger.cpp"
+	
 	"Game.cpp"
 )
 add_library(BeatEngine 

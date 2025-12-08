@@ -29,7 +29,7 @@ ViewManager::ViewManager() : MainView(typeid(nullptr)) {
 void ViewManager::Push(std::type_index viewID) {
 	if (!ViewFabrics.empty()) {
 		if (ViewFabrics.contains(viewID)) {
-			ViewStack.push(ViewFabrics[viewID](m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr));
+			ViewStack.push(ViewFabrics[viewID](m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::GetInstance()->AddInfo(std::format("{} pushed!", viewID.name()), typeid(ViewManager));

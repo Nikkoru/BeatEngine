@@ -90,3 +90,19 @@ void UIElement::RemoveChild(const std::string& name) {
 		}
 	}
 }
+
+void UIElement::OnSFMLEvent(std::optional<sf::Event> event) {
+	EventHandler(event);
+
+	if (!m_Childs.empty())
+		for (const auto& [childName, element] : m_Childs)
+			element->EventHandler(event);
+}
+
+void UIElement::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+	OnDraw(target, states);
+
+	if (!m_Childs.empty())
+		for (const auto& [childName, element] : m_Childs)
+			element->OnDraw(target, states);
+}

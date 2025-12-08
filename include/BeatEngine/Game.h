@@ -6,6 +6,8 @@
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 
+#include "BeatEngine/View/ViewLayerStack.h"
+
 #include "BeatEngine/Enum/AssetType.h"
 
 /// <summary>
@@ -18,10 +20,13 @@ private:
 	AssetManager* m_AssetMgr = nullptr;
 	SettingsManager* m_SettingsMgr = nullptr;
 	AudioManager* m_AudioMgr = nullptr;
+	UIManager* m_UIMgr = nullptr;
 private:
 	sf::RenderWindow* m_Window = nullptr;
 	sf::View m_View;
 	sf::Clock m_Clock;
+
+	ViewLayerStack m_GlobalLayers;
 
 	bool m_UseImGui = false;
 
@@ -64,7 +69,16 @@ public:
 	void UseImGui(bool show);
 	sf::Window* GetWindow();
 
+	template<typename TLayer>
+		requires(std::is_base_of_v<ViewLayer, TLayer>)
+	void AddGlobalLayer() {
+		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_UIMgr, m_AssetMgr);
+
+		m_GlobalLayers.AttachLayer(layer);
+	}
+
 	void SetWindowSize(sf::Vector2u size);
+	void SetWindowTitle(std::string title);
 
 	void PreloadSettings();
 
@@ -102,6 +116,8 @@ private:
 	void ApplyBaseSettings();
 private:
 	void InitSettings();
+
+	void InitUI();
 
 	void InitAudio();
 	/// <summary>

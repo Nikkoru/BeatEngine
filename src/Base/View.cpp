@@ -23,3 +23,11 @@ void Base::View::SetAssetManager(AssetManager* assetMgr) {
 void Base::View::SetSettingsManager(SettingsManager* settingsMgr) {
 	this->b_mSettingsMgr = settingsMgr;
 }
+
+void Base::View::SetAudioManager(AudioManager* audioMgr) {
+	this->b_mAudioMgr = audioMgr;
+}
+
+void Base::View::SetUIManager(UIManager* uiMgr) {
+	this->b_mUIMgr = uiMgr;
+}

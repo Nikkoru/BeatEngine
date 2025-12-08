@@ -28,7 +28,6 @@ namespace UI {
 		void SetInnerColor(sf::Color color);
 		void SetBackColor(sf::Color color);
 
-		void draw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const override;
+		void OnDraw(sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default) const override;
 	};
-
 }

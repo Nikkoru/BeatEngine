@@ -37,6 +37,7 @@ protected:
 
 	std::function<void()> OnHide = nullptr;
 	std::function<void()> OnShow = nullptr;
+
 public:
 	UIElement() = default;
 	UIElement(std::type_index elementID) : m_ID(elementID) {}
@@ -65,6 +66,12 @@ public:
 	bool HasChild(const std::string& name) const;
 	void RemoveChild(const std::string& name);
 
+	void OnSFMLEvent(std::optional<sf::Event> event);
+	virtual void EventHandler(std::optional<sf::Event> event) {}
+
+	virtual void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
+	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
 	template<typename TElement>
 		requires(std::is_base_of_v<UIElement, TElement>)
 	inline std::shared_ptr<TElement> AddChild(const std::string& name) {
@@ -85,13 +92,12 @@ public:
 	inline std::shared_ptr<TElement> GetChild(const std::string& name) {
 		for (auto& [childName, element] : m_Childs) {
 			if (childName == name) {
-				return element;
-			}
-			else {
-				std::string msg = "Element " + name + " doesn't exists in container";
-				Logger::GetInstance()->AddCritical(msg, m_ID);
-				THROW_RUNTIME_ERROR(msg);
+				return std::static_pointer_cast<TElement>(element);
 			}
 		}
+
+		std::string msg = "Element \"" + name + "\" doesn't exists in container";
+		Logger::GetInstance()->AddCritical(msg, m_ID);
+		THROW_RUNTIME_ERROR(msg);
 	}
 };

@@ -42,9 +42,11 @@ void UI::Button::SetFontSize(float size) {
 
 void UI::Button::SetFont(sf::Font font) {
 	this->m_Font = font;
+	m_SFMLText.setFont(font);
 }
 void UI::Button::SetFont(Font font) {
 	this->m_Font = *font.GetSFMLFont();
+	m_SFMLText.setFont(*font.GetSFMLFont());
 }
 
 std::string UI::Button::GetText() {
@@ -71,8 +73,7 @@ void UI::Button::Update(float dt) {
 	m_LayoutRect.setPosition(m_Position);
 }
 
-void UI::Button::draw(sf::RenderTarget& target, sf::RenderStates states) const {
+void UI::Button::OnDraw(sf::RenderTarget& target, sf::RenderStates states) const {
 	target.draw(m_LayoutRect);
-
 	target.draw(m_SFMLText);
 }

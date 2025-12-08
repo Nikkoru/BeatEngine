@@ -11,6 +11,8 @@
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
+#include "BeatEngine/Signals/ViewSignals.h"
+
 Game::Game() {
 	InitSettings();
 	InitAudio();
@@ -18,6 +20,7 @@ Game::Game() {
 	InitSystems();
 	InitWindow();
 	InitViews();
+	InitUI();
 	InitKeybinds();
 	SubscribeToGameEvent();
 	SubscribeToGameSignals();
@@ -62,6 +65,8 @@ void Game::Run() {
 				this->m_Window->close();
 				break;
 			}
+
+			m_GlobalLayers.OnSFMLEvent(event);
 		}
 		this->Update();
 		this->Draw();
@@ -79,6 +84,10 @@ sf::Window* Game::GetWindow() {
 
 void Game::SetWindowSize(sf::Vector2u size) {
 	m_Window->setSize(size);
+}
+
+void Game::SetWindowTitle(std::string title) {
+	m_Window->setTitle(title);
 }
 
 void Game::PreloadSettings() {
@@ -132,6 +141,8 @@ void Game::Draw() {
 	// m_AnimationMgr->DrawActiveAnimation(m_DeltaClock);
 	if (!m_ViewMgr->OnDraw(m_Window))
 		m_Window->close();
+
+	m_Window->draw(m_GlobalLayers);
 }
 
 void Game::Update() {
@@ -146,6 +157,8 @@ void Game::Update() {
 		return;
 	}
 	this->m_SystemMgr->Update(deltaTime);
+
+	m_GlobalLayers.OnUpdate(deltaTime);
 }
 
 void Game::ApplyBaseSettings() {
@@ -163,6 +176,11 @@ void Game::InitSettings() {
 	this->m_SettingsMgr = new SettingsManager;
 
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
+}
+
+void Game::InitUI() {
+	Logger::GetInstance()->AddInfo("Initializing UI...", typeid(Game));
+	this->m_UIMgr = new UIManager;
 }
 
 void Game::InitAudio() {
@@ -211,4 +229,11 @@ void Game::SubscribeToGameEvent() {
 
 void Game::SubscribeToGameSignals() {
 	Logger::GetInstance()->AddInfo("Subscribing to game signals...", typeid(Game));
+
+	SignalManager::GetInstance()->RegisterCallback<ViewAddGlobalLayerSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+		auto signal = std::static_pointer_cast<ViewAddGlobalLayerSignal>(sig);
+		this->m_GlobalLayers.AttachLayer(signal->Layer);
+
+		signal->Layer = nullptr;
+	});
 }
