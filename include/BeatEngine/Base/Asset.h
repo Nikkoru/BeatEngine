@@ -40,7 +40,7 @@ namespace Base {
 	
 			return *this;
 		}
-		bool operator==(const AssetHandle<T>& other) {
+		bool operator==(AssetHandle<T>& other) {
 			return other.m_AssetID == m_AssetID;
 		}
 

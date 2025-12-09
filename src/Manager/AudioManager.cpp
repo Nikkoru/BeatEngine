@@ -195,7 +195,7 @@ AudioManager::AudioManager() {
 
 	for (int rate : preferredRates) {
 		if (Pa_IsFormatSupported(nullptr, &outputParams, rate) == paFormatIsSupported) {
-			_sampleRate = rate;
+			m_SampleRate = rate;
 			supported = true;
 			break;
 		}

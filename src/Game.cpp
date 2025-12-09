@@ -2,7 +2,11 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#include <imgui-sfml.h>
+#ifdef __linux
+#include <imgui-SFML.h>
+#else 
+#include <imgui-sfml.h>    
+#endif
 
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Asset/Texture.h"

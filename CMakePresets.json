@@ -97,5 +97,11 @@
                 }
             }
         }
+    ],
+    "buildPresets": [
+        {
+            "name": "linux-debug",
+            "configurePreset": "linux-debug"
+        }
     ]
 }

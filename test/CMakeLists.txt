@@ -19,7 +19,9 @@ target_link_libraries(BeatEngineTest
 		BeatEngine
 )
 
-target_link_options(BeatEngineTest PRIVATE "$<$<CONFIG:Debug>:/DEBUG>") 
+if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    target_link_options(BeatEngineTest PRIVATE "$<$<CONFIG:Debug>:/DEBUG>") 
+endif()
 
 set_property(TARGET BeatEngineTest PROPERTY CXX_STANDARD 23)
 target_compile_features(BeatEngineTest PRIVATE cxx_std_23)
