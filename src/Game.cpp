@@ -2,11 +2,7 @@
 
 #include <imgui.h>
 #include <imgui_internal.h>
-#ifdef __linux
 #include <imgui-SFML.h>
-#else 
-#include <imgui-sfml.h>    
-#endif
 
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Asset/Texture.h"
@@ -220,7 +216,9 @@ void Game::InitWindow() {
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
 	this->m_Window->setView(m_View);
 
-	ImGui::SFML::Init(*m_Window);
+	if (!ImGui::SFML::Init(*m_Window)) {
+        m_Window->close();
+    }
 }
 
 void Game::InitKeybinds() {
