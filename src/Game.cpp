@@ -3,15 +3,19 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui-SFML.h>
+#include <memory>
 
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
+#include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
 #include "BeatEngine/Signals/ViewSignals.h"
+
+#include "BeatEngine/Events/GameEvent.h"
 
 Game::Game() {
 	InitSettings();
@@ -59,6 +63,8 @@ void Game::Run() {
 			if (auto data = event->getIf<sf::Event::Resized>()) {
 				m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(data->size.x), static_cast<float>(data->size.y) }));
 				m_Window->setView(m_View);
+
+                EventManager::GetInstance()->Send(std::make_shared<GameResized>(data->size));
 			}
 
 			if (!this->m_ViewMgr->OnSFMLEvent(event)) {
