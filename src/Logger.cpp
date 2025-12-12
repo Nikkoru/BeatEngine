@@ -19,6 +19,32 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 
 void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	std::string formattedLog;
+    
+    const std::string red = "\e[0;31m";
+    const std::string yellow = "\e[0;33m";
+    const std::string purple = "\e[0;35m";
+    const std::string cyan = "\e[0;36m";
+    const std::string hiRed = "\e[0;91m";
+
+    std::string color;
+
+    switch (logType) {
+        case LogType::Info:
+            color = cyan;
+            break;
+        case LogType::Warning:
+            color = yellow;
+            break;
+        case LogType::Error:
+            color = red;
+            break;
+        case LogType::Critical:
+            color = hiRed;
+            break;
+        case LogType::DebugTarget:
+            color = purple;
+            break;
+    }
 
 	auto nowTp = std::chrono::system_clock::now();
 	std::time_t nowT = std::chrono::system_clock::to_time_t(nowTp);
@@ -28,10 +54,10 @@ void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	std::strftime(nowStr, sizeof(nowStr), "%T", now);
 
 	if (caller != "") {
-		formattedLog = std::format("{} [{}] {} ({})", nowStr, LogTypeUtils::TypeToString(logType), log, caller);
+		formattedLog = std::format("{} [{}{}{}] {} ({})", nowStr, color, LogTypeUtils::TypeToString(logType), "\033[0m", log, caller);
 	}
 	else
-		formattedLog = std::format("{} [{}] {}", nowStr, LogTypeUtils::TypeToString(logType), log);
+		formattedLog = std::format("{} [{}{}{}] {}", nowStr, color, LogTypeUtils::TypeToString(logType), "\033[0m", log);
 	if (logType == LogType::Error)
 		std::cerr << formattedLog << std::endl;
 	else
