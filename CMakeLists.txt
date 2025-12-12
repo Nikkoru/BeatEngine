@@ -13,6 +13,8 @@ endif()
 
 project("BeatEngine")
 
+option(BUILD_TESTS "Build / include tests" ON)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -25,4 +27,7 @@ set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 # Include sub-projects.
 add_subdirectory("externals")
 add_subdirectory("src")
-add_subdirectory("test")
+
+if (BUILD_TESTS)
+    add_subdirectory("test")
+endif()
