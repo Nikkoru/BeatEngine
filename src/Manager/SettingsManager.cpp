@@ -1,8 +1,20 @@
 #include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Util/Exception.h"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/SettingsSignals.h"
 
 #include <iostream>
 #include <fstream>
+#include <memory>
+
+SettingsManager::SettingsManager() {
+    SignalManager::GetInstance()->RegisterCallback<SetSettingsSignal>(typeid(SettingsManager), [this](const std::shared_ptr<Base::Signal> signal) {
+        auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
+
+        SetSettings(setSignal->SettingsID, setSignal->Settings);
+    });
+}
 
 void SettingsManager::ReadConfig(fs::path path) {
 	Logger::GetInstance()->AddInfo("Reading config file \"" + path.stem().string() + "\"", typeid(SettingsManager));

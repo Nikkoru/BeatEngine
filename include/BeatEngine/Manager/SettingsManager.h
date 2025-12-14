@@ -15,7 +15,7 @@ class SettingsManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::Settings>> m_Settings;
 public:
-	SettingsManager() = default;
+	SettingsManager(); 
 	~SettingsManager() = default;
 private:
 	friend class Game;
