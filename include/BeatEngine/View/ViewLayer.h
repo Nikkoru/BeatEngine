@@ -6,6 +6,7 @@
 
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/SettingsManager.h"
 
 #include <optional>
 #include <memory>
@@ -26,6 +27,7 @@ private:
 protected:
 	UIManager* m_UIMgr = nullptr;
 	AssetManager* m_AssetMgr = nullptr;
+    SettingsManager* m_SettingsMgr = nullptr;
 private:
 	sf::Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
@@ -34,8 +36,8 @@ private:
 private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
-	ViewLayer(std::type_index id, UIManager* uiMgr = nullptr, AssetManager* assetMgr = nullptr)
-		: m_ID(id), m_UIMgr(uiMgr), m_AssetMgr(assetMgr) {}
+	ViewLayer(std::type_index id, UIManager* uiMgr = nullptr, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr)
+		: m_ID(id), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr) {}
 
 	virtual ~ViewLayer() = default;
 
@@ -58,7 +60,10 @@ public:
 	sf::Vector2f GetWorldToScreen(sf::Vector2f pos) const { return { 0, 0 }; };
 	void StartCamera() {};
 	void StopCamera() {};
+
+	void SetUIManager(UIManager* mgr) { m_UIMgr = mgr; }
+    void SetAssetManager(AssetManager* mgr) { m_AssetMgr = mgr; }
+    void SetSettingsManager(SettingsManager* mgr) { m_SettingsMgr = mgr; }
 private:
 	friend class Game;
-	void SetUIManager(UIManager* mgr) { m_UIMgr = mgr; }
 };

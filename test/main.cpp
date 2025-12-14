@@ -38,6 +38,9 @@ int main() {
 	});
 
 	game.AddGlobalLayer<GlobalTestLayerUI>();
+    auto layer = game.GetGlobalLayer<GlobalTestLayerUI>();
+    
+    layer->SetSettingsManager(game.GetSettingsManager());
 
 	game.SaveSettings();
 

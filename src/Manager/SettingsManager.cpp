@@ -1,5 +1,7 @@
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Base/Signal.h"
+#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
@@ -13,6 +15,8 @@ SettingsManager::SettingsManager() {
         auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
 
         SetSettings(setSignal->SettingsID, setSignal->Settings);
+
+        EventManager::GetInstance()->Send(std::make_shared<GameSettingsChanged>());
     });
 }
 

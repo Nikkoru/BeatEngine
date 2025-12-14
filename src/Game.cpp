@@ -238,6 +238,13 @@ void Game::InitKeybinds() {
 
 void Game::SubscribeToGameEvent() {
 	Logger::GetInstance()->AddInfo("Subscribing to game events...", typeid(Game));
+
+    EventManager::GetInstance()->Subscribe<GameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
+        auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+
+        m_Window->setFramerateLimit(settings->FpsLimit);
+        m_Window->setSize(settings->WindowSize);
+    });
 }
 
 void Game::SubscribeToGameSignals() {

@@ -79,6 +79,13 @@ public:
 
 		m_GlobalLayers.AttachLayer(layer);
 	}
+    
+    template<typename TLayer>
+        requires(std::is_base_of_v<ViewLayer, TLayer>)
+    std::shared_ptr<TLayer> GetGlobalLayer() {
+        auto layer = m_GlobalLayers.GetLayer(typeid(TLayer));
+        return std::static_pointer_cast<TLayer>(layer);
+    }
 
 	void SetWindowSize(sf::Vector2u size);
 	void SetWindowTitle(std::string title);

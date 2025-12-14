@@ -1,4 +1,6 @@
 #include "globalLayer.h"
+#include "BeatEngine/Settings/GameSettings.h"
+#include "BeatEngine/Signals/SettingsSignals.h"
 
 #include <BeatEngine/Manager/SignalManager.h>
 #include <BeatEngine/Signals/ViewSignals.h>
@@ -6,6 +8,7 @@
 #include <BeatEngine/UI/Elements/Button.h>
 
 #include <format>
+#include <memory>
 
 GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr) {
 }
@@ -19,6 +22,13 @@ GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr) :
 	root->SetFont(*font);
 	root->SetSize({80, 30});
 	root->SetPosition({ 90, 100 });
+
+    root->SetOnLClick([this]() {
+        auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+        settings->FpsLimit = 120;
+
+        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
+    });
 }
 
 void GlobalTestLayerUI::OnUpdate(float dt) {
