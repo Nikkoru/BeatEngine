@@ -1,5 +1,6 @@
 #include "globalLayer.h"
 #include "BeatEngine/Settings/GameSettings.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
 
 #include <BeatEngine/Manager/SignalManager.h>
@@ -18,6 +19,8 @@ GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr) :
 
 	auto font = assetMgr->Get<Font>("main-font").Get();
 	auto root = m_HUD->SetRootElement<UI::Button>();
+    
+    auto exitBtn = root->AddChild<UI::Button>("exitBtn");
 
 	root->SetFont(*font);
 	root->SetSize({80, 30});
@@ -29,10 +32,20 @@ GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr) :
 
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
+
+    exitBtn->SetFont(*font);
+    exitBtn->SetSize({ 80, 30 });
+    exitBtn->SetPosition({ 5, 600 - 5 - 30 });
+    exitBtn->SetText("Exit");
+
+    exitBtn->SetOnLClick([]() {
+        SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+    });
 }
 
 void GlobalTestLayerUI::OnUpdate(float dt) {
 	m_HUD->Update(dt);
+    m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("exitBtn")->Update(dt);
 }
 
 void GlobalTestLayerUI::OnAttach() {

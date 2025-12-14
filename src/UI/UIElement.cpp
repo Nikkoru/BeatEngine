@@ -36,7 +36,9 @@ void UIElement::Hide() {
 }
 
 void UIElement::Update(float dt) {
-	
+    if (!m_Childs.empty())
+        for (auto& [childName, element] : m_Childs)
+            element->Update(dt);
 }
 
 void UIElement::SetSize(sf::Vector2f size) {

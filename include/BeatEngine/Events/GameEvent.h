@@ -15,3 +15,9 @@ public:
 public:
     GameResized(sf::Vector2u newSize) : Base::Event(typeid(GameResized)), Size(newSize) {} 
 };
+
+class GameExitingEvent : public Base::Event {
+public:
+    GameExitingEvent() : Base::Event(typeid(GameExitingEvent)) {}
+};
+

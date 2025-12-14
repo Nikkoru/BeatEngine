@@ -12,8 +12,10 @@
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/ViewSignals.h"
 
 #include "BeatEngine/Events/GameEvent.h"
@@ -248,6 +250,7 @@ void Game::SubscribeToGameEvent() {
         m_Window->setFramerateLimit(settings->FpsLimit);
         m_Window->setSize(settings->WindowSize);
     });
+
 }
 
 void Game::SubscribeToGameSignals() {
@@ -259,4 +262,10 @@ void Game::SubscribeToGameSignals() {
 
 		signal->Layer = nullptr;
 	});
+
+    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+        EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
+        
+        m_Window->close();
+    });
 }
