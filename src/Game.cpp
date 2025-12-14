@@ -94,6 +94,9 @@ SettingsManager* Game::GetSettingsManager() {
 }
 
 void Game::SetWindowSize(sf::Vector2u size) {
+    auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+    settings->WindowSize = size;
+
 	m_Window->setSize(size);
 }
 
