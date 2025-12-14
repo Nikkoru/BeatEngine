@@ -11,6 +11,7 @@
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
 #include "BeatEngine/Signals/ViewSignals.h"
@@ -86,6 +87,10 @@ void Game::UseImGui(bool show) {
 
 sf::Window* Game::GetWindow() {
 	return m_Window;
+}
+
+SettingsManager* Game::GetSettingsManager() {
+    return m_SettingsMgr;
 }
 
 void Game::SetWindowSize(sf::Vector2u size) {

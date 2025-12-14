@@ -3,6 +3,7 @@
 #include <memory>
 #include <SFML/Window.hpp>
 
+#include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 
@@ -68,6 +69,8 @@ public:
 
 	void UseImGui(bool show);
 	sf::Window* GetWindow();
+    SettingsManager* GetSettingsManager();
+
 
 	template<typename TLayer>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
