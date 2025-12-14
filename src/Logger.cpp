@@ -19,7 +19,8 @@ std::shared_ptr<Logger> Logger::GetInstance() {
 
 void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 	std::string formattedLog;
-    
+    std::string savedLog;
+
     const std::string red = "\e[0;31m";
     const std::string yellow = "\e[0;33m";
     const std::string purple = "\e[0;35m";
@@ -55,15 +56,18 @@ void Logger::AddLog(std::string log, LogType logType, std::string caller) {
 
 	if (caller != "") {
 		formattedLog = std::format("{} [{}{}{}] {} ({})", nowStr, color, LogTypeUtils::TypeToString(logType), "\033[0m", log, caller);
+        savedLog = std::format("{} [{}] {} ({})", nowStr, LogTypeUtils::TypeToString(logType), log, caller);
 	}
-	else
+	else { 
 		formattedLog = std::format("{} [{}{}{}] {}", nowStr, color, LogTypeUtils::TypeToString(logType), "\033[0m", log);
+        savedLog = std::format("{} [{}] {}", nowStr, LogTypeUtils::TypeToString(logType), log);
+    }
 	if (logType == LogType::Error)
 		std::cerr << formattedLog << std::endl;
 	else
 		std::cout << formattedLog << std::endl;
 
-	m_Logs.push_back({ nowT, { logType, formattedLog } });
+	m_Logs.push_back({ nowT, { logType, savedLog } });
 }
 
 void Logger::AddLog(std::string log, LogType logType, std::type_index caller) {
