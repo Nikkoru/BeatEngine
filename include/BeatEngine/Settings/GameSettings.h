@@ -10,6 +10,8 @@ public:
 
 	sf::Vector2i WindowPosition = { -1, -1 };
 	sf::Vector2u WindowSize = { static_cast<unsigned int>(800), static_cast<unsigned int>(600) };
+
+    bool WindowFullScreen = false;
 public:
 	GameSettings() : Base::Settings(typeid(GameSettings), "[Game]") {}
 	~GameSettings() override = default;

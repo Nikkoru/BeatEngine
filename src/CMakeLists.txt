@@ -46,6 +46,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Math.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Exception.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UIHelper.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Helper.h"
 	
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AssetType.h"
@@ -55,8 +56,8 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIElement.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIClickeable.h"
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIPanel.h"
 
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/UIPanel.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/Button.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/ProgressBar.h"
 
@@ -89,14 +90,15 @@ set(SOURCES
 	"Util/UIHelper.cpp"
 	"Util/ChronoHelper.cpp"
 	"Util/UID.cpp"
+    "Util/Helper.cpp"
 
 	"Enum/LogType.cpp"
 	
 	"UI/UILayer.cpp"
 	"UI/UIElement.cpp"
 	"UI/UIClickeable.cpp"
-	"UI/UIPanel.cpp"
 
+    "UI/Elements/UIPanel.cpp"
 	"UI/Elements/Button.cpp"
 	"UI/Elements/ProgressBar.cpp"
 
