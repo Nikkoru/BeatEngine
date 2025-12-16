@@ -85,7 +85,7 @@ bool UIElement::HasChild(const std::string& name) const {
 }
 
 size_t UIElement::ChildCount() const {
-    return m_Childs.count();
+    return m_Childs.size();
 }
 
 void UIElement::RemoveChild(const std::string& name) {
