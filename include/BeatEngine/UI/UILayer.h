@@ -4,7 +4,7 @@
 #include <SFML/Graphics.hpp>
 
 #include "BeatEngine/UI/UIElement.h"
-#include "BeatEngine/UI/UIPanel.h"
+#include "BeatEngine/UI/Elements/UIPanel.h"
 
 class UILayer : public sf::Drawable {
 private:

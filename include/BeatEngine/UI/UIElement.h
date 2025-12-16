@@ -64,6 +64,7 @@ public:
 public:
 	bool HasChild() const;
 	bool HasChild(const std::string& name) const;
+    size_t ChildCount() const;
 	void RemoveChild(const std::string& name);
 
 	void OnSFMLEvent(std::optional<sf::Event> event);
