@@ -2,5 +2,5 @@
 #include <cstring>
 
 bool Helper::ParseBoolFromString(const char *str) {
-    return strlen(str) == 4;
+    return strlen(str) == 5;
 }

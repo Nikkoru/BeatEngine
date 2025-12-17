@@ -3,8 +3,13 @@
 #include <memory>
 #include <SFML/Graphics.hpp>
 
-#include "BeatEngine/UI/UIElement.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
+#include "BeatEngine/UI/UIElement.h"
+<<<<<<< HEAD
+#include "BeatEngine/UI/Elements/UIPanel.h"
+=======
+
+>>>>>>> c315531 (partial initial changes to UI alignment & fullscreen base setting)
 
 class UILayer : public sf::Drawable {
 private:

@@ -1,4 +1,5 @@
 #include "BeatEngine/UI/Elements/Button.h"
+#include "BeatEngine/UI/Alignment.h"
 
 UI::Button::Button(sf::Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Font(font), m_Text(text), m_FontSize(fontSize), m_SFMLText(font, text, m_FontSize) {
 	SetOnHover([this]() {
@@ -60,7 +61,31 @@ float UI::Button::GetFontSize() const {
 void UI::Button::Update(float dt) {
 
 	m_SFMLText = sf::Text(m_Font, m_Text, m_FontSize);
-	m_SFMLText.setPosition(m_Position);
+    
+    float x = 0, y = 0;
+    switch (m_HAlignment) {
+    case UIAlignmentH::Left:
+        x = m_Position.x;
+        break;
+    case UIAlignmentH::Right:
+        x = m_Position.x;
+        break;
+    case UIAlignmentH::Center:
+        x = m_Position.x / 2 - m_SFMLText.getLocalBounds().size.x / 2;
+    }
+
+    switch (m_VAlignment) {
+    case UIAlignmentV::Down:
+        y = m_Position.y;
+        break;
+    case UIAlignmentV::Up:
+        y = m_Position.y;
+        break;
+    case UIAlignmentV::Center:
+        x = m_Position.y / 2 - m_SFMLText.getLocalBounds().size.y / 2;
+    }
+    
+	m_SFMLText.setPosition({ x, y });
 	m_SFMLText.setFillColor(m_TextColor);
 
 	if (!m_Textures.empty()) {

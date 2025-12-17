@@ -56,6 +56,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIElement.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIClickeable.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Alignment.h"
 
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/UIPanel.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/Button.h"

@@ -22,10 +22,18 @@ TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioMa
 
 	playButton->SetFont(*m_Font);
 	playButton->SetText("Play");
+    playButton->SetVAlignment(UIAlignmentV::Center);
+    playButton->SetHAlignment(UIAlignmentH::Center);
+
 	stopButton->SetFont(*m_Font);
 	stopButton->SetText("Stop");
+    stopButton->SetVAlignment(UIAlignmentV::Center);
+    stopButton->SetHAlignment(UIAlignmentH::Center);
+
 	pauseButton->SetFont(*m_Font);
 	pauseButton->SetText("Pause");
+    pauseButton->SetVAlignment(UIAlignmentV::Center);
+    pauseButton->SetHAlignment(UIAlignmentH::Center);
 
 	// auto musicHandle = b_mAssetMgr->Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
 

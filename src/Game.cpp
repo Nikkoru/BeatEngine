@@ -1,5 +1,6 @@
 #include "BeatEngine/Game.h"
 
+#include <SFML/Window/WindowEnums.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <imgui-SFML.h>
@@ -192,6 +193,8 @@ void Game::InitSettings() {
 	this->m_SettingsMgr = new SettingsManager;
 
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
+    m_SettingsMgr->ReadConfig(m_SettingsPath);
+
 }
 
 void Game::InitUI() {
@@ -226,8 +229,12 @@ void Game::InitWindow() {
 	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
 
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
-
-	this->m_Window = new sf::RenderWindow(sf::VideoMode(gameSettings->WindowSize), "BeatEngine Game");
+	this->m_Window = new sf::RenderWindow(
+        sf::VideoMode(gameSettings->WindowSize), 
+        "BeatEngine Game",
+        sf::Style::Default,
+        (gameSettings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
+    );
 	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
 	this->m_Window->setView(m_View);

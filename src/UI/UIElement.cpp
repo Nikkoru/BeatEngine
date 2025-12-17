@@ -1,5 +1,6 @@
 #include "BeatEngine/UI/UIElement.h"
 
+#include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/UIHelper.h"
 
 UIElement::~UIElement() {
@@ -58,6 +59,14 @@ void UIElement::AddTexture(std::string name, const Texture& texture) {
 void UIElement::RemoveTexture(std::string name) {
 	if (!m_Textures.contains("name"))
 		m_Textures.erase(name);
+}
+
+void UIElement::SetVAlignment(UIAlignmentV alignment) {
+    this->m_VAlignment = alignment;
+}
+
+void UIElement::SetHAlignment(UIAlignmentH alignment) {
+    this->m_HAlignment = alignment;
 }
 
 sf::Vector2f UIElement::GetSize() const {

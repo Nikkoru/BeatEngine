@@ -10,6 +10,7 @@
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
 
@@ -26,6 +27,9 @@ protected:
 	sf::Vector2f m_Size = { 0, 0 };
 	sf::Vector2f m_Position = { 0, 0 };;
 	sf::RectangleShape m_LayoutRect = sf::RectangleShape(m_Size);
+
+    UIAlignmentV m_VAlignment = UIAlignmentV::Down;
+    UIAlignmentH m_HAlignment = UIAlignmentH::Left;
 
 	std::map<std::string, std::shared_ptr<UIElement>> m_Childs;
 
@@ -57,6 +61,9 @@ public:
 	void SetPosition(sf::Vector2f position);
 	void AddTexture(std::string name, const Texture& texture);
 	void RemoveTexture(std::string name);
+
+    void SetVAlignment(UIAlignmentV alignment);
+    void SetHAlignment(UIAlignmentH alignment);
 
 	sf::Vector2f GetSize() const;
 	sf::Vector2f GetPosition() const;
