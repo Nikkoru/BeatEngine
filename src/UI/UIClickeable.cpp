@@ -1,6 +1,10 @@
 #include "BeatEngine/UI/UIClickeable.h"
 
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Util/UIHelper.h"
+#include <SFML/Window/Cursor.hpp>
+#include <memory>
 
 void UIClickeable::SetOnRClick(std::function<void()> func) {
 	this->OnRClick = func;
@@ -42,14 +46,19 @@ void UIClickeable::OnMouseMove(sf::Vector2i position) {
 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
 
 	if (currentlyHovered && !m_Hovered) {
+        if (m_CursorFeedback)
+            SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Hand));
 		if (OnHover)
 			OnHover();
 	}
 	else if (!currentlyHovered && m_Hovered) {
+        if (m_CursorFeedback)
+            SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
 		if (OnUnHover)
 			OnUnHover();
 	}
 	m_Hovered = currentlyHovered;
+
 
 	if (m_Active)
 		m_Active = currentlyHovered;

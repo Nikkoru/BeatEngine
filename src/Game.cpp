@@ -275,4 +275,9 @@ void Game::SubscribeToGameSignals() {
         
         m_Window->close();
     });
+
+    SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+        auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
+        m_Window->setMouseCursor(gameSig->NewCursor);
+    });
 }

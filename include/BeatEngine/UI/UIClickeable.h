@@ -5,6 +5,7 @@
 class UIClickeable : public UIElement {
 protected:
 	bool m_Hovered = false;
+    bool m_CursorFeedback = true;
 protected:
 	std::function<void()> OnRClick = nullptr;
 	std::function<void()> OnLClick = nullptr;
