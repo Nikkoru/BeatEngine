@@ -49,6 +49,7 @@ void UIElement::SetSize(sf::Vector2f size) {
 
 void UIElement::SetPosition(sf::Vector2f position) {
 	this->m_Position = position;
+    this->m_LayoutRect.setPosition(position);
 }
 
 void UIElement::AddTexture(std::string name, const Texture& texture) {
