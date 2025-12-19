@@ -23,6 +23,8 @@ public:
 	void SetOnHover(std::function<void()> func);
 	void SetOnUnHover(std::function<void()> func);
 
+    bool IsHovered();
+
 	void EventHandler(std::optional<sf::Event> event) override;
 private:
 	void OnMouseMove(sf::Vector2i position);

@@ -22,6 +22,10 @@ void UIClickeable::SetOnUnHover(std::function<void()> func) {
 	this->OnUnHover = func;
 }
 
+bool UIClickeable::IsHovered() {
+    return this->m_Hovered;
+}
+
 void UIClickeable::EventHandler(std::optional<sf::Event> event) {
 	if (!event.has_value())
 		return;
