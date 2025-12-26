@@ -30,7 +30,7 @@ private:
 	ViewLayerStack m_GlobalLayers;
 
 	bool m_UseImGui = false;
-
+    bool m_Running = false;
 	bool m_Preloaded = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
@@ -75,7 +75,7 @@ public:
 	template<typename TLayer>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
 	void AddGlobalLayer() {
-		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_UIMgr, m_AssetMgr);
+		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_UIMgr, m_AssetMgr, m_SettingsMgr);
 
 		m_GlobalLayers.AttachLayer(layer);
 	}

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Manager/SettingsManager.h"
 #include <BeatEngine/View/ViewLayer.h>
 #include <BeatEngine/UI/UILayer.h>
 
@@ -9,11 +11,12 @@
 class GlobalTestLayerUI : public ViewLayer {
 private:
 	std::shared_ptr<UILayer> m_HUD = nullptr;
-	std::string m_Text;
-
+	std::string m_FPSText;
+    std::string m_DeltaText;
+    std::shared_ptr<Font> m_Font = nullptr;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr);
+	GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr);
 	~GlobalTestLayerUI() override = default;
 private:
 

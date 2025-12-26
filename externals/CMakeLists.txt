@@ -65,5 +65,12 @@ FetchContent_Declare(libsndfile
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(libsndfile)
-# Making miniaudio
-# add_subdirectory("miniaudio")
+
+# Fetch TagLib
+
+FetchContent_Declare(taglib
+    GIT_REPOSITORY https://github.com/taglib/taglib.git
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(taglib)

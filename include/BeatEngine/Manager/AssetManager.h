@@ -15,7 +15,6 @@
 namespace fs = std::filesystem;
 
 class AssetManager {
-
 	struct Slot {
 		Base::AssetHandle<void> Handle;
 		std::shared_ptr<Base::Asset> Asset;
@@ -23,6 +22,8 @@ class AssetManager {
 		Slot() = default;
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset) : Handle(handle), Asset(asset) {}
 	};
+public:
+    ~AssetManager();
 private:
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;

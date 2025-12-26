@@ -58,7 +58,7 @@ float UI::Button::GetFontSize() const {
 	return this->m_FontSize;
 }
 
-void UI::Button::Update(float dt) {
+void UI::Button::OnUpdate(float dt) {
 
 	m_SFMLText = sf::Text(m_Font, m_Text, m_FontSize);
     
@@ -71,7 +71,7 @@ void UI::Button::Update(float dt) {
         x = m_Position.x;
         break;
     case UIAlignmentH::Center:
-        x = m_Position.x / 2 - m_SFMLText.getLocalBounds().size.x / 2;
+        x = m_Position.x / 2 + m_SFMLText.getLocalBounds().size.x / 2;
     }
 
     switch (m_VAlignment) {
@@ -82,7 +82,7 @@ void UI::Button::Update(float dt) {
         y = m_Position.y;
         break;
     case UIAlignmentV::Center:
-        x = m_Position.y / 2 - m_SFMLText.getLocalBounds().size.y / 2;
+        x = m_Position.y / 2 + m_SFMLText.getLocalBounds().size.y / 2;
     }
     
 	m_SFMLText.setPosition({ x, y });

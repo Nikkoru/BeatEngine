@@ -13,7 +13,7 @@
 class AudioManager {
 private:
 	PaStream* m_AudioStream;
-	uint64_t m_SampleRate = 96000;
+	uint64_t m_SampleRate = 48000;
 
 	std::vector<std::shared_ptr<Sound>> m_Sounds;
 	std::vector<std::shared_ptr<AudioStream>> m_Streams;
@@ -49,6 +49,12 @@ public:
 	void PlayStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::string streamName);
+
+    bool IsStreamPlaying(std::shared_ptr<AudioStream> stream);
+    bool IsStreamPlaying(std::string streamName);
+
+    bool IsSoundPlaying(std::shared_ptr<Sound> stream);
+    bool IsSoundPlaying(std::string sound);
 
 	bool AllSoundsDone() const;
 };

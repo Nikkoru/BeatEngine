@@ -35,6 +35,7 @@ set(HEADERS
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/GameEvent.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/AudioEvent.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Texture.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Sound.h"
@@ -126,6 +127,7 @@ target_link_libraries(${PROJECT_NAME}
 		miniaudio
 		sndfile
 		samplerate
+        tag
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")

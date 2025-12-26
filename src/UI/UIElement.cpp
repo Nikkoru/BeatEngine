@@ -37,6 +37,8 @@ void UIElement::Hide() {
 }
 
 void UIElement::Update(float dt) {
+    OnUpdate(dt);
+
     if (!m_Childs.empty())
         for (auto& [childName, element] : m_Childs)
             element->Update(dt);
@@ -116,9 +118,11 @@ void UIElement::OnSFMLEvent(std::optional<sf::Event> event) {
 }
 
 void UIElement::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	OnDraw(target, states);
+    if (!m_Hidden)
+	    OnDraw(target, states);
 
 	if (!m_Childs.empty())
 		for (const auto& [childName, element] : m_Childs)
-			element->OnDraw(target, states);
+            if (!element->m_Hidden)
+			    element->OnDraw(target, states);
 }

@@ -38,7 +38,7 @@ namespace UI {
 		std::string GetText();
 		float GetFontSize() const;
 
-		void Update(float dt) override;
+		void OnUpdate(float dt) override;
 
 		void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const override;
 	};

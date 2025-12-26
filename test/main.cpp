@@ -18,8 +18,6 @@ int main() {
 
 	auto settings = game.GetSettings<GameSettings>();
 
-	// game.GetWindow()->setFramerateLimit(settings->FpsLimit);
-	game.SetWindowSize(settings->WindowSize);
 	game.SetWindowTitle("Now you can change the title!");
 
 	game.LoadGlobalAssets({
@@ -39,8 +37,6 @@ int main() {
 
 	game.AddGlobalLayer<GlobalTestLayerUI>();
     auto layer = game.GetGlobalLayer<GlobalTestLayerUI>();
-    
-    layer->SetSettingsManager(game.GetSettingsManager());
 
 	game.SaveSettings();
 

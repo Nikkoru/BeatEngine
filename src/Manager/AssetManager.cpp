@@ -1,8 +1,10 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
 #include <SFML/Graphics.hpp>
+#include <cstdint>
 #include <miniaudio.h>
 #include <sndfile.h>
+#include <taglib/taglib.h>
 
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
@@ -12,6 +14,11 @@
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
+
+AssetManager::~AssetManager() {
+   m_GlobalAssets.clear();
+   m_ViewAssets.clear();
+}
 
 template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::path& path, std::type_index viewID) {
 	if (fs::exists(path)) {
@@ -169,18 +176,23 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
 
 			SF_INFO sfInfo;
+            TagLib::FileRef ref;
 
 			sf_count_t totalFrames = -1;
+            
+            float seconds = -1;
 
 			auto sndFile = sf_open(fullpath.c_str(), SFM_READ, &sfInfo);
 			if (sndFile) {
 				totalFrames = sfInfo.frames;
+                seconds = totalFrames / sfInfo.samplerate;
 			}
 			else {
-				// sfInfo
+                Logger::GetInstance()->AddError(std::format("Failed to retreive frame count data of \"{}\"", name), typeid(AssetManager));
 			}
 			sf_close(sndFile);
 
+            ref = TagLib::FileRef(fullpath.c_str());
 			
 			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
 
@@ -189,7 +201,7 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 				ma_decoder_uninit(&decoder);
 			}
 
-			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, static_cast<uint64_t>(totalFrames));
+			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, ref, seconds, static_cast<uint64_t>(totalFrames));
 
 			handle = Base::AssetHandle<AudioStream>(stream);
 

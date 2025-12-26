@@ -1,8 +1,12 @@
 #include "BeatEngine/Manager/ViewManager.h"
 
 #include <format>
+#include <memory>
 
+#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Signals/ViewSignals.h"
 
 #include "BeatEngine/Manager/EventManager.h"
@@ -24,6 +28,14 @@ ViewManager::ViewManager() : MainView(typeid(nullptr)) {
 	SignalManager::GetInstance()->RegisterCallback<ViewUnsuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		ViewStack.top()->OnResume();
 	});
+    
+    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event> event) {
+        while (!ViewStack.empty()) {
+            ViewStack.top()->OnExit();
+
+            ViewStack.pop();
+        }    
+    }); 
 }
 
 void ViewManager::Push(std::type_index viewID) {
@@ -65,7 +77,7 @@ bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forget to push?", typeid(ViewManager));
+		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
 		return false;
 	}
 }
@@ -76,7 +88,7 @@ bool ViewManager::OnDraw(sf::RenderWindow* window) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forget to push?", typeid(ViewManager));
+		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
 		return false;
 	}
 }
@@ -87,7 +99,7 @@ bool ViewManager::OnUpdate(float dt) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forget to push?", typeid(ViewManager));
+		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
 		return false;
 	}
 }
@@ -111,4 +123,16 @@ void ViewManager::GetViewKeybinds() {
 
 void ViewManager::SetGlobalAssetManager(AssetManager* assetMgr) {
 	this->m_GlobalViewAssetMgr = assetMgr;
+}
+
+void ViewManager::SetGlobalAudioManager(AudioManager* audioMgr) {
+    this->m_GlobalViewAudioMgr = audioMgr;
+}
+
+void ViewManager::SetGlobalSettingsManager(SettingsManager* settingsMgr) {
+    this->m_GlobalViewSettingsMgr = settingsMgr;
+}
+
+void ViewManager::SetGlobalUIManager(UIManager* uiMgr) {
+    this->m_GlobalViewUIMgr = uiMgr;
 }

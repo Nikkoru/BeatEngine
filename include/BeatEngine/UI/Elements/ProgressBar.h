@@ -18,8 +18,9 @@ namespace UI {
 		ProgressBar(float current, float max);
 		~ProgressBar() override = default;
 
-		void Update(float dt) override;
+		void OnUpdate(float dt) override;
 		void UpdateProgress(float progress);
+        void SetMaxValue(float max);
 
 		float GetProgress() const;
 		float GetMaxValue() const;

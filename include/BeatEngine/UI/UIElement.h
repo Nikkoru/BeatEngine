@@ -55,7 +55,8 @@ public:
 	virtual void Show();
 	virtual void Hide();
 
-	virtual void Update(float dt) = 0;
+	void Update(float dt);
+    virtual void OnUpdate(float dt) = 0;
 
 	void SetSize(sf::Vector2f size);
 	void SetPosition(sf::Vector2f position);

@@ -1,5 +1,7 @@
 #include "BeatEngine/Game.h"
 
+#include <SFML/Graphics/RenderWindow.hpp>
+#include <SFML/Window/Cursor.hpp>
 #include <SFML/Window/WindowEnums.hpp>
 #include <imgui.h>
 #include <imgui_internal.h>
@@ -36,16 +38,17 @@ Game::Game() {
 
 Game::~Game() {
 	delete m_ViewMgr;
+	delete m_AudioMgr;
 	delete m_SystemMgr;
 	delete m_AssetMgr;
-	delete m_AudioMgr;
 
-	delete m_Window;
-
+    delete m_Window;
+	
 	ImGui::SFML::Shutdown();
 }
 
 void Game::Run() {
+    m_Running = true;
 	Logger::GetInstance()->AddInfo("Game started!", typeid(Game));
 
 	if (!m_ViewMgr->HasActiveViews())
@@ -57,30 +60,43 @@ void Game::Run() {
 		ApplyBaseSettings();
 	}
 
-	while (this->m_Window->isOpen()) {
+	while (this->m_Window->isOpen() && m_Running) {
 		while (const auto event = this->m_Window->pollEvent()) {
 			if (m_UseImGui)
 				ImGui::SFML::ProcessEvent(*m_Window, *event);
 
-			if (event->is<sf::Event::Closed>())
-				this->m_Window->close();
+			if (event->is<sf::Event::Closed>()) {
+                EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
+                m_Running = false;
+            }
 			if (auto data = event->getIf<sf::Event::Resized>()) {
 				m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(data->size.x), static_cast<float>(data->size.y) }));
 				m_Window->setView(m_View);
 
                 EventManager::GetInstance()->Send(std::make_shared<GameResized>(data->size));
 			}
+            if (m_Window->isOpen() && m_Running) {
+		    	m_GlobalLayers.OnSFMLEvent(event);
+            }
+            else
+                break;
 
-			if (!this->m_ViewMgr->OnSFMLEvent(event)) {
-				this->m_Window->close();
-				break;
-			}
-
-			m_GlobalLayers.OnSFMLEvent(event);
+            if (m_Window->isOpen() && m_Running) {
+			    if (!this->m_ViewMgr->OnSFMLEvent(event)) {
+				    this->m_Window->close();
+				    break;
+			    }
+            }
+            else
+                break;
 		}
-		this->Update();
-		this->Draw();
-		this->Display();
+        if (m_Window->isOpen() && m_Running) {
+		    this->Update();
+		    this->Draw();
+		    this->Display();
+        }
+        else
+            break;
 	}
 }
 
@@ -211,6 +227,9 @@ void Game::InitViews() {
 	Logger::GetInstance()->AddInfo("Initializing views...", typeid(Game));
 	this->m_ViewMgr = new ViewManager;
 	this->m_ViewMgr->SetGlobalAssetManager(m_AssetMgr);
+    this->m_ViewMgr->SetGlobalAudioManager(m_AudioMgr);
+    this->m_ViewMgr->SetGlobalSettingsManager(m_SettingsMgr);
+    this->m_ViewMgr->SetGlobalUIManager(m_UIMgr);
 }
 
 void Game::InitSystems() {
@@ -230,13 +249,15 @@ void Game::InitWindow() {
 
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
 	this->m_Window = new sf::RenderWindow(
-        sf::VideoMode(gameSettings->WindowSize), 
+	    sf::VideoMode(gameSettings->WindowSize), 
         "BeatEngine Game",
         sf::Style::Default,
         (gameSettings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
     );
+    
 	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
+    this->m_Window->setVerticalSyncEnabled(gameSettings->VSync);
 	this->m_Window->setView(m_View);
 
 	if (!ImGui::SFML::Init(*m_Window)) {
@@ -256,6 +277,7 @@ void Game::SubscribeToGameEvent() {
 
         m_Window->setFramerateLimit(settings->FpsLimit);
         m_Window->setSize(settings->WindowSize);
+        m_Window->setVerticalSyncEnabled(settings->VSync);
     });
 
 }
@@ -272,8 +294,8 @@ void Game::SubscribeToGameSignals() {
 
     SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-        
-        m_Window->close();
+        m_Window->setMouseCursor(sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value());
+        m_Running = false;
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {

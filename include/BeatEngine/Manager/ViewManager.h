@@ -2,9 +2,12 @@
 
 #include "BeatEngine/Base/View.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Manager/UIManager.h"
 
 #include <functional>
 #include <memory>
@@ -65,4 +68,7 @@ public:
 	void GetViewKeybinds();
 
 	void SetGlobalAssetManager(AssetManager* assetMgr);
+    void SetGlobalAudioManager(AudioManager* audioMgr);
+    void SetGlobalSettingsManager(SettingsManager* settingsMgr);
+    void SetGlobalUIManager(UIManager* uiMgr);
 };

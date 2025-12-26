@@ -8,7 +8,7 @@ UI::ProgressBar::ProgressBar(float current, float max) : m_Progress(current), m_
 	m_LayoutRect.setFillColor(m_BackColor);
 }
 
-void UI::ProgressBar::Update(float dt) {
+void UI::ProgressBar::OnUpdate(float dt) {
 	m_Percentage = (m_Progress / m_MaxValue);
 
 	m_InnerRect.setPosition(m_Position);
@@ -21,6 +21,10 @@ void UI::ProgressBar::Update(float dt) {
 
 void UI::ProgressBar::UpdateProgress(float progress) {
 	this->m_Progress = progress;
+}
+
+void UI::ProgressBar::SetMaxValue(float max) {
+    this->m_MaxValue = max;
 }
 
 float UI::ProgressBar::GetProgress() const {

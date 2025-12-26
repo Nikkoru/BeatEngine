@@ -5,6 +5,9 @@
 
 #include "BeatEngine/Util/Math.h"
 #include <cmath>
+#include <cstdint>
+#include <taglib/fileref.h>
+#include <taglib/tag.h>
 
 void AudioStream::FillBuffers() {
     while (m_Fill.load()) {
@@ -54,9 +57,7 @@ void AudioStream::FillBuffers() {
 
             if (m_SrcData.output_frames_gen == 0 && m_LastBufferRound) {
                 m_Playing = false;
-
                 m_Erase = true;
-
                 m_LastBufferRound = false;
 
                 break;
@@ -67,8 +68,8 @@ void AudioStream::FillBuffers() {
 	}
 }
 
-AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, uint64_t totalFrameCount)
-    : m_Name(name), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalFrameCount(totalFrameCount) {
+AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds, uint64_t totalFrames)
+    : m_Name(name), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalSeconds(totalSeconds), m_MetadataReference(fileRef), m_TotalFrames(totalFrames) {
 
     m_SrcRatio = static_cast<double>(m_TargetSampleRate)  / static_cast<double>(m_DefaultSampleRate);
     m_OutputFrameCount = static_cast<uint64_t>(m_SrcRatio * m_DataBufferFrameCount + 256);
@@ -82,6 +83,11 @@ AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultS
         Logger::GetInstance()->AddCritical(msg, typeid(AudioStream));
         THROW_RUNTIME_ERROR(msg);
     }
+
+    m_Metadata.Title = m_MetadataReference.tag()->title();
+    m_Metadata.Artist = m_MetadataReference.tag()->artist();
+    m_Metadata.TrackNum = m_MetadataReference.tag()->track();
+    m_Metadata.Year = m_MetadataReference.tag()->year();
 
     m_ResampledBuffer[0].resize(m_OutputFrameCount * 2);
     m_ResampledBuffer[1].resize(m_OutputFrameCount * 2);
@@ -180,10 +186,37 @@ void AudioStream::Stop() {
 
     if (m_SrcState)
         src_reset(m_SrcState);
+
+    ResetReadFrames();
+    ResetSeconds();
 }
 
 void AudioStream::Resume() {
     m_Playing = true;
+}
+
+void AudioStream::AddSeconds(float seconds) {
+    if (m_TranscurredSeconds <= m_TotalSeconds)
+        m_TranscurredSeconds += seconds;
+
+    if (m_TranscurredSeconds > m_TotalSeconds)
+        m_TranscurredSeconds = m_TotalSeconds;
+}
+
+void AudioStream::CalcTranscurredSeconds() {
+    m_TranscurredSeconds = (static_cast<float>(m_TotalReadFrames) / static_cast<float>(m_TargetSampleRate)) / 1000;
+}
+
+void AudioStream::ResetSeconds() {
+    m_TranscurredSeconds = 0;
+}
+
+void AudioStream::AddReadFrames(uint64_t frames) {
+    this->m_TotalReadFrames += frames;
+}
+
+void AudioStream::ResetReadFrames() {
+    this->m_TotalReadFrames = 0;
 }
 
 std::string AudioStream::GetName() const {
@@ -200,6 +233,22 @@ bool AudioStream::IsLooping() const {
 
 bool AudioStream::IsPlaying() const {
     return m_Playing;
+}
+
+AudioStreamMetadata AudioStream::GetMetadata() {
+    return m_Metadata;
+}
+
+TagLib::FileRef AudioStream::GetFileReference() {
+    return m_MetadataReference;
+}
+
+float AudioStream::GetTotalSeconds() {
+    return m_TotalSeconds;
+}
+
+float AudioStream::GetTranscurredSeconds() {
+    return m_TranscurredSeconds;
 }
 
 bool AudioStream::Erase() const {

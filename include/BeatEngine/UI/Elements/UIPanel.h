@@ -11,7 +11,7 @@ private:
 public:
     UIPanel() = default;
     void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const override;
-    void Update(float dt) override {}
+    void OnUpdate(float dt) override {}
 
     void ShowRect(bool show);
 };

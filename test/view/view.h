@@ -4,13 +4,19 @@
 #include <BeatEngine/Asset/Font.h>
 #include <BeatEngine/UI/Elements/Button.h>
 #include <BeatEngine/UI/Elements/ProgressBar.h>
+#include <string>
 
 class TestView : public Base::View {
 private:
 	UI::Button m_Button;
 	UI::ProgressBar m_ProgressBar;
 
-	std::string m_FPSDeltaTimeText;
+    UI::ProgressBar m_MusicProgressBar;
+	std::wstring m_MusicTitleText;
+	std::wstring m_MusicAlbumText;
+	std::wstring m_MusicTrackNumText;
+	std::wstring m_MusicYearText;
+
 	float m_Timer = 0;
 	std::shared_ptr<Font> m_Font = nullptr;
 

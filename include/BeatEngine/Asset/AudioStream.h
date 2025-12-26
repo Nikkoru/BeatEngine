@@ -3,7 +3,9 @@
 #include "BeatEngine/Base/Asset.h"
 
 #include <miniaudio.h>
+#include <taglib/fileref.h>
 #include <samplerate.h>
+#include <taglib/tag.h>
 #include <vector>
 #include <string>
 #include <array>
@@ -12,9 +14,24 @@
 #include <cstdint>
 #include <mutex>
 
+struct AudioStreamMetadata {
+private:
+    friend class AudioStream;
+public:
+    TagLib::String Artist = "";
+    TagLib::String Title = "";
+    unsigned int TrackNum = 0;
+    unsigned int Year = 0;
+public:
+    AudioStreamMetadata() = default;
+};
+
 class AudioStream : public Base::Asset {
 private:
 	std::string m_Name = "";
+
+    TagLib::FileRef m_MetadataReference;
+    AudioStreamMetadata m_Metadata;
 
 	ma_decoder m_Decoder;
 	SRC_STATE* m_SrcState;
@@ -35,7 +52,12 @@ private:
 	std::atomic<bool> m_IsBufferReady[2]{ false ,false };
 
 	int m_CurrentBuffer = 0;
-	uint64_t m_TotalFrameCount = -1;
+
+	float m_TotalSeconds = -1;
+    float m_TranscurredSeconds = 0;
+
+    uint64_t m_TotalFrames = 0;
+    uint64_t m_TotalReadFrames = 0;
 
 	uint64_t m_CurrentFrame = 0;
 	uint64_t m_ResampledFrameCount = 0;
@@ -51,7 +73,7 @@ private:
 private:
 	void FillBuffers();
 public:
-	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, uint64_t totalFrameCount = -1);
+	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds = -1, uint64_t totalFrames = -1);
 	~AudioStream() override;
 
 	std::array<float, 2> GetNextFrame();
@@ -64,10 +86,23 @@ public:
 	void Stop();
 	void Resume();
 
+    void AddSeconds(float seconds);
+    void CalcTranscurredSeconds();
+    void ResetSeconds();
+
+    void AddReadFrames(uint64_t frames);
+    void ResetReadFrames();
+
 	std::string GetName() const;
 	float GetVolume() const;
 	bool IsLooping() const;
 	bool IsPlaying() const;
+
+    AudioStreamMetadata GetMetadata();
+    TagLib::FileRef GetFileReference();
+
+    float GetTotalSeconds();
+    float GetTranscurredSeconds();
 
 	bool Erase() const;
 };
