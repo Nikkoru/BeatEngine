@@ -24,7 +24,7 @@ TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioMa
 
 	m_Button.SetFont(*m_Font);
 
-	auto playButton = m_Button.AddChild<UI::Button>("play");
+	auto playButton = m_Button.AddChild<UI::Button>("play", *m_Font->GetSFMLFont(), "Play");
 	auto stopButton = m_Button.AddChild<UI::Button>("stop");
 	auto pauseButton = m_Button.AddChild<UI::Button>("pause");
 

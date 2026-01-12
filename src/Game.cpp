@@ -220,7 +220,11 @@ void Game::InitUI() {
 
 void Game::InitAudio() {
 	Logger::GetInstance()->AddInfo("Initializing audio...", typeid(Game));
+    Logger::GetInstance()->AddWarning("AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized.", typeid(Game));
+#ifdef BEATENGINE_TEST
+    Logger::GetInstance()->AddInfo("This a test build, initilizing AudioManager...", typeid(Game));
 	this->m_AudioMgr = new AudioManager;
+#endif
 }
 
 void Game::InitViews() {

@@ -81,17 +81,17 @@ public:
 	virtual void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
-	template<typename TElement>
+	template<typename TElement, typename... Args>
 		requires(std::is_base_of_v<UIElement, TElement>)
-	inline std::shared_ptr<TElement> AddChild(const std::string& name) {
+	inline std::shared_ptr<TElement> AddChild(const std::string& name, Args&&... constructorArgs) {
 		for (auto& [childName, element] : m_Childs) {
 			if (childName == name) {
 				Logger::GetInstance()->AddError("Element" + name + " already exists in container", m_ID);
 				return nullptr;
 			}
 		}
+		auto element = std::make_shared<TElement>(std::forward<Args>(constructorArgs)...);
 
-		auto element = std::make_shared<TElement>();
 		m_Childs.emplace(name, element);
 
 		return element;

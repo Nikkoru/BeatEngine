@@ -3,7 +3,6 @@
 #include <memory>
 #include <SFML/Window.hpp>
 
-#include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 
