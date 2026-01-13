@@ -28,6 +28,7 @@ namespace UI {
 	public:
 		Button() : Button(sf::Font(), "Button") {};
 		Button(sf::Font font, std::string text, float fontSize = 30);
+        Button(Font font, std::string text, float fontSize = 30) : Button(*font.GetSFMLFont(), text, fontSize) {}
 
 		void SetText(const std::string& text);
 		void SetColors(sf::Color normalColor, sf::Color hoverColor, sf::Color activeColor, sf::Color textColor, sf::Color textActiveColor);

@@ -44,16 +44,16 @@ void ViewManager::Push(std::type_index viewID) {
 			ViewStack.push(ViewFabrics[viewID](m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
 			MainView = ViewStack.top()->b_ID;
 
-			Logger::GetInstance()->AddInfo(std::format("{} pushed!", viewID.name()), typeid(ViewManager));
+			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
 
 			EventManager::GetInstance()->UpdateMainView(MainView);
 			EventManager::GetInstance()->Send(std::make_shared<ViewPushEvent>(MainView));
 		}
 		else
-			Logger::GetInstance()->AddError("View not registed. You need to register the view with RegisterView<TView>()", typeid(ViewManager));
+			Logger::AddError(typeid(ViewManager), "View not registed. You need to register the view with RegisterView<TView>()");
 	}
 	else
-		Logger::GetInstance()->AddError("No fabrics found", typeid(ViewManager));
+		Logger::AddError(typeid(ViewManager), "No fabrics found");
 
 }
 
@@ -62,13 +62,13 @@ void ViewManager::Pop() {
 		ViewStack.pop();
 		MainView = ViewStack.top()->b_ID;
 
-		Logger::GetInstance()->AddInfo("Popped top view!", typeid(ViewManager));
+		Logger::AddInfo(typeid(ViewManager), "Popped top view!");
 
 		EventManager::GetInstance()->UpdateMainView(MainView);
 		EventManager::GetInstance()->Send(std::make_shared<ViewPopEvent>());
 	}
 	else
-		Logger::GetInstance()->AddInfo("Only one or no view. Not popping view", typeid(ViewManager));
+		Logger::AddInfo(typeid(ViewManager), "Only one or no view. Not popping view");
 }
 
 bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
@@ -77,7 +77,7 @@ bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
+		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
 		return false;
 	}
 }
@@ -88,7 +88,7 @@ bool ViewManager::OnDraw(sf::RenderWindow* window) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
+		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
 		return false;
 	}
 }
@@ -99,7 +99,7 @@ bool ViewManager::OnUpdate(float dt) {
 		return true;
 	}
 	else {
-		Logger::GetInstance()->AddCritical("No view on the stack. Did you forgot to push?", typeid(ViewManager));
+		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
 		return false;
 	}
 }

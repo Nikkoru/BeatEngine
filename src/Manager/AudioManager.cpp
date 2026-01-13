@@ -66,7 +66,7 @@ int AudioManager::AudioCallback(
 		if (auto& stream = _this->m_PendingRemovalStreams[read]) {
 			if (auto it = std::ranges::find(_this->m_Streams, stream); it != _this->m_Streams.end()) {
 				stream->Stop();
-                Logger::GetInstance()->AddInfo("Stoped \"" + stream->GetName() + "\"", typeid(AudioManager));
+                Logger::AddInfo(typeid(AudioManager), "Stoped \"{}\"", stream->GetName());
                 EventManager::GetInstance()->Send(std::make_shared<AudioStreamStopedEvent>(stream->GetName()));
 				_this->m_Streams.erase(it);
 				_this->m_PendingRemovalStreams[read] = nullptr;
@@ -115,8 +115,7 @@ int AudioManager::AudioCallback(
                     stream->CalcTranscurredSeconds();
 				}
 				if (stream->Erase()) {
-                    Logger::GetInstance()->AddInfo("Stoped \"" + stream->GetName() + "\"", typeid(AudioManager));
-
+                    Logger::AddInfo(typeid(AudioManager), "Stoped \"{}\"", stream->GetName());
                     EventManager::GetInstance()->Send(std::make_shared<AudioStreamStopedEvent>(stream->GetName())); 
 					it = _this->m_Streams.erase(it);
                 }
@@ -142,22 +141,35 @@ AudioManager::AudioManager() {
 
 	std::string deviceName;
 	std::string apiName;
+    
 
+    int platformApiIndex = -1;
 #ifdef _WIN32
-	int wasapiApiIndex = -1;
+    Logger::AddInfo(typeid(AudioManager), "Windows detected. Using WASAPI");
 
 	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
 		const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
 		if (info->type == paWASAPI) {
-			wasapiApiIndex = i;
+			platformApiIndex = i;
 			break;
 		}
 	}
+#elif defined(__linux__)
+    Logger::AddInfo(typeid(AudioManager), "Linux detected. Using PulseAudio API");
 
-	PaDeviceIndex deviceIndex = Pa_GetHostApiInfo(wasapiApiIndex)->defaultOutputDevice;
+	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
+		const PaHostApiInfo *info = Pa_GetHostApiInfo(i);
+		if (info->type == paPulseAudio) {
+			platformApiIndex = i;
+			break;
+		}
+	}
+#endif
+	apiName = Pa_GetHostApiInfo(platformApiIndex)->name;
+	PaDeviceIndex deviceIndex = Pa_GetHostApiInfo(platformApiIndex)->defaultOutputDevice;
 
 	if (deviceIndex == paNoDevice)
-		Logger::GetInstance()->AddError("Default output device via WASAPI was not found", typeid(AudioManager));
+		Logger::AddError(typeid(AudioManager), "No Default {} device");
 
 	const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
 	outputParams.device = deviceIndex;
@@ -179,55 +191,21 @@ AudioManager::AudioManager() {
 			*(preferredRates.begin() + 1), 
 			*(preferredRates.begin() + 2),
 			deviceInfo->name,
-			Pa_GetHostApiInfo(wasapiApiIndex)->name
+			Pa_GetHostApiInfo(platformApiIndex)->name
 		);
 
-		Logger::GetInstance()->AddCritical(msg, typeid(AudioManager));
+		Logger::AddCritical(typeid(AudioManager), msg);
 		THROW_RUNTIME_ERROR(msg);
 	}
+    Logger::AddInfo(typeid(AudioManager), "trying to get output devices");
 
-	apiName = Pa_GetHostApiInfo(wasapiApiIndex)->name;
-#elif defined(__linux__)
-	int pulseApiIndex = -1;
-	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
-		const PaHostApiInfo *info = Pa_GetHostApiInfo(i);
-		if (info->type == paPulseAudio) {
-			pulseApiIndex = i;
-			break;
-		}
-	}
-
-	PaDeviceIndex deviceIndex = Pa_GetHostApiInfo(pulseApiIndex)->defaultOutputDevice;
-
-    Logger::GetInstance()->AddInfo("trying to get output devices");
-
-    for (int i = 0; i <= Pa_GetHostApiInfo(pulseApiIndex)->deviceCount; i++) {
+    for (int i = 0; i <= Pa_GetHostApiInfo(platformApiIndex)->deviceCount; i++) {
         auto device = Pa_GetDeviceInfo(i);
         if (!device)
-            Logger::GetInstance()->AddWarning(std::format("invalid index : {}", i), typeid(AudioManager));
-        Logger::GetInstance()->AddLog(device->name, LogType::DebugTarget, typeid(AudioManager));
+            Logger::AddWarning(typeid(AudioManager), "invalid index : {}", i);
+        Logger::AddLog(LogType::DebugTarget, typeid(AudioManager), device->name);
     }
-	if (deviceIndex == paNoDevice)
-		THROW_RUNTIME_ERROR("No default PulseAudio output device.");
 
-	const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
-	outputParams.device = deviceIndex;
-	outputParams.suggestedLatency = deviceInfo->defaultHighOutputLatency;
-
-	bool supported = false;
-
-	for (int rate : preferredRates) {
-		if (Pa_IsFormatSupported(nullptr, &outputParams, rate) == paFormatIsSupported) {
-			m_SampleRate = rate;
-			supported = true;
-			break;
-		}
-	}
-
-	if (!supported)
-		THROW_RUNTIME_ERROR("Neither 48000 Hz nor 44100 Hz supported with PulseAudio and paInt16.");
-    apiName = Pa_GetHostApiInfo(pulseApiIndex)->name; 
-#endif
     deviceName = deviceInfo->name;
 
 	auto err = Pa_OpenStream(&m_AudioStream, nullptr, &outputParams, m_SampleRate, 1024, paClipOff, AudioCallback, this);
@@ -235,11 +213,11 @@ AudioManager::AudioManager() {
 	if (err != paNoError || Pa_StartStream(m_AudioStream) != paNoError) {
 		std::string msg = "Failed to initialize audio stream";
 
-		Logger::GetInstance()->AddCritical(msg, typeid(AudioManager));
+		Logger::AddCritical(typeid(AudioManager), msg);
 		THROW_RUNTIME_ERROR(msg);
 	}
 
-	Logger::GetInstance()->AddInfo(std::format("Audio Stream opened. Sample Rate = {} Device = {}, API = {}, Latency = {}", m_SampleRate, deviceName, apiName, outputParams.suggestedLatency), typeid(AudioManager));
+	Logger::AddInfo(typeid(AudioManager), "Audio Stream opened. Sample Rate = {} Device = {}, API = {}, Latency = {}", m_SampleRate, deviceName, apiName, outputParams.suggestedLatency);
 
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
@@ -253,7 +231,7 @@ AudioManager::AudioManager() {
 			PlayStream(audioStream);
 		}
 		else {
-			Logger::GetInstance()->AddError("Tried to play an empty AudioStream", typeid(AudioManager));
+			Logger::AddError(typeid(AudioManager), "Tried to play an empty AudioStream");
 		}
 
 	});
@@ -278,7 +256,7 @@ AudioManager::AudioManager() {
 			}
 		}
 
-		Logger::GetInstance()->AddError("AudioStream \"" + nameStream + "\" was not found; did you add it to the queue", typeid(AudioManager));
+		Logger::AddError(typeid(AudioManager), "AudioStream \"{}\" was not found; did you add it to the queue?", nameStream);
 	});
 	SignalManager::GetInstance()->RegisterCallback<PlaySoundSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlaySoundSignal>(sig);
@@ -307,7 +285,7 @@ void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
 }
 
 void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
-	Logger::GetInstance()->AddInfo("Adding \"" + stream->GetName() + "\"onto the queue", typeid(AudioManager));
+	Logger::AddInfo(typeid(AudioManager), "Adding \"{}\"onto the queue", stream->GetName());
     stream->ResetSeconds();
 
     EventManager::GetInstance()->Send(std::make_shared<AudioStreamStartedEvent>(stream->GetName()));

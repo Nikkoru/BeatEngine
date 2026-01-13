@@ -23,7 +23,7 @@ public:
 		requires(std::is_base_of_v<Base::Event, TEvent>)
 	void SubscribeView(std::type_index id, Callback callback) {
 		if (id == typeid(nullptr)) {
-			Logger::GetInstance()->AddWarning("Attempted to subscribe null view to event", typeid(EventManager));
+			Logger::AddWarning(typeid(EventManager), "Attempted to subscribe null view to event");
 			return;
 		}
 

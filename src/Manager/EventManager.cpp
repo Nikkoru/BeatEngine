@@ -14,16 +14,15 @@ std::shared_ptr<EventManager> EventManager::GetInstance() {
 void EventManager::Send(const std::shared_ptr<Base::Event> event) {
 	auto eventID = event->ID;
 	if (!m_ViewSubscribers.empty())
-		if (m_ViewSubscribers.contains(m_MainView))
+		if (m_ViewSubscribers.contains(m_MainView)) {
 			if (m_ViewSubscribers.at(m_MainView).contains(eventID))
 				for (Callback& callback : m_ViewSubscribers.at(m_MainView).at(eventID))
 					callback(event);
-			else
-				Logger::GetInstance()->AddWarning("No subscribers for event in main view", typeid(EventManager));
+        }
 		else
-			Logger::GetInstance()->AddWarning("No subscribers for main view", typeid(EventManager));
+			Logger::AddWarning(typeid(EventManager), "No subscribers for main view");
 	else
-		Logger::GetInstance()->AddWarning("No view subscribers registered", typeid(EventManager));
+		Logger::AddWarning(typeid(EventManager), "No view subscribers registered");
 
 	if (!m_Subscribers.empty())
 		if (m_Subscribers.contains(eventID))

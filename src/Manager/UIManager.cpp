@@ -24,7 +24,7 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
 		else {
 			std::string msg = "No view is present, cannot add layer";
 
-			Logger::GetInstance()->AddCritical(msg, typeid(UIManager));
+			Logger::AddCritical(typeid(UIManager), msg);
 			THROW_RUNTIME_ERROR(msg);
 		}
 	}

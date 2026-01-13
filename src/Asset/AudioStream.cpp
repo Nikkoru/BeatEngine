@@ -49,7 +49,7 @@ void AudioStream::FillBuffers() {
         int err = src_process(m_SrcState, &m_SrcData);
         if (err) {
             std::string msg = "Sample rate conversion failed: " + std::string(src_strerror(err));
-            Logger::GetInstance()->AddCritical(msg, typeid(AudioStream));
+            Logger::AddCritical(typeid(AudioStream), msg);
             THROW_RUNTIME_ERROR(msg);
         }
         else {
@@ -80,7 +80,7 @@ AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultS
 
     if (!m_SrcState) {
         std::string msg = "Failed to initialized libsamplerate converter" + std::string(src_strerror(err));
-        Logger::GetInstance()->AddCritical(msg, typeid(AudioStream));
+        Logger::AddCritical(typeid(AudioStream), msg);
         THROW_RUNTIME_ERROR(msg);
     }
 

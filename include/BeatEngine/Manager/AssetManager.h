@@ -41,7 +41,7 @@ public:
 				return Base::AssetHandle<TAsset>::Cast(m_GlobalAssets.at(assetName).Handle);
 			else {
 				std::string msg = "Asset not found: \"" + assetName + "\"";
-				Logger::GetInstance()->AddCritical(msg, typeid(AssetManager));
+				Logger::AddCritical(typeid(AssetManager), msg);
 				THROW_RUNTIME_ERROR(msg);
 			}
 		}
@@ -51,13 +51,13 @@ public:
 					return Base::AssetHandle<TAsset>::Cast(m_ViewAssets.at(viewID).at(assetName).Handle);
 				else {
 					std::string msg = "Asset not found: \"" + assetName + "\"";
-					Logger::GetInstance()->AddCritical(msg, typeid(AssetManager));
+					Logger::AddCritical(typeid(AssetManager), msg);
 					THROW_RUNTIME_ERROR(msg);
 				}
 			}
 			else {
 				std::string msg = std::format("View {} dosen't have assets", viewID.name());
-				Logger::GetInstance()->AddCritical(msg, typeid(AssetManager));
+				Logger::AddCritical(typeid(AssetManager), msg);
 				THROW_RUNTIME_ERROR(msg);
 			}
 		}

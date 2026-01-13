@@ -38,7 +38,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
 				handle = Base::AssetHandle<Texture>::Cast(m_GlobalAssets[name].Handle);
 			}
 		}
@@ -53,7 +53,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
 				handle = Base::AssetHandle<Texture>::Cast(m_ViewAssets.at(viewID)[name].Handle); 
 			}
 		}
@@ -61,7 +61,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 		return handle;
 	}
 	else {
-		Logger::GetInstance()->AddError("directory dosen't exists: \"" + path.string() + "\"", typeid(AssetManager));
+		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
 		return Base::AssetHandle<Texture>();
 	}
 }
@@ -77,7 +77,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 
 		if (global) {
 			if (m_GlobalAssets.contains(name)) {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
 				handle = Base::AssetHandle<Sound>::Cast(m_GlobalAssets[name].Handle);
 				exists = true;
 			}
@@ -88,7 +88,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (m_ViewAssets.at(viewID).contains(name)) {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
 				handle = Base::AssetHandle<Sound>::Cast(m_ViewAssets.at(viewID)[name].Handle);
 				exists = true;
 			}
@@ -106,12 +106,10 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 
 			if (result != MA_SUCCESS) {
 				std::string msg = "Couldn't read audio file: \"" + name + "\"";
-				Logger::GetInstance()->AddCritical(msg, typeid(AssetManager));
+				Logger::AddCritical(typeid(AssetManager), msg);
 				ma_decoder_uninit(&decoder);
 				THROW_RUNTIME_ERROR(msg);
 			}
-
-
 
 			uint64_t frameCount = 0;
 			std::vector<float> data;
@@ -126,7 +124,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 
 			if (result != MA_SUCCESS) {
 				std::string msg = "Unable to decode audio: \"" + name + "\"";
-				Logger::GetInstance()->AddCritical(msg, typeid(typeid(AssetManager)));
+				Logger::AddCritical(typeid(AssetManager), msg);
 				THROW_RUNTIME_ERROR(msg);
 			}
 
@@ -143,7 +141,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 		return handle;
 	}
 	else {
-		Logger::GetInstance()->AddError("Directory dosen't exist: \"" + path.string() + "\"", typeid(AssetManager));
+		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
 		return Base::AssetHandle<Sound>();
 	}
 }
@@ -188,7 +186,7 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
                 seconds = totalFrames / sfInfo.samplerate;
 			}
 			else {
-                Logger::GetInstance()->AddError(std::format("Failed to retreive frame count data of \"{}\"", name), typeid(AssetManager));
+                Logger::AddError(typeid(AssetManager), "Failed to retreive frame count data of \"{}\"", name);
 			}
 			sf_close(sndFile);
 
@@ -210,7 +208,7 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 		return handle;
 	}
 	else {
-		Logger::GetInstance()->AddError("Directory dosen't exist: \"" + path.string() + "\"", typeid(AssetManager));
+		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
 		return Base::AssetHandle<AudioStream>();
 	}
 }
@@ -232,7 +230,7 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
 				handle = Base::AssetHandle<Font>::Cast(m_ViewAssets.at(viewID)[name].Handle);
 			}
 
@@ -248,14 +246,14 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
-				Logger::GetInstance()->AddError("Asset already exists: \"" + name + "\", returning existing asset", typeid(AssetManager));
+				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
 				handle = Base::AssetHandle<Font>::Cast(m_ViewAssets.at(viewID)[name].Handle);
 			}
 		}
 		return handle;
 	}
 	else {
-		Logger::GetInstance()->AddError("Directory doesn't exist: \"" + path.string() + "\"", typeid(AssetManager));
+		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
 		return Base::AssetHandle<Font>();
 	}
 }

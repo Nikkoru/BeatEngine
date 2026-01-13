@@ -49,7 +49,7 @@ Game::~Game() {
 
 void Game::Run() {
     m_Running = true;
-	Logger::GetInstance()->AddInfo("Game started!", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Game started!");
 
 	if (!m_ViewMgr->HasActiveViews())
 		m_ViewMgr->Push(m_ViewMgr->MainView);
@@ -102,6 +102,13 @@ void Game::Run() {
 
 void Game::UseImGui(bool show) {
 	m_UseImGui = show;
+}
+
+void Game::UseImGuiDocking(bool docking) {
+    if (docking)
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    else
+        ImGui::GetIO().ConfigFlags &= ImGuiConfigFlags_DockingEnable;
 }
 
 sf::Window* Game::GetWindow() {
@@ -205,7 +212,7 @@ void Game::ApplyBaseSettings() {
 }
 
 void Game::InitSettings() {
-	Logger::GetInstance()->AddInfo("Initializing settings...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing settings...");
 	this->m_SettingsMgr = new SettingsManager;
 
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
@@ -214,21 +221,21 @@ void Game::InitSettings() {
 }
 
 void Game::InitUI() {
-	Logger::GetInstance()->AddInfo("Initializing UI...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing UI...");
 	this->m_UIMgr = new UIManager;
 }
 
 void Game::InitAudio() {
-	Logger::GetInstance()->AddInfo("Initializing audio...", typeid(Game));
-    Logger::GetInstance()->AddWarning("AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized.", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing audio...");
+    Logger::AddWarning(typeid(Game), "AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized.");
 #ifdef BEATENGINE_TEST
-    Logger::GetInstance()->AddInfo("This a test build, initilizing AudioManager...", typeid(Game));
+    Logger::AddInfo(typeid(Game), "But this a test build, so initilizing AudioManager...");
 	this->m_AudioMgr = new AudioManager;
 #endif
 }
 
 void Game::InitViews() {
-	Logger::GetInstance()->AddInfo("Initializing views...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing views...");
 	this->m_ViewMgr = new ViewManager;
 	this->m_ViewMgr->SetGlobalAssetManager(m_AssetMgr);
     this->m_ViewMgr->SetGlobalAudioManager(m_AudioMgr);
@@ -237,17 +244,17 @@ void Game::InitViews() {
 }
 
 void Game::InitSystems() {
-	Logger::GetInstance()->AddInfo("Initializing systems...", typeid(Game));
+    Logger::AddInfo(typeid(Game), "Initializing systems...");
 	this->m_SystemMgr = new SystemManager;
 }
 
 void Game::InitAssets() {
-	Logger::GetInstance()->AddInfo("Initializing assets...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing assets...");
 	this->m_AssetMgr = new AssetManager;
 }
 
 void Game::InitWindow() {
-	Logger::GetInstance()->AddInfo("Initializing window...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing window...");
 
 	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
 
@@ -270,11 +277,11 @@ void Game::InitWindow() {
 }
 
 void Game::InitKeybinds() {
-	Logger::GetInstance()->AddInfo("Initializing keybinds... (not really)", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Initializing keybinds... (not really)");
 }
 
 void Game::SubscribeToGameEvent() {
-	Logger::GetInstance()->AddInfo("Subscribing to game events...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Subscribing to game events...");
 
     EventManager::GetInstance()->Subscribe<GameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
@@ -287,7 +294,7 @@ void Game::SubscribeToGameEvent() {
 }
 
 void Game::SubscribeToGameSignals() {
-	Logger::GetInstance()->AddInfo("Subscribing to game signals...", typeid(Game));
+	Logger::AddInfo(typeid(Game), "Subscribing to game signals...");
 
 	SignalManager::GetInstance()->RegisterCallback<ViewAddGlobalLayerSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto signal = std::static_pointer_cast<ViewAddGlobalLayerSignal>(sig);

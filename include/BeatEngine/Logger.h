@@ -1,9 +1,7 @@
 #pragma once
 
-#include <cstdint>
 #include <string>
 #include <vector>
-#include <map>
 #include <typeindex>
 #include <imgui.h>
 #include <memory>
@@ -16,18 +14,28 @@ public:
 	Logger() = default;
 
 	static std::shared_ptr<Logger> GetInstance();
+   
+    template<typename... Args>
+	static void AddLog(LogType logType, std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddLog(LogType logType, std::type_index caller, std::string_view fmt = "", Args&&... elms);
 
-	void AddLog(std::string log, LogType logType, std::string caller = "");
-	void AddLog(std::string log, LogType logType, std::type_index caller);
-
-	void AddInfo(std::string log, std::string caller = "");
-	void AddInfo(std::string log, std::type_index caller);
-	void AddWarning(std::string log, std::string caller = "");
-	void AddWarning(std::string log, std::type_index caller); 
-	void AddError(std::string log, std::string caller = "");
-	void AddError(std::string log, std::type_index caller); 
-	void AddCritical(std::string log, std::string caller = "");
-	void AddCritical(std::string log, std::type_index caller);
+    template<typename... Args>
+	static void AddInfo(std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddInfo(std::type_index caller, std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddWarning(std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddWarning(std::type_index caller, std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddError(std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddError(std::type_index caller, std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddCritical(std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddCritical(std::type_index caller, std::string_view fmt = "", Args&&... elms);
 
 	std::vector<std::pair<std::time_t, std::pair<LogType, std::string>>> GetLogs() const;
 
@@ -38,3 +46,4 @@ private:
 	static std::shared_ptr<Logger> m_Instance;
 };
 
+#include "BeatEngine/Logger.inl"

@@ -24,22 +24,16 @@ TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioMa
 
 	m_Button.SetFont(*m_Font);
 
-	auto playButton = m_Button.AddChild<UI::Button>("play", *m_Font->GetSFMLFont(), "Play");
-	auto stopButton = m_Button.AddChild<UI::Button>("stop");
-	auto pauseButton = m_Button.AddChild<UI::Button>("pause");
+	auto playButton = m_Button.AddChild<UI::Button>("play", *m_Font, "Play");
+	auto stopButton = m_Button.AddChild<UI::Button>("stop", *m_Font, "Stop");
+	auto pauseButton = m_Button.AddChild<UI::Button>("pause", *m_Font, "Pause");
 
-	playButton->SetFont(*m_Font);
-	playButton->SetText("Play");
     // playButton->SetVAlignment(UIAlignmentV::Center);
     // playButton->SetHAlignment(UIAlignmentH::Center);
 
-	stopButton->SetFont(*m_Font);
-	stopButton->SetText("Stop");
     // stopButton->SetVAlignment(UIAlignmentV::Center);
     // stopButton->SetHAlignment(UIAlignmentH::Center);
 
-	pauseButton->SetFont(*m_Font);
-	pauseButton->SetText("Pause");
     // pauseButton->SetVAlignment(UIAlignmentV::Center);
     // pauseButton->SetHAlignment(UIAlignmentH::Center);
 

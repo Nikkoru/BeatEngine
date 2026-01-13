@@ -21,7 +21,7 @@ SettingsManager::SettingsManager() {
 }
 
 void SettingsManager::ReadConfig(fs::path path) {
-	Logger::GetInstance()->AddInfo("Reading config file \"" + path.stem().string() + "\"", typeid(SettingsManager));
+	Logger::AddInfo(typeid(SettingsManager), "Reading config file \"{}\"", path.stem().string());
 	const char* iniData = GetTextData(path);
 	if (iniData != NULL) {
 		size_t iniSize = strlen(iniData);
@@ -53,7 +53,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 		free(buf);
 	}
 	else {
-		Logger::GetInstance()->AddWarning("File dosen't exists, creating", typeid(SettingsManager));
+		Logger::AddWarning(typeid(SettingsManager), "File dosen't exists, creating");
 		std::ofstream f(path);
 		f.close();
 	}
@@ -61,7 +61,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 }
 
 void SettingsManager::WriteConfig(fs::path path) {
-	Logger::GetInstance()->AddInfo("Writing config", typeid(SettingsManager));
+	Logger::AddInfo(typeid(SettingsManager), "Writing config");
 
 	std::ofstream file(path);
 
@@ -79,7 +79,7 @@ std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::string tag) {
 	}
 
 	std::string msg = "Unable to get settings with tag: \"" + tag + "\"";
-	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	Logger::AddCritical(typeid(SettingsManager), msg);
 	THROW_RUNTIME_ERROR(msg);
 }
 
@@ -90,7 +90,7 @@ std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::type_index set
 	}
 
 	std::string msg = std::format("Unable to get: \"{}\"", settingsID.name());
-	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	Logger::AddCritical(typeid(SettingsManager), msg);
 	THROW_RUNTIME_ERROR(msg);
 }
 
@@ -103,7 +103,7 @@ void SettingsManager::SetSettings(std::type_index settingsID, std::shared_ptr<Ba
 	}
 
 	std::string msg = std::format("Unable to get: \"{}\"", settingsID.name());
-	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	Logger::AddCritical(typeid(SettingsManager), msg);
 	THROW_RUNTIME_ERROR(msg);
 }
 
@@ -116,12 +116,12 @@ void SettingsManager::SetSettings(std::string tag, std::shared_ptr<Base::Setting
 	}
 
 	std::string msg = "Unable to get settings with tag: \"" + tag + "\"";
-	Logger::GetInstance()->AddCritical(msg, typeid(SettingsManager));
+	Logger::AddCritical(typeid(SettingsManager), msg);
 	THROW_RUNTIME_ERROR(msg);
 }
 
 void SettingsManager::SetDefaults() {
-	Logger::GetInstance()->AddInfo("Setting defaults...", typeid(SettingsManager));
+	Logger::AddInfo(typeid(SettingsManager), "Setting defaults...");
 
 	for (auto& [index, settings] : m_Settings)
 		settings->SetDefaults();

@@ -19,11 +19,11 @@ public:
 		std::type_index ID = typeid(TSystem);
 
 		if (m_Systems.contains(ID))
-			Logger::GetInstance()->AddInfo("System already registered: " + std::string(typeid(TSystem).name()), typeid(SystemManager));
+			Logger::AddInfo(typeid(SystemManager), "System \"{}\" already registered", typeid(TSystem).name());
 		else {
 			auto system = std::make_shared<TSystem>();
 			m_Systems.try_emplace(ID, system);
-			Logger::GetInstance()->AddInfo("Registered system: " + std::string(typeid(TSystem).name()), typeid(SystemManager));
+			Logger::AddInfo(typeid(SystemManager), "Registered system \"{}\"", typeid(TSystem).name());
 		}
 	}
 
@@ -35,7 +35,7 @@ public:
 		if (m_Systems.contains(ID))
 			m_Systems.at(ID)->Start();
 		else
-			Logger::GetInstance()->AddWarning("System " + std::string(typeid(TSystem).name()) + " not found", typeid(SystemManager));
+			Logger::AddWarning(typeid(SystemManager), "System \"{}\" not found", typeid(TSystem).name());
 	}
 	template <typename TSystem>
 		requires(std::is_base_of_v<Base::System, TSystem>)
@@ -45,7 +45,7 @@ public:
 		if (m_Systems.contains(ID))
 			m_Systems.at(ID)->Stop();
 		else
-			Logger::GetInstance()->AddWarning("System " + std::string(typeid(TSystem).name()) + " not found", typeid(SystemManager));
+			Logger::AddWarning(typeid(SystemManager), "System \"{}\" not found", typeid(TSystem).name());
 	}
 
 	void StartSystems();

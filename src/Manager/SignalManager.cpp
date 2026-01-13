@@ -17,7 +17,7 @@ void SignalManager::Send(std::shared_ptr<Base::Signal> sig) {
 				for (auto& callback : vector)
 					callback(sig);
 		else
-			Logger::GetInstance()->AddWarning("No callbacks registered for signal", typeid(SignalManager));
+			Logger::AddWarning(typeid(SignalManager), "No callbacks registered for signal");
 	else
-		Logger::GetInstance()->AddWarning("No signal callbacks registered", typeid(SignalManager));
+		Logger::AddWarning(typeid(SignalManager), "No signal callbacks registered");
 }

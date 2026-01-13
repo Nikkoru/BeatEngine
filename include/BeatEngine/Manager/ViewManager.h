@@ -47,7 +47,7 @@ public:
 		FabricCallback fabric = ([](AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr)
 			-> std::unique_ptr<Base::View> { return std::make_unique<TView>(assetMgr, settingsMgr, audioMgr, uiMgr); });
 
-		Logger::GetInstance()->AddInfo(std::format("Registing {}", typeid(TView).name()), typeid(ViewManager));
+		Logger::AddInfo(typeid(ViewManager), "Registing {}", typeid(TView).name());
 
 		bool firstView = ViewFabrics.empty();
 

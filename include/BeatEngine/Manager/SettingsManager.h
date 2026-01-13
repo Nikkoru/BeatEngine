@@ -28,7 +28,7 @@ public:
 		std::type_index ID = typeid(TSettings);
 
 		if (m_Settings.contains(ID))
-			Logger::GetInstance()->AddWarning(std::format("{} is already registed", ID.name()), typeid(SettingsManager));
+			Logger::AddWarning(typeid(SettingsManager), "{} is already registed", ID.name());
 		else
 			m_Settings.try_emplace(ID, std::make_shared<TSettings>());
 	}

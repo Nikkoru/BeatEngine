@@ -67,6 +67,7 @@ public:
 	}
 
 	void UseImGui(bool show);
+    void UseImGuiDocking(bool docking);
 	sf::Window* GetWindow();
     SettingsManager* GetSettingsManager();
 
