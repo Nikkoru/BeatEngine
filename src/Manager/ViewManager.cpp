@@ -65,7 +65,7 @@ void ViewManager::Pop() {
 		Logger::AddInfo(typeid(ViewManager), "Popped top view!");
 
 		EventManager::GetInstance()->UpdateMainView(MainView);
-		EventManager::GetInstance()->Send(std::make_shared<ViewPopEvent>());
+		EventManager::GetInstance()->Send(std::make_shared<ViewPopEvent>(typeid(MainView)));
 	}
 	else
 		Logger::AddInfo(typeid(ViewManager), "Only one or no view. Not popping view");

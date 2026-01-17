@@ -6,7 +6,9 @@
 
 class ViewPopEvent : public Base::Event {
 public:
-	ViewPopEvent() : Base::Event(typeid(ViewPopEvent)) {}
+    std::type_index ViewID;
+public:
+	ViewPopEvent(std::type_index id) : Base::Event(typeid(ViewPopEvent)), ViewID(id) {}
 };
 
 class ViewPushEvent : public Base::Event {
