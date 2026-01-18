@@ -265,6 +265,7 @@ void Game::InitWindow() {
         sf::Style::Default,
         (gameSettings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
     );
+    this->m_InFullscreen = gameSettings->WindowFullScreen;
     
 	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
@@ -289,6 +290,15 @@ void Game::SubscribeToGameEvent() {
         m_Window->setFramerateLimit(settings->FpsLimit);
         m_Window->setSize(settings->WindowSize);
         m_Window->setVerticalSyncEnabled(settings->VSync);
+
+        if (settings->WindowFullScreen != m_InFullscreen) {
+        	this->m_Window = new sf::RenderWindow(
+	            sf::VideoMode(settings->WindowSize), 
+                "BeatEngine Game",
+                sf::Style::Default,
+                (settings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
+            );
+        }
     });
 
 }

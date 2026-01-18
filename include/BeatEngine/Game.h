@@ -31,6 +31,7 @@ private:
 	bool m_UseImGui = false;
     bool m_Running = false;
 	bool m_Preloaded = false;
+    bool m_InFullscreen = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
