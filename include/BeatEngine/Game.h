@@ -6,6 +6,7 @@
 
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
+#include "BeatEngine/Enum/GameFlags.h"
 
 #include "BeatEngine/View/ViewLayerStack.h"
 
@@ -30,11 +31,9 @@ private:
 
 	ViewLayerStack m_GlobalLayers;
 
-	bool m_UseImGui = false;
+    GameFlags m_Flags;
+
     bool m_Running = false;
-	bool m_Preloaded = false;
-    bool m_InFullscreen = false;
-    bool m_CursorChanged = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
@@ -107,6 +106,8 @@ public:
 	}
 
 	void SetConfigPath(std::filesystem::path path);
+    void SetFlags(GameFlags flags);
+    void RemoveFlags(GameFlags flags);
 public:
 	/// <summary>
 	/// Loads the global assets and saves it into the AssetManager.

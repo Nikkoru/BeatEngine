@@ -52,6 +52,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AssetType.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Alignment.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/GameFlags.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
