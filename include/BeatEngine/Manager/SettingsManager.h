@@ -40,6 +40,8 @@ public:
 	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);
 
 	void SetDefaults();
+public:
+    void DrawImGuiDebug();
 private:
 	char* GetTextData(fs::path path);
 };

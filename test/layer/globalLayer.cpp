@@ -1,4 +1,5 @@
 #include "globalLayer.h"
+#include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
@@ -8,14 +9,17 @@
 
 #include <BeatEngine/UI/Elements/Button.h>
 
+#include <SFML/Window/Event.hpp>
+#include <SFML/Window/Keyboard.hpp>
 #include <cmath>
 #include <format>
+#include <imgui.h>
 #include <memory>
 
-GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr, nullptr) {
+GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr, nullptr, nullptr, nullptr) {
 }
 
-GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr) : ViewLayer(typeid(GlobalTestLayerUI), uiMgr, assetMgr, settingsMgr) {
+GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr) : ViewLayer(typeid(GlobalTestLayerUI), uiMgr, assetMgr, settingsMgr, audioMgr, systemMgr) {
 	m_HUD = uiMgr->AddLayer("GlobalTestLayerUI", true);
 
 	m_Font = assetMgr->Get<Font>("main-font").Get();
@@ -23,6 +27,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, S
     
     auto exitBtn = root->AddChild<UI::Button>("exitBtn");
     auto toggleVSyncBtn = root->AddChild<UI::Button>("vSyncToggle");
+    auto toggleFullscreenBtn = root->AddChild<UI::Button>("fullscreenToggle");
 
 	root->SetFont(*m_Font);
 	root->SetSize({80, 30});
@@ -64,6 +69,26 @@ GlobalTestLayerUI::GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, S
 
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
+
+    toggleFullscreenBtn->SetFont(*m_Font);
+    toggleFullscreenBtn->SetSize({ 110, 30 });
+    toggleFullscreenBtn->SetPosition({795 - toggleFullscreenBtn->GetSize().x, 135 });
+    if (std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen)
+        toggleFullscreenBtn->SetText("In fullscreen");
+    else
+        toggleFullscreenBtn->SetText("In window");
+    toggleFullscreenBtn->SetOnLClick([toggleFullscreenBtn, this]() {
+        auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+
+        settings->WindowFullScreen = !settings->WindowFullScreen;
+
+        if (settings->WindowFullScreen)
+            toggleFullscreenBtn->SetText("In fullscreen");
+        else
+            toggleFullscreenBtn->SetText("In windows");
+
+        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
+    });
 }
 
 void GlobalTestLayerUI::OnUpdate(float dt) {
@@ -82,6 +107,12 @@ void GlobalTestLayerUI::OnDetach() {
 
 void GlobalTestLayerUI::OnSFMLEvent(std::optional<sf::Event> event) {
 	m_HUD->OnSFMLEvent(event);
+
+    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
+        if (data->scancode == sf::Keyboard::Scan::Grave) {
+            ToggleImGuiDrawing();
+        }
+    }
 }
 
 void GlobalTestLayerUI::draw(sf::RenderTarget& target, sf::RenderStates states) const {
@@ -107,4 +138,22 @@ void GlobalTestLayerUI::draw(sf::RenderTarget& target, sf::RenderStates states) 
 	target.draw(fpsText);
 	target.draw(deltaText);
 	target.draw(*m_HUD);
+
+    DrawImGuiDebug();
+}
+
+void GlobalTestLayerUI::ToggleImGuiDrawing() {
+   m_DrawDebug = !m_DrawDebug; 
+}
+
+void GlobalTestLayerUI::DrawImGuiDebug() const {
+    ImGui::Begin("wa");
+    ImGui::Text("wa");
+    ImGui::End();
+
+    m_SettingsMgr->DrawImGuiDebug();
+    m_UIMgr->DrawImGuiDebug();
+    m_AssetMgr->DrawImGuiDebug();
+    // m_AudioMgr->DrawImGuiDebug();
+    m_SystemMgr->DrawImGuiDebug();
 }

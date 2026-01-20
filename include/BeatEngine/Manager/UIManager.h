@@ -28,5 +28,6 @@ public:
 
 	void Update(float dt);
 	void UpdateView(const std::type_index& viewID);
-
+    
+    void DrawImGuiDebug();
 };

@@ -63,4 +63,6 @@ public:
 		}
 	}
 	bool Has(std::string name, const std::type_index viewID = typeid(nullptr));
+
+    void DrawImGuiDebug();
 };

@@ -4,6 +4,8 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
@@ -28,6 +30,8 @@ protected:
 	UIManager* m_UIMgr = nullptr;
 	AssetManager* m_AssetMgr = nullptr;
     SettingsManager* m_SettingsMgr = nullptr;
+    AudioManager* m_AudioMgr = nullptr;
+    SystemManager* m_SystemMgr = nullptr;
 private:
 	sf::Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
@@ -36,8 +40,13 @@ private:
 private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
-	ViewLayer(std::type_index id, UIManager* uiMgr = nullptr, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr)
-		: m_ID(id), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr) {}
+	ViewLayer(std::type_index id, 
+              UIManager* uiMgr = nullptr, 
+              AssetManager* assetMgr = nullptr, 
+              SettingsManager* settingsMgr = nullptr, 
+              AudioManager* audioMgr = nullptr, 
+              SystemManager* systemMgr = nullptr)
+		: m_ID(id), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr), m_AudioMgr(audioMgr), m_SystemMgr(systemMgr) {}
 
 	virtual ~ViewLayer() = default;
 
@@ -64,6 +73,8 @@ public:
 	void SetUIManager(UIManager* mgr) { m_UIMgr = mgr; }
     void SetAssetManager(AssetManager* mgr) { m_AssetMgr = mgr; }
     void SetSettingsManager(SettingsManager* mgr) { m_SettingsMgr = mgr; }
+    void SetAudioManager(AudioManager* mgr) { m_AudioMgr = mgr; }
+    void SetSystemManager(SystemManager* mgr) { m_SystemMgr = mgr; }
 private:
 	friend class Game;
 };

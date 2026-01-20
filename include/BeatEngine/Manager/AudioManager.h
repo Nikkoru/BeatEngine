@@ -57,4 +57,6 @@ public:
     bool IsSoundPlaying(std::string sound);
 
 	bool AllSoundsDone() const;
+
+    void DrawImGuiDebug();
 };

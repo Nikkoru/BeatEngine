@@ -1,5 +1,6 @@
 #pragma once
 
+#include <SFML/Window/Cursor.hpp>
 #include <memory>
 #include <SFML/Window.hpp>
 
@@ -25,6 +26,7 @@ private:
 	sf::RenderWindow* m_Window = nullptr;
 	sf::View m_View;
 	sf::Clock m_Clock;
+    sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
 
 	ViewLayerStack m_GlobalLayers;
 
@@ -76,7 +78,7 @@ public:
 	template<typename TLayer>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
 	void AddGlobalLayer() {
-		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_UIMgr, m_AssetMgr, m_SettingsMgr);
+		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_UIMgr, m_AssetMgr, m_SettingsMgr, m_AudioMgr, m_SystemMgr);
 
 		m_GlobalLayers.AttachLayer(layer);
 	}

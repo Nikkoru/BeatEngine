@@ -71,4 +71,6 @@ public:
     void SetGlobalAudioManager(AudioManager* audioMgr);
     void SetGlobalSettingsManager(SettingsManager* settingsMgr);
     void SetGlobalUIManager(UIManager* uiMgr);
+public:
+    void ShowImGuiDebugData();
 };

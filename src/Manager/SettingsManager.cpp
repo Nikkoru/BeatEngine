@@ -127,6 +127,10 @@ void SettingsManager::SetDefaults() {
 		settings->SetDefaults();
 }
 
+void SettingsManager::DrawImGuiDebug() {
+
+}
+
 char* SettingsManager::GetTextData(fs::path path) {
 	std::ifstream file(path);
 

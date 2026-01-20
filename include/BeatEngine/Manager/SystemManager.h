@@ -52,4 +52,6 @@ public:
 	void StopSystems();
 
 	void Update(float dt);
+
+    void DrawImGuiDebug();
 };

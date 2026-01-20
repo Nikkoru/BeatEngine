@@ -270,3 +270,7 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 			return false;
 	}
 }
+
+void AssetManager::DrawImGuiDebug() {
+    
+}

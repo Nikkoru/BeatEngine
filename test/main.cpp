@@ -14,6 +14,9 @@ int main() {
 	game.RegisterView<TestView>();
 	game.RegisterSystem<SettingsSystemTest>();
 
+    game.UseImGui(true);
+    game.UseImGuiDocking(true);
+
 	game.PreloadSettings();
 
 	auto settings = game.GetSettings<GameSettings>();

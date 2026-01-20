@@ -339,3 +339,7 @@ bool AudioManager::IsStreamPlaying(std::string streamName) {
 bool AudioManager::AllSoundsDone() const {
 	return m_Sounds.empty();
 }
+
+void AudioManager::DrawImGuiDebug() {
+
+}

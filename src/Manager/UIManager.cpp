@@ -79,3 +79,7 @@ void UIManager::Update(float dt) {
 void UIManager::UpdateView(const std::type_index& viewID) {
 	m_CurrentView = viewID;
 }
+
+void UIManager::DrawImGuiDebug() {
+
+}

@@ -1,7 +1,9 @@
 #pragma once
 
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Manager/SystemManager.h"
 #include <BeatEngine/View/ViewLayer.h>
 #include <BeatEngine/UI/UILayer.h>
 
@@ -14,9 +16,10 @@ private:
 	std::string m_FPSText;
     std::string m_DeltaText;
     std::shared_ptr<Font> m_Font = nullptr;
+    bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr);
+	GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr);
 	~GlobalTestLayerUI() override = default;
 private:
 
@@ -27,4 +30,8 @@ public:
 	void OnSFMLEvent(std::optional<sf::Event> event) override;
 
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+
+    void ToggleImGuiDrawing();
+
+    void DrawImGuiDebug() const;
 };
