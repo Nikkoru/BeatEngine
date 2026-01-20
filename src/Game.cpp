@@ -291,6 +291,8 @@ void Game::SubscribeToGameEvent() {
 	Logger::AddInfo(typeid(Game), "Subscribing to game events...");
 
     EventManager::GetInstance()->Subscribe<GameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
+        ImGui::SFML::Shutdown();
+        
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
 
         if (settings->WindowFullScreen != m_InFullscreen) {
