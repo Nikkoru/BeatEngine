@@ -190,7 +190,10 @@ void Game::Draw() {
 }
 
 void Game::Update() {
-    m_Window->setMouseCursor(m_Cursor);
+    if (m_CursorChanged) {
+        m_Window->setMouseCursor(m_Cursor);
+        m_CursorChanged = false;
+    }
 
 	auto sfDelta = m_Clock.restart();
 	auto deltaTime = sfDelta.asSeconds();
@@ -277,6 +280,7 @@ void Game::InitWindow() {
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
     this->m_Window->setVerticalSyncEnabled(gameSettings->VSync);
 	this->m_Window->setView(m_View);
+    this->m_Window->setMouseCursor(m_Cursor);
 
 	if (!ImGui::SFML::Init(*m_Window)) {
         m_Window->close();
@@ -291,11 +295,11 @@ void Game::SubscribeToGameEvent() {
 	Logger::AddInfo(typeid(Game), "Subscribing to game events...");
 
     EventManager::GetInstance()->Subscribe<GameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
-        ImGui::SFML::Shutdown();
         
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
 
         if (settings->WindowFullScreen != m_InFullscreen) {
+            ImGui::SFML::Shutdown();
             m_Window->close();
         	this->m_Window = new sf::RenderWindow(
 	            sf::VideoMode(settings->WindowSize), 
@@ -303,15 +307,19 @@ void Game::SubscribeToGameEvent() {
                 sf::Style::Default,
                 (settings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
             );
+
+            m_InFullscreen = settings->WindowFullScreen;
+
+            if (!ImGui::SFML::Init(*m_Window)) {
+                m_Window->close();
+            }
         }
 
         m_Window->setFramerateLimit(settings->FpsLimit);
         m_Window->setSize(settings->WindowSize);
         m_Window->setVerticalSyncEnabled(settings->VSync);
+        m_Window->setMouseCursor(m_Cursor);
 
-        if (!ImGui::SFML::Init(*m_Window)) {
-            m_Window->close();
-        }
     });
 
 }
@@ -329,13 +337,15 @@ void Game::SubscribeToGameSignals() {
     SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
         m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
+        m_Window->setMouseCursor(m_Cursor);
         m_Running = false;
-        exit(0);
+        // exit(0);
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
         m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
+        m_CursorChanged = true;
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameToggleImGui>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {

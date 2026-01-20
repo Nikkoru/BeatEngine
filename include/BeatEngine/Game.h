@@ -34,6 +34,7 @@ private:
     bool m_Running = false;
 	bool m_Preloaded = false;
     bool m_InFullscreen = false;
+    bool m_CursorChanged = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
