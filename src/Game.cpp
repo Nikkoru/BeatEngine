@@ -2,6 +2,7 @@
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Window/Cursor.hpp>
+#include <SFML/Window/Event.hpp>
 #include <SFML/Window/WindowEnums.hpp>
 #include <cstdlib>
 #include <imgui.h>
@@ -67,7 +68,8 @@ void Game::Run() {
 		while (const auto event = this->m_Window->pollEvent()) {
 			if (m_Flags & GameFlags_ImGui)
 				ImGui::SFML::ProcessEvent(*m_Window, *event);
-
+            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Flags & GameFlags_DisableKeyPressEvents)
+                continue;
 			if (event->is<sf::Event::Closed>()) {
                 EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
                 m_Running = false;
