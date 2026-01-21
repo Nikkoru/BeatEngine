@@ -68,7 +68,7 @@ void Game::Run() {
 		while (const auto event = this->m_Window->pollEvent()) {
 			if (m_Flags & GameFlags_ImGui)
 				ImGui::SFML::ProcessEvent(*m_Window, *event);
-            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Flags & GameFlags_DisableKeyPressEvents)
+            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && (m_Flags & GameFlags_DisableKeyPressEvents))
                 continue;
 			if (event->is<sf::Event::Closed>()) {
                 EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
@@ -162,6 +162,25 @@ void Game::RemoveFlags(GameFlags flags) {
     this->m_Flags &= ~flags;
 }
 
+void Game::DrawImGuiDebug() {
+    ImGui::Begin("BeatEngine Game Debug Window");
+    bool imguiToggle = m_Flags & GameFlags_ImGui;
+    bool preloadToggle = m_Flags & GameFlags_Preload;
+    bool fullscreenToggle = m_Flags & GameFlags_Fullscreen;
+    bool cursorChangedToggle = m_Flags & GameFlags_CursorChanged;
+    bool disableKeysToggle = m_Flags & GameFlags_DisableKeyPressEvents;
+    bool drawDebugToggle = m_Flags & GameFlags_DrawDebugInfo;
+
+
+    ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
+    ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
+    ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
+    ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
+    ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
+    ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
+    ImGui::End();
+}
+
 void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
 	if (globalAssets.empty())
 		return;
@@ -201,6 +220,9 @@ void Game::Draw() {
 		m_Window->close();
 
 	m_Window->draw(m_GlobalLayers);
+
+    if ((m_Flags & GameFlags_DrawDebugInfo) && (m_Flags & GameFlags_ImGui))
+        DrawImGuiDebug();
 }
 
 void Game::Update() {
@@ -385,5 +407,12 @@ void Game::SubscribeToGameSignals() {
     SignalManager::GetInstance()->RegisterCallback<GameRemoveFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<GameRemoveFlags>(sig);
         this->RemoveFlags(gameSig->Flags);
+    });
+
+    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+            if (m_Flags & GameFlags_DrawDebugInfo)
+                m_Flags &= ~GameFlags_DrawDebugInfo;
+            else
+                m_Flags |= GameFlags_DrawDebugInfo;
     });
 }

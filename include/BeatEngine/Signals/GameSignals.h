@@ -22,9 +22,9 @@ public:
     GameToggleImGui() : Base::Signal(typeid(GameToggleImGui)) {}
 };
 
-class GameToggleDebugImGuiWindow : public Base::Signal {
+class GameToggleDrawingDebugInfo : public Base::Signal {
 public:
-    GameToggleDebugImGuiWindow() : Base::Signal(typeid(GameToggleDebugImGuiWindow)) {}
+    GameToggleDrawingDebugInfo() : Base::Signal(typeid(GameToggleDrawingDebugInfo)) {}
 };
 
 class GameAddFlags : public Base::Signal {

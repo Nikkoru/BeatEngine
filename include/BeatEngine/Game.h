@@ -31,7 +31,7 @@ private:
 
 	ViewLayerStack m_GlobalLayers;
 
-    GameFlags m_Flags;
+    GameFlags m_Flags = GameFlags_None;
 
     bool m_Running = false;
 private:
@@ -108,6 +108,8 @@ public:
 	void SetConfigPath(std::filesystem::path path);
     void SetFlags(GameFlags flags);
     void RemoveFlags(GameFlags flags);
+
+    void DrawImGuiDebug();
 public:
 	/// <summary>
 	/// Loads the global assets and saves it into the AssetManager.

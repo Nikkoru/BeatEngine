@@ -138,12 +138,13 @@ void GlobalTestLayerUI::draw(sf::RenderTarget& target, sf::RenderStates states) 
 	target.draw(fpsText);
 	target.draw(deltaText);
 	target.draw(*m_HUD);
-
-    DrawImGuiDebug();
+    if (m_DrawDebug)
+        DrawImGuiDebug();
 }
 
 void GlobalTestLayerUI::ToggleImGuiDrawing() {
-   m_DrawDebug = !m_DrawDebug; 
+    m_DrawDebug = !m_DrawDebug; 
+    SignalManager::GetInstance()->Send(std::make_shared<GameToggleDrawingDebugInfo>());
 }
 
 void GlobalTestLayerUI::DrawImGuiDebug() const {

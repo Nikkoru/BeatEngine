@@ -8,5 +8,6 @@ enum GameFlags_ {
     GameFlags_Preload                   = 1 << 1,
     GameFlags_Fullscreen                = 1 << 2,
     GameFlags_CursorChanged             = 1 << 3,
-    GameFlags_DisableKeyPressEvents     = 1 << 4
+    GameFlags_DisableKeyPressEvents     = 1 << 4,
+    GameFlags_DrawDebugInfo             = 1 << 5
 };

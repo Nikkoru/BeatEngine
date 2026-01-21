@@ -272,5 +272,8 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 }
 
 void AssetManager::DrawImGuiDebug() {
-    
+    ImGui::Begin("BeatEngine AssetManager Debug Window");
+    ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
+    ImGui::Text("View Assets: %zu", m_ViewAssets.size());
+    ImGui::End();
 }

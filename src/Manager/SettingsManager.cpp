@@ -6,6 +6,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
 
+#include <imgui.h>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -128,7 +129,9 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::DrawImGuiDebug() {
-
+    ImGui::Begin("BeatEngine SettingsManager Debug Window");
+    ImGui::Text("Settings : %zu", m_Settings.size());
+    ImGui::End();
 }
 
 char* SettingsManager::GetTextData(fs::path path) {
