@@ -347,9 +347,9 @@ void Game::SubscribeToGameEvent() {
         auto curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
-            ImGui::SFML::Shutdown();
             m_Window->close();
             delete m_Window;
+            ImGui::SFML::Shutdown();
 
         	this->m_Window = new sf::RenderWindow(
 	            sf::VideoMode(settings->WindowSize), 
