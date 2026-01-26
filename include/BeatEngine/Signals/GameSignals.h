@@ -2,6 +2,7 @@
 
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Enum/ViewFlags.h"
 #include <SFML/Window/Cursor.hpp>
 
 class GameChangeCursorSignal : public Base::Signal {
@@ -39,4 +40,18 @@ public:
     GameFlags Flags;
 public:
     GameRemoveFlags(GameFlags flags) : Base::Signal(typeid(GameRemoveFlags)), Flags(flags) {}
+};
+
+class ViewAddFlags : public Base::Signal {
+public:
+    ViewFlags Flags;
+public:
+    ViewAddFlags(ViewFlags flags) : Base::Signal(typeid(ViewAddFlags)), Flags(flags) {}
+};
+
+class ViewRemoveFlags : public Base::Signal {
+public:
+    ViewFlags Flags;
+public:
+    ViewRemoveFlags(ViewFlags flags) : Base::Signal(typeid(ViewRemoveFlags)), Flags(flags) {}
 };
