@@ -12,6 +12,7 @@
 
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
@@ -28,6 +29,8 @@
 #include "BeatEngine/Events/GameEvent.h"
 
 Game::Game() {
+    m_Context = new GameContext;
+
 	InitSettings();
 	InitAudio();
 	InitAssets();
@@ -47,6 +50,8 @@ Game::~Game() {
 	delete m_AssetMgr;
 
     delete m_Window;
+
+    delete m_Context;
 	
 	ImGui::SFML::Shutdown();
 }
@@ -59,16 +64,16 @@ void Game::Run() {
 		m_ViewMgr->Push(m_ViewMgr->MainView);
 
 
-	if (m_Flags & GameFlags_Preload) {
+	if (m_Context->GFlags & GameFlags_Preload) {
 		m_SettingsMgr->ReadConfig(m_SettingsPath);
 		ApplyBaseSettings();
 	}
 
 	while (this->m_Window->isOpen() && m_Running) {
 		while (const auto event = this->m_Window->pollEvent()) {
-			if (m_Flags & GameFlags_ImGui)
+			if (m_Context->GFlags & GameFlags_ImGui)
 				ImGui::SFML::ProcessEvent(*m_Window, *event);
-            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && (m_Flags & GameFlags_DisableKeyPressEvents))
+            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && (m_Context->GFlags & GameFlags_DisableKeyPressEvents))
                 continue;
 			if (event->is<sf::Event::Closed>()) {
                 EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
@@ -109,9 +114,9 @@ void Game::Run() {
 
 void Game::UseImGui(bool show) {
     if (show)
-        m_Flags |= GameFlags_ImGui;
+        m_Context->GFlags |= GameFlags_ImGui;
     else
-        m_Flags &= ~GameFlags_ImGui;
+        m_Context->GFlags &= ~GameFlags_ImGui;
 }
 
 void Game::UseImGuiDocking(bool docking) {
@@ -141,7 +146,7 @@ void Game::SetWindowTitle(std::string title) {
 }
 
 void Game::PreloadSettings() {
-    m_Flags |= GameFlags_Preload;
+    m_Context->GFlags |= GameFlags_Preload;
 
 	m_SettingsMgr->ReadConfig(m_SettingsPath);
 }
@@ -155,21 +160,23 @@ void Game::SetConfigPath(std::filesystem::path path) {
 }
 
 void Game::SetFlags(GameFlags flags) {
-    this->m_Flags |= flags;
+    this->m_Context->GFlags |= flags;
 }
 
 void Game::RemoveFlags(GameFlags flags) {
-    this->m_Flags &= ~flags;
+    this->m_Context->GFlags &= ~flags;
 }
 
 void Game::DrawImGuiDebug() {
     ImGui::Begin("BeatEngine Game Debug Window");
-    bool imguiToggle = m_Flags & GameFlags_ImGui;
-    bool preloadToggle = m_Flags & GameFlags_Preload;
-    bool fullscreenToggle = m_Flags & GameFlags_Fullscreen;
-    bool cursorChangedToggle = m_Flags & GameFlags_CursorChanged;
-    bool disableKeysToggle = m_Flags & GameFlags_DisableKeyPressEvents;
-    bool drawDebugToggle = m_Flags & GameFlags_DrawDebugInfo;
+    bool imguiToggle = m_Context->GFlags & GameFlags_ImGui;
+    bool preloadToggle = m_Context->GFlags & GameFlags_Preload;
+    bool fullscreenToggle = m_Context->GFlags & GameFlags_Fullscreen;
+    bool cursorChangedToggle = m_Context->GFlags & GameFlags_CursorChanged;
+    bool disableKeysToggle = m_Context->GFlags & GameFlags_DisableKeyPressEvents;
+    bool drawDebugToggle = m_Context->GFlags & GameFlags_DrawDebugInfo;
+
+    bool viewDisableKeyToggle = m_Context->VFlags & ViewFlags_DisableKeys;
 
 
     ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
@@ -178,6 +185,8 @@ void Game::DrawImGuiDebug() {
     ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
     ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
     ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
+    ImGui::NewLine();
+    ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
     ImGui::End();
 }
 
@@ -206,7 +215,7 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 }
 
 void Game::Display() {
-	if (m_Flags & GameFlags_ImGui)
+	if (m_Context->GFlags & GameFlags_ImGui)
 		ImGui::SFML::Render(*m_Window);
 
 	m_Window->display();
@@ -221,20 +230,20 @@ void Game::Draw() {
 
 	m_Window->draw(m_GlobalLayers);
 
-    if ((m_Flags & GameFlags_DrawDebugInfo) && (m_Flags & GameFlags_ImGui))
+    if ((m_Context->GFlags & GameFlags_DrawDebugInfo) && (m_Context->GFlags & GameFlags_ImGui))
         DrawImGuiDebug();
 }
 
 void Game::Update() {
-    if (m_Flags & GameFlags_CursorChanged) {
+    if (m_Context->GFlags & GameFlags_CursorChanged) {
         m_Window->setMouseCursor(m_Cursor);
-        m_Flags &= ~GameFlags_CursorChanged;
+        m_Context->GFlags &= ~GameFlags_CursorChanged;
     }
 
 	auto sfDelta = m_Clock.restart();
 	auto deltaTime = sfDelta.asSeconds();
 
-	if (m_Flags & GameFlags_ImGui)
+	if (m_Context->GFlags & GameFlags_ImGui)
 		ImGui::SFML::Update(*m_Window, sfDelta);
 
 	if (!this->m_ViewMgr->OnUpdate(deltaTime)) {
@@ -258,8 +267,8 @@ void Game::ApplyBaseSettings() {
 
 void Game::InitSettings() {
 	Logger::AddInfo(typeid(Game), "Initializing settings...");
-	this->m_SettingsMgr = new SettingsManager;
-
+	this->m_SettingsMgr = new SettingsManager(m_Context);
+    
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
     m_SettingsMgr->ReadConfig(m_SettingsPath);
 
@@ -267,21 +276,20 @@ void Game::InitSettings() {
 
 void Game::InitUI() {
 	Logger::AddInfo(typeid(Game), "Initializing UI...");
-	this->m_UIMgr = new UIManager;
+	this->m_UIMgr = new UIManager(m_Context);
 }
 
 void Game::InitAudio() {
 	Logger::AddInfo(typeid(Game), "Initializing audio...");
-    Logger::AddWarning(typeid(Game), "AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized.");
+    Logger::AddWarning(typeid(Game), "AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized. You can still use it if BEATENGINE_TEST is defined.");
 #ifdef BEATENGINE_TEST
-    Logger::AddInfo(typeid(Game), "But this a test build, so initilizing AudioManager...");
-	this->m_AudioMgr = new AudioManager;
+	this->m_AudioMgr = new AudioManager(m_Context);
 #endif
 }
 
 void Game::InitViews() {
 	Logger::AddInfo(typeid(Game), "Initializing views...");
-	this->m_ViewMgr = new ViewManager;
+	this->m_ViewMgr = new ViewManager(m_Context);
 	this->m_ViewMgr->SetGlobalAssetManager(m_AssetMgr);
     this->m_ViewMgr->SetGlobalAudioManager(m_AudioMgr);
     this->m_ViewMgr->SetGlobalSettingsManager(m_SettingsMgr);
@@ -290,30 +298,29 @@ void Game::InitViews() {
 
 void Game::InitSystems() {
     Logger::AddInfo(typeid(Game), "Initializing systems...");
-	this->m_SystemMgr = new SystemManager;
+	this->m_SystemMgr = new SystemManager(m_Context);
 }
 
 void Game::InitAssets() {
 	Logger::AddInfo(typeid(Game), "Initializing assets...");
-	this->m_AssetMgr = new AssetManager;
+	this->m_AssetMgr = new AssetManager(m_Context);
 }
 
 void Game::InitWindow() {
 	Logger::AddInfo(typeid(Game), "Initializing window...");
 
 	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
-
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
+
 	this->m_Window = new sf::RenderWindow(
 	    sf::VideoMode(gameSettings->WindowSize), 
         "BeatEngine Game",
         sf::Style::Default,
         (gameSettings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
     );
+
     if (gameSettings->WindowFullScreen)
-        m_Flags |= GameFlags_Fullscreen;
-    else 
-        m_Flags &= ~GameFlags_Fullscreen;
+        m_Context->GFlags |= GameFlags_Fullscreen;
 
 	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
 	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
@@ -337,11 +344,13 @@ void Game::SubscribeToGameEvent() {
         
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
         
-        auto curFullscreen = m_Flags & GameFlags_Fullscreen;
+        auto curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
             ImGui::SFML::Shutdown();
             m_Window->close();
+            delete m_Window;
+
         	this->m_Window = new sf::RenderWindow(
 	            sf::VideoMode(settings->WindowSize), 
                 "BeatEngine Game",
@@ -349,9 +358,9 @@ void Game::SubscribeToGameEvent() {
                 (settings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
             );
             if (settings->WindowFullScreen)
-                m_Flags |= GameFlags_Fullscreen;
-            else
-                m_Flags &= ~GameFlags_Fullscreen;
+                m_Context->GFlags |= GameFlags_Fullscreen;
+            else if (m_Context->GFlags & GameFlags_Fullscreen)
+                m_Context->GFlags &= ~GameFlags_Fullscreen;
 
             if (!ImGui::SFML::Init(*m_Window)) {
                 m_Window->close();
@@ -362,7 +371,6 @@ void Game::SubscribeToGameEvent() {
         m_Window->setSize(settings->WindowSize);
         m_Window->setVerticalSyncEnabled(settings->VSync);
         m_Window->setMouseCursor(m_Cursor);
-
     });
 
 }
@@ -388,15 +396,15 @@ void Game::SubscribeToGameSignals() {
     SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
         m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
-        m_Flags |= GameFlags_CursorChanged;
+        m_Context->GFlags |= GameFlags_CursorChanged;
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameToggleImGui>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<GameToggleImGui>(sig);
-        if (m_Flags & GameFlags_ImGui)
-            m_Flags &= ~GameFlags_ImGui;
+        if (m_Context->GFlags & GameFlags_ImGui)
+            m_Context->GFlags &= ~GameFlags_ImGui;
         else
-            m_Flags |= GameFlags_ImGui;
+            m_Context->GFlags |= GameFlags_ImGui;
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameAddFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -410,9 +418,9 @@ void Game::SubscribeToGameSignals() {
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-            if (m_Flags & GameFlags_DrawDebugInfo)
-                m_Flags &= ~GameFlags_DrawDebugInfo;
+            if (m_Context->GFlags & GameFlags_DrawDebugInfo)
+                m_Context->GFlags &= ~GameFlags_DrawDebugInfo;
             else
-                m_Flags |= GameFlags_DrawDebugInfo;
+                m_Context->GFlags |= GameFlags_DrawDebugInfo;
     });
 }

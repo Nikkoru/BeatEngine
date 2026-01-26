@@ -2,6 +2,7 @@
 
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/AudioStream.h"
+#include "BeatEngine/GameContext.h"
 
 #include <portaudio.h>
 #include <atomic>
@@ -31,7 +32,8 @@ private:
 	std::array<std::shared_ptr<AudioStream>, MAX_PENDING_STREAMS> m_PendingRemovalStreams;
 	std::atomic<int> m_StreamRemoveReadIndex;
 	std::atomic<int> m_StreamRemoveWriteIndex;
-
+private:
+    GameContext* m_Context = nullptr;
 public:
 	static int AudioCallback(
 		const void* inputBuffer, 
@@ -42,7 +44,7 @@ public:
 		void* userData
 	);
 public:
-	AudioManager();
+	AudioManager(GameContext* context);
 	~AudioManager();
 public:
 	void PlaySound(std::shared_ptr<Sound> sound);

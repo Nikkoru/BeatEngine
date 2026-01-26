@@ -4,6 +4,7 @@
 #include <memory>
 #include <SFML/Window.hpp>
 
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 #include "BeatEngine/Enum/GameFlags.h"
@@ -30,8 +31,8 @@ private:
     sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
 
 	ViewLayerStack m_GlobalLayers;
-
-    GameFlags m_Flags = GameFlags_None;
+    
+    GameContext* m_Context;
 
     bool m_Running = false;
 private:

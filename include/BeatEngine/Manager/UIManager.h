@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/UI/UILayer.h"
 
 #include <typeindex>
@@ -10,8 +11,10 @@ private:
 	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
 
 	std::type_index m_CurrentView = typeid(nullptr);
+private:
+    GameContext* m_Context = nullptr;
 public:
-	UIManager() = default;
+	UIManager(GameContext* context);
 	~UIManager() = default;
 
 	void OnSFMLEvent(std::optional<sf::Event> event);

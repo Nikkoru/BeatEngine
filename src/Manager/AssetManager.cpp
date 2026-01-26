@@ -11,9 +11,12 @@
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
+
+AssetManager::AssetManager(GameContext* context): m_Context(context) {}
 
 AssetManager::~AssetManager() {
    m_GlobalAssets.clear();

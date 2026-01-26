@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Base/Settings.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Logger.h"
 
 #include <string>
@@ -14,8 +15,10 @@ class Game;
 class SettingsManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::Settings>> m_Settings;
+private:
+    GameContext* m_Context = nullptr;
 public:
-	SettingsManager(); 
+	SettingsManager(GameContext* context); 
 	~SettingsManager() = default;
 private:
 	friend class Game;

@@ -65,6 +65,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/ProgressBar.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Game.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/GameContext.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.inl"
 )

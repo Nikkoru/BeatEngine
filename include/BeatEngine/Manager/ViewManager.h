@@ -3,6 +3,7 @@
 #include "BeatEngine/Base/View.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
@@ -27,8 +28,10 @@ private:
 	AudioManager* m_GlobalViewAudioMgr = nullptr;
 	SettingsManager* m_GlobalViewSettingsMgr = nullptr;
 	UIManager* m_GlobalViewUIMgr = nullptr;
+private:
+    GameContext* m_Context = nullptr;
 public:
-	ViewManager();
+	ViewManager(GameContext* context);
 	~ViewManager() = default;
 public:
 	template<typename TView>

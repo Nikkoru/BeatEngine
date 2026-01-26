@@ -9,6 +9,7 @@
 #include <format>
 
 #include "BeatEngine/Base/Asset.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
 
@@ -23,12 +24,15 @@ class AssetManager {
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset) : Handle(handle), Asset(asset) {}
 	};
 public:
+    AssetManager(GameContext* context);
     ~AssetManager();
 private:
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
 private:
 	uint64_t m_AudioSampleRate = 48000;
+private:
+    GameContext* m_Context = nullptr;
 public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)

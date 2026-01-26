@@ -3,6 +3,7 @@
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Enum/LogType.h"
 #include "BeatEngine/Events/AudioEvent.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
@@ -128,7 +129,7 @@ int AudioManager::AudioCallback(
 
 	return paContinue;
 }
-AudioManager::AudioManager() {
+AudioManager::AudioManager(GameContext* context): m_Context(context) {
 	Pa_Initialize();
 
 	PaStreamParameters outputParams{};

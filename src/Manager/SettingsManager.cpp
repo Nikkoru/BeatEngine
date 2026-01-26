@@ -1,6 +1,7 @@
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Manager/SignalManager.h"
@@ -11,7 +12,7 @@
 #include <fstream>
 #include <memory>
 
-SettingsManager::SettingsManager() {
+SettingsManager::SettingsManager(GameContext* context): m_Context(context) {
     SignalManager::GetInstance()->RegisterCallback<SetSettingsSignal>(typeid(SettingsManager), [this](const std::shared_ptr<Base::Signal> signal) {
         auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
 

@@ -4,13 +4,16 @@
 #include <memory>
 
 #include "BeatEngine/Base/System.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Logger.h"
 
 class SystemManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::System>> m_Systems;
+private:
+    GameContext* m_Context = nullptr;
 public:
-	SystemManager() = default;
+	SystemManager(GameContext* context);
 	~SystemManager() = default;
 public:
 	template <typename TSystem>

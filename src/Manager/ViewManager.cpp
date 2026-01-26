@@ -3,6 +3,7 @@
 #include <format>
 #include <memory>
 
+#include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
@@ -14,7 +15,7 @@
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Logger.h"
 
-ViewManager::ViewManager() : MainView(typeid(nullptr)) {
+ViewManager::ViewManager(GameContext* context) : MainView(typeid(nullptr)), m_Context(context) {
 	SignalManager::GetInstance()->RegisterCallback<ViewPushSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto sigView = std::static_pointer_cast<ViewPushSignal>(sig);
 		Push(sigView->ViewID);
@@ -73,7 +74,8 @@ void ViewManager::Pop() {
 
 bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
 	if (!ViewStack.empty()) {
-		ViewStack.top()->OnSFMLEvent(event);
+        if (!((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Context->VFlags & ViewFlags_DisableKeys))
+		    ViewStack.top()->OnSFMLEvent(event);
 		return true;
 	}
 	else {

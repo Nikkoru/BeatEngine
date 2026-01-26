@@ -1,7 +1,10 @@
 #include "BeatEngine/Manager/UIManager.h"
 
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Exception.h"
+
+UIManager::UIManager(GameContext* context) : m_Context(context) {}
 
 void UIManager::OnSFMLEvent(std::optional<sf::Event> event) {
 	for (const auto& [name, layer] : m_GlobalLayers) {
