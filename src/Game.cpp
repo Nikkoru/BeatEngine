@@ -414,12 +414,12 @@ void Game::SubscribeToGameSignals() {
 
     SignalManager::GetInstance()->RegisterCallback<ViewAddFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
-        this->m_Context->VFlags &= ~gameSig->Flags;
+        this->m_Context->VFlags |= gameSig->Flags;
     });
 
     SignalManager::GetInstance()->RegisterCallback<ViewRemoveFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
-        this->m_Context->VFlags |= gameSig->Flags;
+        this->m_Context->VFlags &= ~gameSig->Flags;
     });
 
     SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
