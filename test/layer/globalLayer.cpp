@@ -1,4 +1,6 @@
 #include "globalLayer.h"
+#include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 #include "BeatEngine/Signals/GameSignals.h"
@@ -148,9 +150,18 @@ void GlobalTestLayerUI::ToggleImGuiDrawing() {
 }
 
 void GlobalTestLayerUI::DrawImGuiDebug() const {
+    auto text = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
+
     ImGui::Begin("wa");
     ImGui::Text("wa");
+    if (ImGui::Button(text)) {
+        auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+        settings->WindowFullScreen = !settings->WindowFullScreen;
+
+        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
+    }
     ImGui::End();
+
 
     m_SettingsMgr->DrawImGuiDebug();
     m_UIMgr->DrawImGuiDebug();

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/GameContext.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
 #include <BeatEngine/UI/Elements/Button.h>
@@ -24,7 +25,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr);
+	TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr);
 	~TestView() override = default;
 public:
 	void OnDraw(sf::RenderWindow* window) override;

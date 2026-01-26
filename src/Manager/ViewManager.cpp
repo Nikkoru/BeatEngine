@@ -42,7 +42,7 @@ ViewManager::ViewManager(GameContext* context) : MainView(typeid(nullptr)), m_Co
 void ViewManager::Push(std::type_index viewID) {
 	if (!ViewFabrics.empty()) {
 		if (ViewFabrics.contains(viewID)) {
-			ViewStack.push(ViewFabrics[viewID](m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
+			ViewStack.push(ViewFabrics[viewID](m_Context, m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());

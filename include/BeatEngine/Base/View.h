@@ -4,6 +4,7 @@
 #include <optional>
 #include <typeindex>
 
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/AudioManager.h"
@@ -23,6 +24,8 @@ namespace Base {
 		SettingsManager* b_mSettingsMgr = nullptr;
 		AudioManager* b_mAudioMgr = nullptr;
 		UIManager* b_mUIMgr = nullptr;
+    protected:
+        GameContext* b_mContext = nullptr;
 	protected:
 		ViewLayerStack b_mLayerStack;
 	private:
@@ -42,8 +45,8 @@ namespace Base {
 		/// <param name="settingsMgr">the SettingsManager pointer</param>
 		/// <param name="audioMgr">the AudioManager pointer</param>
 		/// <param name="uiMgr">the UIManager pointer</param>
-		View(std::type_index id, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr, UIManager* uiMgr = nullptr) 
-			: b_ID(id), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr), b_mUIMgr(uiMgr) {}
+		View(std::type_index id, GameContext* context, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr, UIManager* uiMgr = nullptr) 
+			: b_ID(id), b_mContext(context), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr), b_mUIMgr(uiMgr) {}
 
 		virtual ~View() = default;
 	public: // Events

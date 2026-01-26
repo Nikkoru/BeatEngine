@@ -10,13 +10,14 @@
 #include "BeatEngine/Asset/AudioStream.h"
 
 #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Events/AudioEvent.h"
 
-TestView::TestView(AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr) 
-	: Base::View(typeid(TestView), assetMgr, settingsMgr, audioMgr, uiMgr), m_Button(), m_ProgressBar(0, 200), m_MusicProgressBar(0, 0) {
+TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr) 
+	: Base::View(typeid(TestView), context, assetMgr, settingsMgr, audioMgr, uiMgr), m_Button(), m_ProgressBar(0, 200), m_MusicProgressBar(0, 0) {
     m_MusicProgressBar.Hide();
 
 	auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));

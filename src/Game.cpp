@@ -349,7 +349,6 @@ void Game::SubscribeToGameEvent() {
         if (settings->WindowFullScreen != curFullscreen) {
             m_Window->close();
             delete m_Window;
-            ImGui::SFML::Shutdown();
 
         	this->m_Window = new sf::RenderWindow(
 	            sf::VideoMode(settings->WindowSize), 
@@ -361,10 +360,6 @@ void Game::SubscribeToGameEvent() {
                 m_Context->GFlags |= GameFlags_Fullscreen;
             else if (m_Context->GFlags & GameFlags_Fullscreen)
                 m_Context->GFlags &= ~GameFlags_Fullscreen;
-
-            if (!ImGui::SFML::Init(*m_Window)) {
-                m_Window->close();
-            }
         }
 
         m_Window->setFramerateLimit(settings->FpsLimit);
