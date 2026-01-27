@@ -97,7 +97,7 @@ std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::type_index set
 }
 
 void SettingsManager::SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings) {
-	for (auto& [id, _] : m_Settings) {
+	for (const auto& [id, _] : m_Settings) {
 		if (id == settingsID) {
 			m_Settings.try_emplace(id, settings);
 			return;

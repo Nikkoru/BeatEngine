@@ -311,13 +311,22 @@ void Game::InitWindow() {
 
 	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
-
-	this->m_Window = new sf::RenderWindow(
-	    sf::VideoMode(gameSettings->WindowSize), 
-        "BeatEngine Game",
-        sf::Style::Default,
-        (gameSettings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
-    );
+    
+    if (gameSettings->WindowFullScreen)
+	    this->m_Window = new sf::RenderWindow(
+	        sf::VideoMode{}, 
+            "BeatEngine Game",
+            sf::Style::Default,
+            sf::State::Fullscreen 
+        );
+    else {
+	    this->m_Window = new sf::RenderWindow(
+	        sf::VideoMode(gameSettings->WindowSize), 
+            "BeatEngine Game",
+            sf::Style::Default,
+            sf::State::Windowed
+        );
+    }
 
     if (gameSettings->WindowFullScreen)
         m_Context->GFlags |= GameFlags_Fullscreen;
@@ -344,26 +353,41 @@ void Game::SubscribeToGameEvent() {
         
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
         
-        auto curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
+        bool curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
+            Logger::AddLog(LogType::DebugTarget, typeid(Game), "reopening window");
+            Logger::AddLog(LogType::DebugTarget, typeid(Game), "settings: {}, flags: {}", settings->WindowFullScreen, curFullscreen);
             m_Window->close();
             delete m_Window;
+            if (settings->WindowFullScreen)
+                this->m_Window = new sf::RenderWindow(
+                    sf::VideoMode{}, 
+                    "BeatEngine Game",
+                    sf::Style::Default,
+                    sf::State::Fullscreen 
+                );
+            else {
+                this->m_Window = new sf::RenderWindow(
+                    sf::VideoMode(settings->WindowSize), 
+                    "BeatEngine Game",
+                    sf::Style::Default,
+                    sf::State::Windowed
+                );
+            }
 
-        	this->m_Window = new sf::RenderWindow(
-	            sf::VideoMode(settings->WindowSize), 
-                "BeatEngine Game",
-                sf::Style::Default,
-                (settings->WindowFullScreen ? sf::State::Fullscreen : sf::State::Windowed)
-            );
             if (settings->WindowFullScreen)
                 m_Context->GFlags |= GameFlags_Fullscreen;
             else if (m_Context->GFlags & GameFlags_Fullscreen)
                 m_Context->GFlags &= ~GameFlags_Fullscreen;
+            m_Window->display();
         }
 
         m_Window->setFramerateLimit(settings->FpsLimit);
-        m_Window->setSize(settings->WindowSize);
+        if (!settings->WindowFullScreen && m_Window->getSize() != settings->WindowSize) {
+            Logger::AddLog(LogType::DebugTarget, typeid(Game), "settings: ({}, {}) window: ({}, {})", settings->WindowSize.x, settings->WindowSize.y, m_Window->getSize().x, m_Window->getSize().y);
+            m_Window->setSize(settings->WindowSize);
+        }
         m_Window->setVerticalSyncEnabled(settings->VSync);
         m_Window->setMouseCursor(m_Cursor);
     });
