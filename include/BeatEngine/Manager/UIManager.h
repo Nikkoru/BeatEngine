@@ -9,8 +9,6 @@ class UIManager {
 private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<UILayer>>> m_Layers;
 	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
-
-	std::type_index m_CurrentView = typeid(nullptr);
 private:
     GameContext* m_Context = nullptr;
 public:
@@ -30,7 +28,6 @@ public:
 	void DrawLayer(const std::string layerName, sf::RenderWindow* window);
 
 	void Update(float dt);
-	void UpdateView(const std::type_index& viewID);
     
     void DrawImGuiDebug();
 };

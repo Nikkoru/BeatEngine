@@ -1,3 +1,4 @@
+#include "view/gameView.h"
 #define BEATENGINE_TEST
 
 #include <BeatEngine/Game.h>
@@ -12,6 +13,7 @@ int main() {
 	Game game;
 
 	game.RegisterView<TestView>();
+	game.RegisterView<GameView>();
 	game.RegisterSystem<SettingsSystemTest>();
 
     game.UseImGui(true);

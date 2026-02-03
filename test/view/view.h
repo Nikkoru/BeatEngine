@@ -9,10 +9,8 @@
 
 class TestView : public Base::View {
 private:
-	UI::Button m_Button;
-	UI::ProgressBar m_ProgressBar;
+    std::shared_ptr<UILayer> m_HUD = nullptr;
 
-    UI::ProgressBar m_MusicProgressBar;
 	std::wstring m_MusicTitleText;
 	std::wstring m_MusicAlbumText;
 	std::wstring m_MusicTrackNumText;
@@ -32,4 +30,7 @@ public:
 	void OnSFMLEvent(std::optional<sf::Event> event) override;
 	void OnUpdate(float dt) override;
 	void OnExit() override;
+
+    void OnSuspend() override;
+    void OnResume() override;
 };

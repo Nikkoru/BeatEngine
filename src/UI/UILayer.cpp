@@ -27,3 +27,6 @@ void UILayer::draw(sf::RenderTarget& target, sf::RenderStates states) const {
 		target.draw(*m_Root);
 }
 
+void UILayer::SetVisible(bool visible) {
+    this->m_Hidden = !visible;
+}

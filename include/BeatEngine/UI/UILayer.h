@@ -35,6 +35,8 @@ public:
 	void Update(float dt);
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
+    void SetVisible(bool visible);
+
 	bool IsVisible() const { return !m_Hidden; }
 };	
 

@@ -86,7 +86,7 @@ public:
 	inline std::shared_ptr<TElement> AddChild(const std::string& name, Args&&... constructorArgs) {
 		for (auto& [childName, element] : m_Childs) {
 			if (childName == name) {
-				Logger::AddError("Element \"{}\" already exists in container", name);
+				Logger::AddError("", "Element \"{}\" already exists in container", name);
 				return nullptr;
 			}
 		}

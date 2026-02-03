@@ -1,6 +1,5 @@
 #include "BeatEngine/Manager/ViewManager.h"
 
-#include <format>
 #include <memory>
 
 #include "BeatEngine/Enum/ViewFlags.h"
@@ -42,10 +41,13 @@ ViewManager::ViewManager(GameContext* context) : MainView(typeid(nullptr)), m_Co
 void ViewManager::Push(std::type_index viewID) {
 	if (!ViewFabrics.empty()) {
 		if (ViewFabrics.contains(viewID)) {
+            if (!ViewStack.empty())
+                ViewStack.top()->OnSuspend();
 			ViewStack.push(ViewFabrics[viewID](m_Context, m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
+            m_Context->ActiveView = MainView;
 
 			EventManager::GetInstance()->UpdateMainView(MainView);
 			EventManager::GetInstance()->Send(std::make_shared<ViewPushEvent>(MainView));
@@ -60,10 +62,14 @@ void ViewManager::Push(std::type_index viewID) {
 
 void ViewManager::Pop() {
 	if (ViewStack.size() > 1) {
+        ViewStack.top()->OnExit();
 		ViewStack.pop();
 		MainView = ViewStack.top()->b_ID;
 
 		Logger::AddInfo(typeid(ViewManager), "Popped top view!");
+        m_Context->ActiveView = MainView;
+
+        ViewStack.top()->OnResume();
 
 		EventManager::GetInstance()->UpdateMainView(MainView);
 		EventManager::GetInstance()->Send(std::make_shared<ViewPopEvent>(typeid(MainView)));

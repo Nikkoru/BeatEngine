@@ -5,6 +5,7 @@ project("BeatEngineTest")
 add_executable(BeatEngineTest 
 	"main.cpp"
  	"view/view.cpp"			"view/view.h"
+    "view/gameView.cpp"     "view/gameView.h"
 	"system/system.cpp"		"system/system.h"
  "layer/globalLayer.h" "layer/globalLayer.cpp")
 target_link_libraries(BeatEngineTest

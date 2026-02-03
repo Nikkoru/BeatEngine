@@ -36,8 +36,8 @@ Game::Game() {
 	InitAssets();
 	InitSystems();
 	InitWindow();
-	InitViews();
 	InitUI();
+	InitViews();
 	InitKeybinds();
 	SubscribeToGameEvent();
 	SubscribeToGameSignals();
@@ -230,11 +230,15 @@ void Game::Draw() {
 
 	m_Window->draw(m_GlobalLayers);
 
+    m_UIMgr->OnDraw(m_Window);
+
     if ((m_Context->GFlags & GameFlags_DrawDebugInfo) && (m_Context->GFlags & GameFlags_ImGui))
         DrawImGuiDebug();
 }
 
 void Game::Update() {
+    m_Context->WindowSize = m_Window->getSize();
+
     if (m_Context->GFlags & GameFlags_CursorChanged) {
         m_Window->setMouseCursor(m_Cursor);
         m_Context->GFlags &= ~GameFlags_CursorChanged;
@@ -253,6 +257,8 @@ void Game::Update() {
 	this->m_SystemMgr->Update(deltaTime);
 
 	m_GlobalLayers.OnUpdate(deltaTime);
+
+    m_UIMgr->Update(deltaTime);
 }
 
 void Game::ApplyBaseSettings() {
@@ -337,6 +343,8 @@ void Game::InitWindow() {
 	this->m_Window->setView(m_View);
     this->m_Window->setMouseCursor(m_Cursor);
 
+    this->m_Context->WindowSize = m_Window->getSize();
+
 	if (!ImGui::SFML::Init(*m_Window)) {
         m_Window->close();
     }
@@ -356,8 +364,6 @@ void Game::SubscribeToGameEvent() {
         bool curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
-            Logger::AddLog(LogType::DebugTarget, typeid(Game), "reopening window");
-            Logger::AddLog(LogType::DebugTarget, typeid(Game), "settings: {}, flags: {}", settings->WindowFullScreen, curFullscreen);
             m_Window->close();
             delete m_Window;
             if (settings->WindowFullScreen)
@@ -385,7 +391,6 @@ void Game::SubscribeToGameEvent() {
 
         m_Window->setFramerateLimit(settings->FpsLimit);
         if (!settings->WindowFullScreen && m_Window->getSize() != settings->WindowSize) {
-            Logger::AddLog(LogType::DebugTarget, typeid(Game), "settings: ({}, {}) window: ({}, {})", settings->WindowSize.x, settings->WindowSize.y, m_Window->getSize().x, m_Window->getSize().y);
             m_Window->setSize(settings->WindowSize);
         }
         m_Window->setVerticalSyncEnabled(settings->VSync);

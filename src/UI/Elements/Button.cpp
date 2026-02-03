@@ -1,5 +1,9 @@
 #include "BeatEngine/UI/Elements/Button.h"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/UI/Alignment.h"
+#include <SFML/Window/Cursor.hpp>
+#include <memory>
 
 UI::Button::Button(sf::Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Font(font), m_Text(text), m_FontSize(fontSize), m_SFMLText(font, text, m_FontSize) {
 	SetOnHover([this]() {
@@ -24,7 +28,15 @@ UI::Button::Button(sf::Font font, std::string text, float fontSize) : UIClickeab
 			m_TextColor = m_TextNormalColor;
 		}
 	});
-}
+    SetOnHide([this]() {
+        if (m_Hovered) {
+            SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
+        }
+        
+        m_Hovered = false;
+        OnUnHover();
+    });
+} 
 void UI::Button::SetText(const std::string& text) {
 	this->m_Text = text;
 }
@@ -71,7 +83,7 @@ void UI::Button::OnUpdate(float dt) {
         x = m_Position.x;
         break;
     case UIAlignmentH::Center:
-        x = m_Position.x / 2 + m_SFMLText.getLocalBounds().size.x / 2;
+        x = m_Position.x / 2 - m_SFMLText.getLocalBounds().size.x / 2;
     }
 
     switch (m_VAlignment) {
@@ -82,7 +94,7 @@ void UI::Button::OnUpdate(float dt) {
         y = m_Position.y;
         break;
     case UIAlignmentV::Center:
-        x = m_Position.y / 2 + m_SFMLText.getLocalBounds().size.y / 2;
+        x = m_Position.y / 2 - m_SFMLText.getLocalBounds().size.y / 2;
     }
     
 	m_SFMLText.setPosition({ x, y });

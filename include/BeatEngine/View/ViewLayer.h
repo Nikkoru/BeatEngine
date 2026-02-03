@@ -4,6 +4,10 @@
 #include <SFML/System/Vector2.hpp>
 #include <SFML/Window/Event.hpp>
 
+#include "BeatEngine/Camera/Camera.h"
+#include "BeatEngine/Camera/CameraMode.h"
+#include "BeatEngine/Camera/ShakeParams.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/Manager/UIManager.h"
@@ -32,44 +36,50 @@ protected:
     SettingsManager* m_SettingsMgr = nullptr;
     AudioManager* m_AudioMgr = nullptr;
     SystemManager* m_SystemMgr = nullptr;
+protected:
+    GameContext* m_Context;
 private:
 	sf::Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
+	
+    Camera m_Camera;
 
-	void* m_Camera = nullptr;
+    sf::View m_MainView; 
 private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
-	ViewLayer(std::type_index id, 
+	ViewLayer(std::type_index id,
+              GameContext* context = nullptr,
               UIManager* uiMgr = nullptr, 
               AssetManager* assetMgr = nullptr, 
               SettingsManager* settingsMgr = nullptr, 
               AudioManager* audioMgr = nullptr, 
               SystemManager* systemMgr = nullptr)
-		: m_ID(id), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr), m_AudioMgr(audioMgr), m_SystemMgr(systemMgr) {}
+		: m_ID(id), m_Context(context), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr), m_AudioMgr(audioMgr), m_SystemMgr(systemMgr) {}
 
 	virtual ~ViewLayer() = default;
 
 	virtual void OnUpdate(float dt) = 0;
-	virtual void OnAttach() = 0;
-	virtual void OnDetach() = 0;
+	virtual void OnAttach() {} 
+	virtual void OnDetach() {}
 	virtual void OnSFMLEvent(std::optional<sf::Event> event) = 0;
 
 	inline sf::Vector2f GetSize() const { return m_Size; }
-	inline float GetCameraZoom()  const	{ return .0f; };
+	inline float GetCameraZoom() const { return m_Camera.GetZoom(); };
 	inline std::shared_ptr<Base::View> GetOwner() const { return m_OwnerView; };
 
-	void SetCamera(void* noCameraYet) {};
-	void SetCameraMode(void* noCameraModeYet) {};
-	void SetCameraOffset(sf::Vector2f offset) {};
-	void SetCameraRotation(float rotation) {};
-	void SetCameraZoom(float zoom) {};
-	void ShakeCamera(void* noShakeParamsYet) {};
-	sf::Vector2f GetScreenToWorld(sf::Vector2f pos) const { return { 0, 0 }; };
-	sf::Vector2f GetWorldToScreen(sf::Vector2f pos) const { return { 0, 0 }; };
-	void StartCamera() {};
-	void StopCamera() {};
-
+	void SetCamera(Camera& camera);
+	void SetCameraMode(CameraMode mode);
+	void SetCameraPosition(sf::Vector2f pos);
+	void SetCameraRotation(float rotation);
+	void SetCameraZoom(float zoom);
+	void ShakeCamera(ShakeParams params);
+	sf::Vector2f GetScreenToWorld(sf::Vector2f pos) const;
+	sf::Vector2f GetWorldToScreen(sf::Vector2f pos) const;
+	void StartCamera();
+	void StopCamera();
+    
+    void SetGameContext(GameContext* context) { m_Context = context; }
 	void SetUIManager(UIManager* mgr) { m_UIMgr = mgr; }
     void SetAssetManager(AssetManager* mgr) { m_AssetMgr = mgr; }
     void SetSettingsManager(SettingsManager* mgr) { m_SettingsMgr = mgr; }

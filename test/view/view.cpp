@@ -1,6 +1,7 @@
 #include "view.h"
 
 #include <SFML/Graphics/Text.hpp>
+#include <SFML/Window/Event.hpp>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -15,31 +16,55 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Events/AudioEvent.h"
+#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/ViewSignals.h"
+#include "BeatEngine/UI/Elements/Button.h"
+#include "BeatEngine/UI/Elements/ProgressBar.h"
+#include "gameView.h"
 
 TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr) 
-	: Base::View(typeid(TestView), context, assetMgr, settingsMgr, audioMgr, uiMgr), m_Button(), m_ProgressBar(0, 200), m_MusicProgressBar(0, 0) {
-    m_MusicProgressBar.Hide();
+	: Base::View(typeid(TestView), context, assetMgr, settingsMgr, audioMgr, uiMgr) {
+    auto windowSize = b_mContext->WindowSize;
+    
+    m_HUD = uiMgr->AddLayer("mainViewUI");
+
+    auto button = m_HUD->SetRootElement<UI::Button>();
+    auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
 
 	auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
 	m_Font = fontHandle.Get();
 
-	m_Button.SetFont(*m_Font);
+	button->SetFont(*m_Font);
+    button->SetPosition({ 5, 100 });
+	button->SetSize({ 80, 30 });
 
-	auto playButton = m_Button.AddChild<UI::Button>("play", *m_Font, "Play");
-	auto stopButton = m_Button.AddChild<UI::Button>("stop", *m_Font, "Stop");
-	auto pauseButton = m_Button.AddChild<UI::Button>("pause", *m_Font, "Pause");
+	auto playBtn = button->AddChild<UI::Button>("playBtn", *m_Font, "Play");
+	playBtn->SetSize({ 80, 30 });
+    playBtn->SetPosition({ 5 , 5 + button->GetPosition().y + button->GetSize().y });
 
-    // playButton->SetVAlignment(UIAlignmentV::Center);
-    // playButton->SetHAlignment(UIAlignmentH::Center);
+	auto stopBtn = button->AddChild<UI::Button>("stopBtn", *m_Font, "Stop");
+	stopBtn->SetSize({ 80, 30 });
+    stopBtn->SetPosition({ 5 + playBtn->GetPosition().x + playBtn->GetSize().x, 5 + button->GetPosition().y + button->GetSize().y});
 
-    // stopButton->SetVAlignment(UIAlignmentV::Center);
-    // stopButton->SetHAlignment(UIAlignmentH::Center);
+	auto pauseBtn = button->AddChild<UI::Button>("pauseBtn", *m_Font, "Pause");
+	pauseBtn->SetSize({ 80, 30 });
+    pauseBtn->SetPosition({ 5, 5 + playBtn->GetPosition().y + playBtn->GetSize().y });
 
-    // pauseButton->SetVAlignment(UIAlignmentV::Center);
-    // pauseButton->SetHAlignment(UIAlignmentH::Center);
+    auto gameBtn = button->AddChild<UI::Button>("gameBtn", *m_Font, "Game");
+    gameBtn->SetSize({ 80, 30 });
+    gameBtn->SetPosition({ static_cast<float>(windowSize.x / 2) - static_cast<float>(gameBtn->GetSize().x / 2), 100 });
 
-	m_Button.SetOnLClick([this]() { progress = 0; m_ProgressBar.UpdateProgress(progress); m_ProgressBar.Update(0); });
-	playButton->SetOnLClick([this]() {
+    playBtn->SetVAlignment(UIAlignmentV::Center);
+    playBtn->SetHAlignment(UIAlignmentH::Center);
+
+    stopBtn->SetVAlignment(UIAlignmentV::Center);
+    stopBtn->SetHAlignment(UIAlignmentH::Center);
+
+    pauseBtn->SetVAlignment(UIAlignmentV::Center);
+    pauseBtn->SetHAlignment(UIAlignmentH::Center);
+
+	button->SetOnLClick([this, progressBar]() { progress = 0; progressBar->UpdateProgress(progress); progressBar->Update(0); });
+	playBtn->SetOnLClick([this]() {
 		Base::AssetHandle<AudioStream> musicHandle;
 
 		if (b_mAssetMgr->Has("test-music", typeid(TestView)))
@@ -49,7 +74,7 @@ TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager
         
         b_mAudioMgr->PlayStream(musicHandle.Get());
 	});
-	stopButton->SetOnLClick([this]() {
+	stopBtn->SetOnLClick([this]() {
 		Base::AssetHandle<AudioStream> musicHandle;
 
 		if (b_mAssetMgr->Has("test-music", typeid(TestView)) && b_mAudioMgr->IsStreamPlaying("test-music")) {
@@ -58,22 +83,23 @@ TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager
         }
 
 	});
-	pauseButton->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<PauseAudioStreamSignal>("test-music")); });
+	pauseBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<PauseAudioStreamSignal>("test-music")); });
+    gameBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<ViewPushSignal>(typeid(GameView))); });
 
-    EventManager::GetInstance()->SubscribeView<AudioStreamStopedEvent>(typeid(TestView), [this](std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->SubscribeView<AudioStreamStopedEvent>(typeid(TestView), [this, button](std::shared_ptr<Base::Event> event) {
         auto audioEvent = std::static_pointer_cast<AudioStreamStopedEvent>(event);
 
-        if (audioEvent->Name == "test-music") {
-            m_MusicProgressBar.Hide();
+        if (audioEvent->Name == "test-music" && button->HasChild("musicProg")) {
+            button->RemoveChild("musicProg");
         }
     });
 
-    EventManager::GetInstance()->SubscribeView<AudioStreamStartedEvent>(typeid(TestView), [this](std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->SubscribeView<AudioStreamStartedEvent>(typeid(TestView), [this, button](std::shared_ptr<Base::Event> event) {
         auto audioEvent = std::static_pointer_cast<AudioStreamStartedEvent>(event);
 
         if (audioEvent->Name == "test-music") {
             auto handle = b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView));
-            m_MusicProgressBar.Show();
+            auto musicProgressBar = button->AddChild<UI::ProgressBar>("musicProg", 0, handle.Get()->GetTotalSeconds());
 
             auto musicMetadata = handle.Get()->GetMetadata();
 
@@ -81,8 +107,6 @@ TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager
             m_MusicAlbumText = musicMetadata.Artist.toWString();
             m_MusicTrackNumText = std::to_wstring(musicMetadata.TrackNum); 
             m_MusicYearText = std::to_wstring(musicMetadata.Year);
-
-            m_MusicProgressBar.SetMaxValue(handle.Get()->GetTotalSeconds());
         }
     });
 }
@@ -101,25 +125,27 @@ void TestView::OnDraw(sf::RenderWindow* window) {
 
     auto musicYear = sf::Text(*font, m_MusicYearText, 15);
     musicYear.setPosition({ 400 - (musicYear.getGlobalBounds().size.x / 2), musicTrackNum.getPosition().y - musicYear.getGlobalBounds().size.y - 1 });
+    
+    auto progressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("prog");
 
-	auto count = sf::Text(*font, std::format("{}", m_ProgressBar.GetProgress()), 15);
+	auto count = sf::Text(*font, std::format("{}", progressBar->GetProgress()), 15);
 	count.setPosition({ 800 - count.getLocalBounds().size.x, 0});
 
-	auto percentage = sf::Text(*font, std::format("{:.0f}%", m_ProgressBar.GetPercentage() * 100), 15);
+	auto percentage = sf::Text(*font, std::format("{:.0f}%", progressBar->GetPercentage() * 100), 15);
 	percentage.setPosition({ 800 - percentage.getLocalBounds().size.x, count.getPosition().y + count.getLocalBounds().size.y + 1 });
 
-    auto countMusic = sf::Text(*font, std::format("{}", m_MusicProgressBar.GetProgress()), 15);
-    countMusic.setPosition({ 400 - countMusic.getGlobalBounds().size.x / 2, 300 });
 
-    auto maxMusic = sf::Text(*font, std::format("{}", m_MusicProgressBar.GetMaxValue()), 15);
-    maxMusic.setPosition({ 400 - maxMusic.getGlobalBounds().size.x / 2, countMusic.getPosition().y + maxMusic.getGlobalBounds().size.y - 1 });
+	// window->draw(*m_HUD);
 
-	window->draw(m_Button);
+    if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
+        auto musicProgressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("musicProg");
 
-	window->draw(m_ProgressBar);
-    window->draw(m_MusicProgressBar);
+        auto countMusic = sf::Text(*font, std::format("{}", musicProgressBar->GetProgress()), 15);
+        countMusic.setPosition({ 400 - countMusic.getGlobalBounds().size.x / 2, 300 });
 
-    if (m_MusicProgressBar.IsVisible()) {
+        auto maxMusic = sf::Text(*font, std::format("{}", musicProgressBar->GetMaxValue()), 15);
+        maxMusic.setPosition({ 400 - maxMusic.getGlobalBounds().size.x / 2, countMusic.getPosition().y + maxMusic.getGlobalBounds().size.y - 1 });
+
         window->draw(musicTitle);
         window->draw(musicAlbum);
         window->draw(musicTrackNum);
@@ -134,55 +160,58 @@ void TestView::OnDraw(sf::RenderWindow* window) {
 }
 
 void TestView::OnSFMLEvent(std::optional<sf::Event> event) {
-	m_Button.OnSFMLEvent(event);
+	m_HUD->OnSFMLEvent(event);
 
-	if (auto data = event->getIf<sf::Event::Resized>()) {
-
-	}
+    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
+        if (data->scancode == sf::Keyboard::Scan::Escape)
+            SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+    }
+    if (event->is<sf::Event::Resized>()) {
+        auto windowSize = b_mContext->WindowSize;
+        auto btn = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("gameBtn");
+        btn->SetPosition({ static_cast<float>(windowSize.x / 2) - static_cast<float>(btn->GetSize().x / 2), 100 });
+    }
 }
 
 void TestView::OnUpdate(float dt) {
+    auto progressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("prog");
+
 	m_Timer += dt;
 
 	if (m_Timer >= 0.1) {
 		m_Timer = 0;
 		progress += 0.5;
 	}
-	if (progress <= m_ProgressBar.GetMaxValue())
-		m_ProgressBar.UpdateProgress(progress);
+	if (progress <= progressBar->GetMaxValue())
+		progressBar->UpdateProgress(progress);
 
-    if (m_MusicProgressBar.IsVisible()) {
-        m_MusicProgressBar.UpdateProgress(std::floor(b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView)).Get()->GetTranscurredSeconds()));
+    if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
+        auto musicProgressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("musicProg");
+        musicProgressBar->UpdateProgress(std::floor(b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView)).Get()->GetTranscurredSeconds()));
+
+        musicProgressBar->SetPosition({ 400 - (musicProgressBar->GetSize().x / 2), 590 });
+        musicProgressBar->SetSize({ 300, 5 });
+        musicProgressBar->Update(dt);
     }
 
-	m_Button.SetPosition({ 5, 100 });
-	m_Button.SetSize({ 80, 30 });
-	m_Button.Update(dt);
+	progressBar->SetPosition({ 400 - (progressBar->GetSize().x / 2), 0});
+	progressBar->SetSize({ 725, 5 });
+	progressBar->Update(dt);
 
-	auto playBtn = m_Button.GetChild<UI::Button>("play"); 
-	playBtn->SetPosition({ 5 , 5 + m_Button.GetPosition().y + m_Button.GetSize().y });
-	playBtn->SetSize({ 80, 30 });
-	playBtn->Update(dt);
-
-	auto stopBtn = m_Button.GetChild<UI::Button>("stop");
-	stopBtn->SetPosition({ 5 + playBtn->GetPosition().x + playBtn->GetSize().x, 5 + m_Button.GetPosition().y + m_Button.GetSize().y});
-	stopBtn->SetSize({ 80, 30 });
-	stopBtn->Update(dt);
-
-	auto pauseBtn = m_Button.GetChild<UI::Button>("pause");
-	pauseBtn->SetPosition({ 5, 5 + playBtn->GetPosition().y + playBtn->GetSize().y });
-	pauseBtn->SetSize({ 80, 30 });
-	pauseBtn->Update(dt);
-
-	m_ProgressBar.SetPosition({ 400 - (m_ProgressBar.GetSize().x / 2), 0});
-	m_ProgressBar.SetSize({ 725, 5 });
-	m_ProgressBar.Update(dt);
-
-    m_MusicProgressBar.SetPosition({ 400 - (m_MusicProgressBar.GetSize().x / 2), 590 });
-    m_MusicProgressBar.SetSize({ 300, 5 });
-    m_MusicProgressBar.Update(dt);
 }
 
 void TestView::OnExit() {
+    Logger::AddInfo(typeid(TestView), "OnExit() called");
+}
 
+void TestView::OnSuspend() {
+    Logger::AddInfo(typeid(TestView), "OnSuspend() called");
+
+    m_HUD->SetVisible(false);
+}
+
+void TestView::OnResume() {
+    Logger::AddInfo(typeid(TestView), "OnResume() called");
+
+    m_HUD->SetVisible(true);
 }

@@ -21,12 +21,17 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Settings.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/System.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Asset.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Entity.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayer.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.inl"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/Camera.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/CameraMode.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/ShakeParams.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/ViewSignals.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/AudioSignals.h"
@@ -96,6 +101,9 @@ set(SOURCES
 	"Util/ChronoHelper.cpp"
 	"Util/UID.cpp"
     "Util/Helper.cpp"
+
+    "Camera/Camera.cpp"
+    "Camera/ShakeParams.cpp"
 
 	"Enum/LogType.cpp"
 	

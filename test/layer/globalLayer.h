@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/SystemManager.h"
@@ -19,7 +20,7 @@ private:
     bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr);
+	GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr);
 	~GlobalTestLayerUI() override = default;
 private:
 
@@ -32,6 +33,8 @@ public:
 	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
 
     void ToggleImGuiDrawing();
+
+    void UpdatePositions();
 
     void DrawImGuiDebug() const;
 };

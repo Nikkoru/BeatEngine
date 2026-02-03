@@ -27,6 +27,9 @@ void UIElement::Show() {
 
 	if (OnShow)
 		OnShow();
+    
+    for (const auto& [name, element] : m_Childs)
+        element->Show();
 }
 
 void UIElement::Hide() {
@@ -34,6 +37,9 @@ void UIElement::Hide() {
 
 	if (OnHide)
 		OnHide();
+
+    for (const auto& [name, element] : m_Childs)
+        element->Hide();
 }
 
 void UIElement::Update(float dt) {

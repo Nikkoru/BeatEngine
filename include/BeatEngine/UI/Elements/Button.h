@@ -4,7 +4,6 @@
 #include "SFML/Graphics.hpp"
 
 #include "BeatEngine/Asset/Font.h"
-#include "BeatEngine/Asset/Texture.h"
 
 #include <string>
 namespace UI {
