@@ -3,6 +3,7 @@
 #include <SFML/Window/Cursor.hpp>
 #include <memory>
 #include <SFML/Window.hpp>
+#include <SDL3/SDL.h>
 
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Managers.h"
@@ -25,7 +26,12 @@ private:
 	AudioManager* m_AudioMgr = nullptr;
 	UIManager* m_UIMgr = nullptr;
 private:
-	sf::RenderWindow* m_Window = nullptr;
+#ifdef BEATENGINE_VULKAN
+    SDL_Window* m_Window = nullptr;
+#else
+    sf::RenderWindow* m_Window = nullptr;
+#endif
+
 	sf::View m_View;
 	sf::Clock m_Clock;
     sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();

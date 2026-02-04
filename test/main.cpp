@@ -1,5 +1,6 @@
 #include "view/gameView.h"
 #define BEATENGINE_TEST
+#define BEATENGINE_VULKAN
 
 #include <BeatEngine/Game.h>
 #include <BeatEngine/Enum/AssetType.h>

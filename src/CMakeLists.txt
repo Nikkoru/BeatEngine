@@ -131,6 +131,7 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
 target_link_libraries(${PROJECT_NAME} 
 	PRIVATE 
+        SDL3
 		sfml-graphics 
 		sfml-network 
 		ImGui-SFML::ImGui-SFML
@@ -142,6 +143,8 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${SFML_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${SDL3_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")

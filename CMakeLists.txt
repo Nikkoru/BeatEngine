@@ -13,19 +13,27 @@ endif()
 
 project("BeatEngine")
 
-option(BUILD_TESTS "Build / include tests" ON)
+option(BUILD_TESTS "Build & include tests" ON)
+option(MAKE_TEST_BUILD "Makes this project a BeatEngine Test Build" OFF)
+option(USE_VULKAN "Instead of using SFML/OpenGL, Makes the default BeatEngine renderer and window manager Vulkan/SDL" OFF)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 set(HEADER_SOURCE_DIR "${PROJECT_SOURCE_DIR}/include")
 set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 
 # Include sub-projects.
 add_subdirectory("externals")
+
+if (MAKE_TEST_BUILD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_TEST)
+endif()
+if (USE_VULKAN)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_VULKAN)
+endif()
 add_subdirectory("src")
 
 if (BUILD_TESTS)

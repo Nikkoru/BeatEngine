@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+
 project("BeatEngineTest")
+set(MAKE_TEST_BUILD ON)
 
 add_executable(BeatEngineTest 
 	"main.cpp"

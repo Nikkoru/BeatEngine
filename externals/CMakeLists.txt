@@ -1,9 +1,8 @@
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-option(BUILD_SHARED_LIBS "Build shared libraries" OFF)
 
 include (FetchContent)
 
-# Fetch SFML
+# Fetch SFML (ON REMOVAL)
 FetchContent_Declare(SFML
         GIT_REPOSITORY https://github.com/SFML/SFML.git
         GIT_TAG 3.0.x
@@ -11,6 +10,18 @@ FetchContent_Declare(SFML
         EXCLUDE_FROM_ALL
         SYSTEM)
 FetchContent_MakeAvailable(SFML)
+
+# Fetch SDL
+FetchContent_Declare(SDL3
+        GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
+        GIT_TAG a962f40bbba175e9716557a25d5d7965f134a3d3
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+FetchContent_MakeAvailable(SDL3)
+
+# Find Vulkan
+find_package(slang CONFIG HINTS "$ENV{VULKAN_SDK}/lib/cmake" REQUIRED)
 
 # Fetch ImGui
 FetchContent_Declare(ImGui

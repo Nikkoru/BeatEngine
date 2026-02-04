@@ -29,6 +29,12 @@
 #include "BeatEngine/Events/GameEvent.h"
 
 Game::Game() {
+#ifdef BEATENGINE_TEST
+    Logger::AddInfo("", "This is a Test Build");
+#endif
+#ifdef BEATENGINE_VULKAN
+    Logger::AddInfo("", "Using Vulkan/SDL instead of SFML/OpenGL")
+#endif
     m_Context = new GameContext;
 
 	InitSettings();
