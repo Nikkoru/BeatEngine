@@ -28,12 +28,7 @@ set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 # Include sub-projects.
 add_subdirectory("externals")
 
-if (MAKE_TEST_BUILD)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_TEST)
-endif()
-if (USE_VULKAN)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_VULKAN)
-endif()
+
 add_subdirectory("src")
 
 if (BUILD_TESTS)

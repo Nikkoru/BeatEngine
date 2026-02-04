@@ -129,6 +129,13 @@ add_library(BeatEngine
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
+if (MAKE_TEST_BUILD)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_TEST)
+endif()
+if (USE_VULKAN)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_VULKAN)
+endif()
+
 target_link_libraries(${PROJECT_NAME} 
 	PRIVATE 
         SDL3
