@@ -21,17 +21,8 @@ public:
 public:
 	template<typename TSignal>
 		requires (std::is_base_of_v<Base::Signal, TSignal>)
-	inline void RegisterCallback(std::type_index id, Callback callback) {
-		auto signalID = std::type_index(typeid(TSignal));
-
-		if (m_SignalCallbacks.contains(signalID))
-			if (m_SignalCallbacks.at(signalID).contains(id))
-				m_SignalCallbacks.at(signalID).at(id).emplace_back(callback);
-			else
-				m_SignalCallbacks.at(signalID).try_emplace(id, std::vector<Callback>{ callback });
-		else
-			m_SignalCallbacks.try_emplace(signalID, std::map<std::type_index, std::vector<Callback>>{ { id, std::vector<Callback>{ callback } } });
-	}
-
+	void RegisterCallback(std::type_index id, Callback callback); 
 	void Send(std::shared_ptr<Base::Signal> sig);
 };
+
+#include "BeatEngine/Manager/SignalManager.inl"

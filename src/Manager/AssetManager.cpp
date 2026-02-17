@@ -1,6 +1,5 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
-#include <SFML/Graphics.hpp>
 #include <cstdint>
 #include <miniaudio.h>
 #include <sndfile.h>
@@ -34,11 +33,11 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-				sf::Texture sfTexture(fullpath);
-				auto texture = std::make_shared<Texture>(sfTexture);
-
-				handle = Base::AssetHandle<Texture>(texture);
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+				// sf::Texture sfTexture(fullpath);
+				// auto texture = std::make_shared<Texture>(sfTexture);
+				//
+				// handle = Base::AssetHandle<Texture>(texture);
+				// m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
@@ -49,11 +48,11 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-				sf::Texture sfTexture(fullpath);
-				auto texture = std::make_shared<Texture>(sfTexture);
+				// sf::Texture sfTexture(fullpath);
+				// auto texture = std::make_shared<Texture>(sfTexture);
 
-				handle = Base::AssetHandle<Texture>(texture);
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+				// handle = Base::AssetHandle<Texture>(texture);
+				// m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
@@ -226,11 +225,11 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-				sf::Font sfFont(fullpath);
-				auto font = std::make_shared<Font>(sfFont);
+				// sf::Font sfFont(fullpath);
+				// auto font = std::make_shared<Font>(sfFont);
 
-				handle = Base::AssetHandle<Font>(font);
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				// handle = Base::AssetHandle<Font>(font);
+				// m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
 				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -242,11 +241,11 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-				sf::Font sfFont(fullpath);
-				auto font = std::make_shared<Font>(sfFont);
+				// Font sfFont(fullpath);
+				// auto font = std::make_shared<Font>(sfFont);
 
-				handle = Base::AssetHandle<Font>(font);
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				// handle = Base::AssetHandle<Font>(font);
+				// m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
 				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -275,8 +274,8 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 }
 
 void AssetManager::DrawImGuiDebug() {
-    ImGui::Begin("BeatEngine AssetManager Debug Window");
-    ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
-    ImGui::Text("View Assets: %zu", m_ViewAssets.size());
-    ImGui::End();
+    // ImGui::Begin("BeatEngine AssetManager Debug Window");
+    // ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
+    // ImGui::Text("View Assets: %zu", m_ViewAssets.size());
+    // ImGui::End();
 }

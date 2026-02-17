@@ -12,5 +12,5 @@ LogType LogTypeUtils::StringToType(const std::string& str) {
 		if (str == pair.second)
 			return pair.first;
 	}
-	return LogType::None;
+	return LogType::Custom;
 }

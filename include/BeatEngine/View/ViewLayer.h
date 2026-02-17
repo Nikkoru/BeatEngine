@@ -1,9 +1,5 @@
 #pragma once
 
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/System/Vector2.hpp>
-#include <SFML/Window/Event.hpp>
-
 #include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/Camera/CameraMode.h"
 #include "BeatEngine/Camera/ShakeParams.h"
@@ -24,7 +20,7 @@ namespace Base {
 
 class Game;
 class ViewLayerStack;
-class ViewLayer : public sf::Drawable {
+class ViewLayer /*: public sf::Drawable*/ {
 private:
 	friend class ViewLayerStack;
 private:
@@ -39,12 +35,12 @@ protected:
 protected:
     GameContext* m_Context;
 private:
-	sf::Vector2f m_Size = { 0, 0 };
+	Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
 	
     Camera m_Camera;
 
-    sf::View m_MainView; 
+    // sf::View m_MainView; 
 private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
@@ -62,20 +58,20 @@ public:
 	virtual void OnUpdate(float dt) = 0;
 	virtual void OnAttach() {} 
 	virtual void OnDetach() {}
-	virtual void OnSFMLEvent(std::optional<sf::Event> event) = 0;
+	virtual void OnEvent(std::optional<Base::Event> event) = 0;
 
-	inline sf::Vector2f GetSize() const { return m_Size; }
+	inline Vector2f GetSize() const { return m_Size; }
 	inline float GetCameraZoom() const { return m_Camera.GetZoom(); };
 	inline std::shared_ptr<Base::View> GetOwner() const { return m_OwnerView; };
 
 	void SetCamera(Camera& camera);
 	void SetCameraMode(CameraMode mode);
-	void SetCameraPosition(sf::Vector2f pos);
+	void SetCameraPosition(Vector2f pos);
 	void SetCameraRotation(float rotation);
 	void SetCameraZoom(float zoom);
 	void ShakeCamera(ShakeParams params);
-	sf::Vector2f GetScreenToWorld(sf::Vector2f pos) const;
-	sf::Vector2f GetWorldToScreen(sf::Vector2f pos) const;
+	Vector2f GetScreenToWorld(Vector2f pos) const;
+	Vector2f GetWorldToScreen(Vector2f pos) const;
 	void StartCamera();
 	void StopCamera();
     

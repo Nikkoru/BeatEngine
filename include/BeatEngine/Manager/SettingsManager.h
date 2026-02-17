@@ -2,7 +2,6 @@
 
 #include "BeatEngine/Base/Settings.h"
 #include "BeatEngine/GameContext.h"
-#include "BeatEngine/Logger.h"
 
 #include <string>
 #include <filesystem>
@@ -27,15 +26,7 @@ private:
 public:
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
-	void RegisterSettingsData() {
-		std::type_index ID = typeid(TSettings);
-
-		if (m_Settings.contains(ID))
-			Logger::AddWarning(typeid(SettingsManager), "{} is already registed", ID.name());
-		else
-			m_Settings.try_emplace(ID, std::make_shared<TSettings>());
-	}
-
+	void RegisterSettingsData(); 
 	std::shared_ptr<Base::Settings> GetSettings(std::string tag);
 	std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
 
@@ -48,3 +39,5 @@ public:
 private:
 	char* GetTextData(fs::path path);
 };
+
+#include "BeatEngine/Manager/SettingsManager.inl"

@@ -3,8 +3,7 @@
 #include "BeatEngine/Camera/CameraMode.h"
 #include "BeatEngine/Camera/ShakeParams.h"
 #include "BeatEngine/Base/Entity.h"
-#include <SFML/Graphics/View.hpp>
-#include <SFML/System/Vector2.hpp>
+#include "BeatEngine/Graphics/Vector2.h"
 #include <memory>
 class Camera {
 private:
@@ -12,7 +11,7 @@ private:
     ShakeParams m_Shake;
     CameraMode m_Mode;
     float m_Zoom;
-    sf::View m_View;
+    // sf::View m_View;
     bool m_AutoResizeToWindowSize = true;
 public:
     Camera() = default;
@@ -23,15 +22,15 @@ public:
     void SetFollowingEntity(std::shared_ptr<Base::Entity> entity);
     void SetMode(CameraMode mode);
     void SetShakeParams(ShakeParams params);
-    void SetPosition(sf::Vector2f pos);
-    void SetSize(sf::Vector2f size);
+    void SetPosition(Vector2f pos);
+    void SetSize(Vector2f size);
     void SetAutoResize(bool resize);
 public:
     float GetZoom() const;
     std::shared_ptr<Base::Entity> GetEntity() const;
     CameraMode GetMode() const;
     ShakeParams GetShakeParams() const;
-    sf::Vector2f GetPosition() const;
-    sf::Vector2f GetSize() const;
+    Vector2f GetPosition() const;
+    Vector2f GetSize() const;
     bool IsAutoResize() const;
 };

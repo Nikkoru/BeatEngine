@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
 #include <BeatEngine/UI/Elements/Button.h>
@@ -26,8 +27,8 @@ public:
 	TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr);
 	~TestView() override = default;
 public:
-	void OnDraw(sf::RenderWindow* window) override;
-	void OnSFMLEvent(std::optional<sf::Event> event) override;
+	void OnDraw(GraphicsManager* window) override;
+	void OnEvent(std::optional<Base::Event> event) override;
 	void OnUpdate(float dt) override;
 	void OnExit() override;
 

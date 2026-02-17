@@ -1,13 +1,9 @@
 #include "BeatEngine/Game.h"
 
-#include <SFML/Graphics/RenderWindow.hpp>
-#include <SFML/Window/Cursor.hpp>
-#include <SFML/Window/Event.hpp>
-#include <SFML/Window/WindowEnums.hpp>
 #include <cstdlib>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <imgui-SFML.h>
+// #include <imgui.h>
+// #include <imgui_internal.h>
+// #include <imgui-SFML.h>
 #include <memory>
 
 #include "BeatEngine/Base/Signal.h"
@@ -19,34 +15,31 @@
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Manager/ViewManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/ViewSignals.h"
 
 #include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/System/Time.h"
 
 Game::Game() {
 #ifdef BEATENGINE_TEST
     Logger::AddInfo("", "This is a Test Build");
 #endif
-#ifdef BEATENGINE_VULKAN
-    Logger::AddInfo("", "Using Vulkan/SDL instead of SFML/OpenGL")
-#endif
     m_Context = new GameContext;
 
-	InitSettings();
-	InitAudio();
-	InitAssets();
-	InitSystems();
-	InitWindow();
-	InitUI();
-	InitViews();
-	InitKeybinds();
-	SubscribeToGameEvent();
-	SubscribeToGameSignals();
+    m_ViewMgr = new ViewManager{ m_Context };
+    // m_AudioMgr = new AudioManager{ m_Context };
+    m_GraphicsMgr = new GraphicsManager{ m_Context };
+    m_UIMgr = new UIManager{ m_Context };
+    m_SystemMgr = new SystemManager{ m_Context };
+    m_SettingsMgr = new SettingsManager{ m_Context };
+    m_AssetMgr = new AssetManager{ m_Context };
 }
 
 Game::~Game() {
@@ -55,11 +48,9 @@ Game::~Game() {
 	delete m_SystemMgr;
 	delete m_AssetMgr;
 
-    delete m_Window;
-
     delete m_Context;
 	
-	ImGui::SFML::Shutdown();
+	// ImGui::SFML::Shutdown();
 }
 
 void Game::Run() {
@@ -75,40 +66,40 @@ void Game::Run() {
 		ApplyBaseSettings();
 	}
 
-	while (this->m_Window->isOpen() && m_Running) {
-		while (const auto event = this->m_Window->pollEvent()) {
-			if (m_Context->GFlags & GameFlags_ImGui)
-				ImGui::SFML::ProcessEvent(*m_Window, *event);
-            if ((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && (m_Context->GFlags & GameFlags_DisableKeyPressEvents))
-                continue;
-			if (event->is<sf::Event::Closed>()) {
-                EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-                m_Running = false;
-            }
-			if (auto data = event->getIf<sf::Event::Resized>()) {
-				m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(data->size.x), static_cast<float>(data->size.y) }));
-				m_Window->setView(m_View);
-
-                EventManager::GetInstance()->Send(std::make_shared<GameResized>(data->size));
-			}
-            if (m_Window->isOpen() && m_Running) {
-		    	m_GlobalLayers.OnSFMLEvent(event);
+	while (this->m_GraphicsMgr->IsOpen() && m_Running) {
+		while (const auto event = this->m_GraphicsMgr->PollEvent()) {
+			// if (m_Context->GFlags & GameFlags_ImGui)
+			// 	ImGui::SFML::ProcessEvent(*m_Window, *event);
+   //          if ((event->Is<sf::Event::KeyPressed>() || event->Is<sf::Event::KeyReleased>()) && (m_Context->GFlags & GameFlags_DisableKeyPressEvents))
+   //              continue;
+			// if (event->Is<sf::Event::Closed>()) {
+   //              EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
+   //              m_Running = false;
+   //          }
+			// if (auto data = event->GetIf<sf::Event::Resized>()) {
+			// 	// m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(data->size.x), static_cast<float>(data->size.y) }));
+			// 	// m_Window->setView(m_View);
+			//
+   //              EventManager::GetInstance()->Send(std::make_shared<GameResized>(data->size));
+			// }
+            if (m_GraphicsMgr->IsOpen() && m_Running) {
+		    	m_GlobalLayers.OnEvent(event);
             }
             else
                 break;
 
-            if (m_Window->isOpen() && m_Running) {
-			    if (!this->m_ViewMgr->OnSFMLEvent(event)) {
-				    this->m_Window->close();
+            if (m_GraphicsMgr->IsOpen() && m_Running) {
+			    if (!this->m_ViewMgr->OnEvent(event)) {
+                    m_GraphicsMgr->Close();
 				    break;
 			    }
             }
             else {
-                m_Window->close();
+                m_GraphicsMgr->Close();
                 break;
             }
 		}
-        if (m_Window->isOpen() && m_Running) {
+        if (m_GraphicsMgr->IsOpen() && m_Running) {
 		    this->Update();
 		    this->Draw();
 		    this->Display();
@@ -116,6 +107,35 @@ void Game::Run() {
         else
             break;
 	}
+}
+
+void Game::Initialize() {
+    Logger::AddInfo(typeid(Game), "Initializing Game");
+
+    InitSettings();
+	InitAudio();
+	InitAssets();
+	InitSystems();
+	InitWindow();
+	InitUI();
+	InitViews();
+	InitKeybinds();
+
+	SubscribeToGameEvent();
+	SubscribeToGameSignals();
+}
+
+void Game::Uninitialize() {
+    Logger::AddInfo(typeid(Game), "Game in shutdown");
+
+    // m_KeybindsMgr->Uninit();
+    // m_ViewMgr->Uninit();
+    // m_UIMgr->Uninit();
+    m_GraphicsMgr->Close();
+    m_SystemMgr->StopSystems();
+    // m_AssetMgr->Uninit();
+    // m_AudioMgr->Uninit();
+    // m_SettingsMgr->Uninit();
 }
 
 void Game::UseImGui(bool show) {
@@ -126,29 +146,25 @@ void Game::UseImGui(bool show) {
 }
 
 void Game::UseImGuiDocking(bool docking) {
-    if (docking)
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    else
-        ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_DockingEnable;
-}
-
-sf::Window* Game::GetWindow() {
-	return m_Window;
+    // if (docking)
+    //     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    // else
+    //     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_DockingEnable;
 }
 
 SettingsManager* Game::GetSettingsManager() {
     return m_SettingsMgr;
 }
 
-void Game::SetWindowSize(sf::Vector2u size) {
+void Game::SetWindowSize(Vector2u size) {
     auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
     settings->WindowSize = size;
 
-	m_Window->setSize(size);
+	m_GraphicsMgr->GetWindow()->SetSize(size);
 }
 
 void Game::SetWindowTitle(std::string title) {
-	m_Window->setTitle(title);
+    m_GraphicsMgr->SetWindowTitle(title);
 }
 
 void Game::PreloadSettings() {
@@ -174,7 +190,7 @@ void Game::RemoveFlags(GameFlags flags) {
 }
 
 void Game::DrawImGuiDebug() {
-    ImGui::Begin("BeatEngine Game Debug Window");
+    // ImGui::Begin("BeatEngine Game Debug Window");
     bool imguiToggle = m_Context->GFlags & GameFlags_ImGui;
     bool preloadToggle = m_Context->GFlags & GameFlags_Preload;
     bool fullscreenToggle = m_Context->GFlags & GameFlags_Fullscreen;
@@ -185,15 +201,15 @@ void Game::DrawImGuiDebug() {
     bool viewDisableKeyToggle = m_Context->VFlags & ViewFlags_DisableKeys;
 
 
-    ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
-    ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
-    ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
-    ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
-    ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
-    ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
-    ImGui::NewLine();
-    ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
-    ImGui::End();
+    // ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
+    // ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
+    // ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
+    // ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
+    // ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
+    // ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
+    // ImGui::NewLine();
+    // ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
+    // ImGui::End();
 }
 
 void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
@@ -221,74 +237,72 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 }
 
 void Game::Display() {
-	if (m_Context->GFlags & GameFlags_ImGui)
-		ImGui::SFML::Render(*m_Window);
-
-	m_Window->display();
+// if (m_Context->GFlags & GameFlags_ImGui)
+// 		ImGui::SFML::Render(*m_Window);
+//
+// 	m_Window->display();
+// }
 }
 
 void Game::Draw() {
-	m_Window->clear();
-
-	// m_AnimationMgr->DrawActiveAnimation(m_DeltaClock);
-	if (!m_ViewMgr->OnDraw(m_Window))
-		m_Window->close();
-
-	m_Window->draw(m_GlobalLayers);
-
-    m_UIMgr->OnDraw(m_Window);
-
-    if ((m_Context->GFlags & GameFlags_DrawDebugInfo) && (m_Context->GFlags & GameFlags_ImGui))
-        DrawImGuiDebug();
+    m_GraphicsMgr->Render();
+// m_Window->clear();
+//
+// 	// m_AnimationMgr->DrawActiveAnimation(m_DeltaClock);
+// 	if (!m_ViewMgr->OnDraw(m_Window))
+// 		m_Window->close();
+//
+// 	m_Window->draw(m_GlobalLayers);
+//
+//     m_UIMgr->OnDraw(m_Window);
+//
+//     if ((m_Context->GFlags & GameFlags_DrawDebugInfo) && (m_Context->GFlags & GameFlags_ImGui))
+//         DrawImGuiDebug();
 }
 
 void Game::Update() {
-    m_Context->WindowSize = m_Window->getSize();
+    // m_Context->WindowSize = m_Window->getSize();
+    //
+    // if (m_Context->GFlags & GameFlags_CursorChanged) {
+    //     m_Window->setMouseCursor(m_Cursor);
+    //     m_Context->GFlags &= ~GameFlags_CursorChanged;
+    // }
 
-    if (m_Context->GFlags & GameFlags_CursorChanged) {
-        m_Window->setMouseCursor(m_Cursor);
-        m_Context->GFlags &= ~GameFlags_CursorChanged;
-    }
-
-	auto sfDelta = m_Clock.restart();
-	auto deltaTime = sfDelta.asSeconds();
+	auto sfDelta = m_Clock.GetAndReset();
+	auto deltaTime = sfDelta.AsSeconds();
 
 	if (m_Context->GFlags & GameFlags_ImGui)
-		ImGui::SFML::Update(*m_Window, sfDelta);
+		// ImGui::SFML::Update(*m_Window, sfDelta);
 
 	if (!this->m_ViewMgr->OnUpdate(deltaTime)) {
-		this->m_Window->close();
+		// this->m_Window->close();
 		return;
 	}
-	this->m_SystemMgr->Update(deltaTime);
-
+	
+    this->m_SystemMgr->Update(deltaTime);
 	m_GlobalLayers.OnUpdate(deltaTime);
-
     m_UIMgr->Update(deltaTime);
 }
 
 void Game::ApplyBaseSettings() {
 	auto gameSettings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
 
-	m_Window->setFramerateLimit(gameSettings->FpsLimit);
-	m_Window->setSize(gameSettings->WindowSize);
-
-	if (gameSettings->WindowPosition != sf::Vector2i(-1, -1))
-		m_Window->setPosition(gameSettings->WindowPosition);
+	// m_Window->setFramerateLimit(gameSettings->FpsLimit);
+	// m_Window->setSize(gameSettings->WindowSize);
+	//
+	// if (gameSettings->WindowPosition != sf::Vector2i(-1, -1))
+	// 	m_Window->setPosition(gameSettings->WindowPosition);
 }
 
 void Game::InitSettings() {
 	Logger::AddInfo(typeid(Game), "Initializing settings...");
-	this->m_SettingsMgr = new SettingsManager(m_Context);
     
 	m_SettingsMgr->RegisterSettingsData<GameSettings>();
     m_SettingsMgr->ReadConfig(m_SettingsPath);
-
 }
 
 void Game::InitUI() {
 	Logger::AddInfo(typeid(Game), "Initializing UI...");
-	this->m_UIMgr = new UIManager(m_Context);
 }
 
 void Game::InitAudio() {
@@ -301,7 +315,6 @@ void Game::InitAudio() {
 
 void Game::InitViews() {
 	Logger::AddInfo(typeid(Game), "Initializing views...");
-	this->m_ViewMgr = new ViewManager(m_Context);
 	this->m_ViewMgr->SetGlobalAssetManager(m_AssetMgr);
     this->m_ViewMgr->SetGlobalAudioManager(m_AudioMgr);
     this->m_ViewMgr->SetGlobalSettingsManager(m_SettingsMgr);
@@ -310,50 +323,50 @@ void Game::InitViews() {
 
 void Game::InitSystems() {
     Logger::AddInfo(typeid(Game), "Initializing systems...");
-	this->m_SystemMgr = new SystemManager(m_Context);
 }
 
 void Game::InitAssets() {
 	Logger::AddInfo(typeid(Game), "Initializing assets...");
-	this->m_AssetMgr = new AssetManager(m_Context);
 }
 
 void Game::InitWindow() {
 	Logger::AddInfo(typeid(Game), "Initializing window...");
 
+    m_GraphicsMgr->Init();
+
 	auto settings = m_SettingsMgr->GetSettings(typeid(GameSettings));
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
     
-    if (gameSettings->WindowFullScreen)
-	    this->m_Window = new sf::RenderWindow(
-	        sf::VideoMode{}, 
-            "BeatEngine Game",
-            sf::Style::Default,
-            sf::State::Fullscreen 
-        );
-    else {
-	    this->m_Window = new sf::RenderWindow(
-	        sf::VideoMode(gameSettings->WindowSize), 
-            "BeatEngine Game",
-            sf::Style::Default,
-            sf::State::Windowed
-        );
-    }
-
+    // if (gameSettings->WindowFullScreen)
+	   //  this->m_Window = new sf::RenderWindow(
+	   //      sf::VideoMode{}, 
+    //         "BeatEngine Game",
+    //         sf::Style::Default,
+    //         sf::State::Fullscreen 
+    //     );
+    // else {
+	   //  this->m_Window = new sf::RenderWindow(
+	   //      sf::VideoMode(gameSettings->WindowSize), 
+    //         "BeatEngine Game",
+    //         sf::Style::Default,
+    //         sf::State::Windowed
+    //     );
+    // }
+    //
     if (gameSettings->WindowFullScreen)
         m_Context->GFlags |= GameFlags_Fullscreen;
 
-	this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
-	this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
-    this->m_Window->setVerticalSyncEnabled(gameSettings->VSync);
-	this->m_Window->setView(m_View);
-    this->m_Window->setMouseCursor(m_Cursor);
+	// this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
+	// this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
+ //    this->m_Window->setVerticalSyncEnabled(gameSettings->VSync);
+	// this->m_Window->setView(m_View);
+ //    this->m_Window->setMouseCursor(m_Cursor);
+	//
+ //    this->m_Context->WindowSize = m_Window->getSize();
 
-    this->m_Context->WindowSize = m_Window->getSize();
-
-	if (!ImGui::SFML::Init(*m_Window)) {
-        m_Window->close();
-    }
+// 	if (!ImGui::SFML::Init(*m_Window)) {
+//         m_Window->close();
+//     }
 }
 
 void Game::InitKeybinds() {
@@ -363,44 +376,44 @@ void Game::InitKeybinds() {
 void Game::SubscribeToGameEvent() {
 	Logger::AddInfo(typeid(Game), "Subscribing to game events...");
 
-    EventManager::GetInstance()->Subscribe<GameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->Subscribe<EventGameSettingsChanged>([this](std::shared_ptr<Base::Event> event) {
         
         auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
         
         bool curFullscreen = m_Context->GFlags & GameFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
-            m_Window->close();
-            delete m_Window;
-            if (settings->WindowFullScreen)
-                this->m_Window = new sf::RenderWindow(
-                    sf::VideoMode{}, 
-                    "BeatEngine Game",
-                    sf::Style::Default,
-                    sf::State::Fullscreen 
-                );
-            else {
-                this->m_Window = new sf::RenderWindow(
-                    sf::VideoMode(settings->WindowSize), 
-                    "BeatEngine Game",
-                    sf::Style::Default,
-                    sf::State::Windowed
-                );
-            }
+            // m_Window->close();
+            // delete m_Window;
+            // if (settings->WindowFullScreen)
+            //     this->m_Window = new sf::RenderWindow(
+            //         sf::VideoMode{}, 
+            //         "BeatEngine Game",
+            //         sf::Style::Default,
+            //         sf::State::Fullscreen 
+            //     );
+            // else {
+            //     this->m_Window = new sf::RenderWindow(
+            //         sf::VideoMode(settings->WindowSize), 
+            //         "BeatEngine Game",
+            //         sf::Style::Default,
+            //         sf::State::Windowed
+            //     );
+            // }
 
             if (settings->WindowFullScreen)
                 m_Context->GFlags |= GameFlags_Fullscreen;
             else if (m_Context->GFlags & GameFlags_Fullscreen)
                 m_Context->GFlags &= ~GameFlags_Fullscreen;
-            m_Window->display();
+        //     m_Window->display();
         }
 
-        m_Window->setFramerateLimit(settings->FpsLimit);
-        if (!settings->WindowFullScreen && m_Window->getSize() != settings->WindowSize) {
-            m_Window->setSize(settings->WindowSize);
-        }
-        m_Window->setVerticalSyncEnabled(settings->VSync);
-        m_Window->setMouseCursor(m_Cursor);
+        // m_Window->setFramerateLimit(settings->FpsLimit);
+        // if (!settings->WindowFullScreen && m_Window->getSize() != settings->WindowSize) {
+        //     m_Window->setSize(settings->WindowSize);
+        // }
+        // m_Window->setVerticalSyncEnabled(settings->VSync);
+        // m_Window->setMouseCursor(m_Cursor);
     });
 
 }
@@ -416,18 +429,19 @@ void Game::SubscribeToGameSignals() {
 	});
 
     SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-        EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-        m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
-        m_Window->setMouseCursor(m_Cursor);
+        EventManager::GetInstance()->Send(std::make_shared<EventGameExiting>());
+        // m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
+        // m_Window->setMouseCursor(m_Cursor);
+        Uninitialize();
         m_Running = false;
         // exit(0);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-        auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
-        m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
-        m_Context->GFlags |= GameFlags_CursorChanged;
-    });
+    // SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+    //     auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
+    //     // m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
+    //     m_Context->GFlags |= GameFlags_CursorChanged;
+    // });
 
     SignalManager::GetInstance()->RegisterCallback<GameToggleImGui>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<GameToggleImGui>(sig);

@@ -1,33 +1,33 @@
 #pragma once
 
-#include <BeatEngine/Base/Event.h>
+#include "BeatEngine/Base/Event.h"
 #include <string>
 
-class AudioStreamStopedEvent : public Base::Event {
+class EventAudioStreamStoped : public Base::Event {
 public:
     std::string Name;
 public:
-    AudioStreamStopedEvent(std::string name) : Base::Event(typeid(AudioStreamStopedEvent)), Name(name) {}
+    EventAudioStreamStoped(std::string name) : Base::Event(typeid(EventAudioStreamStoped)), Name(name) {}
 };
 
-class AudioStreamStartedEvent : public Base::Event {
+class EventAudioStreamStarted : public Base::Event {
 public:
     std::string Name;
 public:
-    AudioStreamStartedEvent(std::string name) : Base::Event(typeid(AudioStreamStartedEvent)), Name(name) {}
+    EventAudioStreamStarted(std::string name) : Base::Event(typeid(EventAudioStreamStarted)), Name(name) {}
 };
 
-class SoundStartedEvent : public Base::Event {
+class EventSoundStarted : public Base::Event {
 public:
     std::string Name;
 public:
-    SoundStartedEvent(std::string name) : Base::Event(typeid(SoundStartedEvent)), Name(name) {}
+    EventSoundStarted(std::string name) : Base::Event(typeid(EventSoundStarted)), Name(name) {}
 };
 
-class SoundStopedEvent : public Base::Event {
+class EventSoundStoped : public Base::Event {
 public:
     std::string Name;
 public:
-    SoundStopedEvent(std::string name) : Base::Event(typeid(SoundStopedEvent)), Name(name) {}
+    EventSoundStoped(std::string name) : Base::Event(typeid(EventSoundStoped)), Name(name) {}
 };
 

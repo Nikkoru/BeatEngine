@@ -17,10 +17,10 @@ void GameSettings::Read(const char* line) {
         VSync = Helper::ParseBoolFromString(buf);
     }
     else if (sscanf(line, "windowPos=%i,%i", &x, &y) == 2) {
-		WindowPosition = sf::Vector2i(x, y);
+		WindowPosition = Vector2i(x, y);
 	}
     else if (sscanf(line, "windowSize=%i,%i", &x, &y) == 2) {
-		WindowSize = sf::Vector2u(x, y);
+		WindowSize = Vector2u(x, y);
 	}
     else if (sscanf(line, "fullscreen=%s", &buf) == 1) {
         buf[5] = '\0';
@@ -35,8 +35,8 @@ std::string GameSettings::Write() {
 	config += m_SettingsTag + "\n";
 	config += std::format("fpsLimit={}", FpsLimit) + "\n";
     config += std::format("vsync={}", (VSync ? "true" :"false")) + "\n";
-	config += std::format("windowPos={},{}", WindowPosition.x, WindowPosition.y) + "\n";
-	config += std::format("windowSize={},{}", WindowSize.x, WindowSize.y) + "\n";
+	config += std::format("windowPos={},{}", WindowPosition.X, WindowPosition.Y) + "\n";
+	config += std::format("windowSize={},{}", WindowSize.X, WindowSize.Y) + "\n";
     config += std::format("fullscreen={}", (WindowFullScreen ? "true" : "false"));
 
 	return config;

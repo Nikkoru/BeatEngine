@@ -5,11 +5,12 @@
 #include <map>
 #include <memory>
 #include <functional>
-#include <SFML/Graphics.hpp>
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
@@ -18,15 +19,15 @@
 /// Semi-abstract base class for UI Elements compatible with SFML.
 /// As is compatible with SFML, it can draw its components using the normal <code>window.draw(UIElement)</code> method which each derivated class needs to implement.
 /// </summary>
-class UIElement : public sf::Drawable {
+class UIElement /*: public sf::Drawable*/ {
 protected:
 	std::map<std::string, Texture> m_Textures;
 
 	std::type_index m_ID = typeid(nullptr);
 
-	sf::Vector2f m_Size = { 0, 0 };
-	sf::Vector2f m_Position = { 0, 0 };;
-	sf::RectangleShape m_LayoutRect = sf::RectangleShape(m_Size);
+	Vector2f m_Size = { 0, 0 };
+	Vector2f m_Position = { 0, 0 };;
+	// sf::RectangleShape m_LayoutRect = sf::RectangleShape(m_Size);
 
     UIAlignmentV m_VAlignment = UIAlignmentV::Down;
     UIAlignmentH m_HAlignment = UIAlignmentH::Left;
@@ -58,16 +59,16 @@ public:
 	void Update(float dt);
     virtual void OnUpdate(float dt) = 0;
 
-	void SetSize(sf::Vector2f size);
-	void SetPosition(sf::Vector2f position);
+	void SetSize(Vector2f size);
+	void SetPosition(Vector2f position);
 	void AddTexture(std::string name, const Texture& texture);
 	void RemoveTexture(std::string name);
 
     void SetVAlignment(UIAlignmentV alignment);
     void SetHAlignment(UIAlignmentH alignment);
 
-	sf::Vector2f GetSize() const;
-	sf::Vector2f GetPosition() const;
+	Vector2f GetSize() const;
+	Vector2f GetPosition() const;
 	bool IsVisible() const;
 public:
 	bool HasChild() const;
@@ -75,11 +76,11 @@ public:
     size_t ChildCount() const;
 	void RemoveChild(const std::string& name);
 
-	void OnSFMLEvent(std::optional<sf::Event> event);
-	virtual void EventHandler(std::optional<sf::Event> event) {}
+	void OnEvent(std::optional<Base::Event> event);
+	virtual void EventHandler(std::optional<Base::Event> event) {}
 
-	virtual void OnDraw(sf::RenderTarget& target, sf::RenderStates states) const = 0;
-	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+	virtual void OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const = 0;
+	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;
 
 	template<typename TElement, typename... Args>
 		requires(std::is_base_of_v<UIElement, TElement>)

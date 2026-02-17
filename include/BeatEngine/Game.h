@@ -1,15 +1,14 @@
 #pragma once
 
-#include <SFML/Window/Cursor.hpp>
 #include <memory>
-#include <SFML/Window.hpp>
-#include <SDL3/SDL.h>
 
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 #include "BeatEngine/Enum/GameFlags.h"
 
+#include "BeatEngine/System/Clock.h"
 #include "BeatEngine/View/ViewLayerStack.h"
 
 #include "BeatEngine/Enum/AssetType.h"
@@ -19,26 +18,20 @@
 /// </summary>
 class Game {
 private:
-	ViewManager* m_ViewMgr = nullptr;
-	SystemManager* m_SystemMgr = nullptr;
-	AssetManager* m_AssetMgr = nullptr;
-	SettingsManager* m_SettingsMgr = nullptr;
-	AudioManager* m_AudioMgr = nullptr;
-	UIManager* m_UIMgr = nullptr;
+	ViewManager* m_ViewMgr{ nullptr };
+	SystemManager* m_SystemMgr{ nullptr };
+	AssetManager* m_AssetMgr{ nullptr };
+	SettingsManager* m_SettingsMgr{ nullptr };
+	AudioManager* m_AudioMgr{ nullptr };
+	UIManager* m_UIMgr { nullptr };
+    GraphicsManager* m_GraphicsMgr{ nullptr };
 private:
-#ifdef BEATENGINE_VULKAN
-    SDL_Window* m_Window = nullptr;
-#else
-    sf::RenderWindow* m_Window = nullptr;
-#endif
+	Clock m_Clock{};
+    // sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
 
-	sf::View m_View;
-	sf::Clock m_Clock;
-    sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
-
-	ViewLayerStack m_GlobalLayers;
+	ViewLayerStack m_GlobalLayers{};
     
-    GameContext* m_Context;
+    GameContext* m_Context{ nullptr };
 
     bool m_Running = false;
 private:
@@ -51,8 +44,10 @@ public:
 	/// Runs and updates the game.
 	/// </summary>
 	void Run();
+    void Initialize();
+    void Uninitialize();
 public:
-	/// <summary>
+    /// <summary>
 	/// Registers a custom system onto the SystemManager.
 	/// </summary>
 	/// <typeparam name="TSystem">the custom system class</typeparam>
@@ -78,9 +73,7 @@ public:
 
 	void UseImGui(bool show);
     void UseImGuiDocking(bool docking);
-	sf::Window* GetWindow();
     SettingsManager* GetSettingsManager();
-
 
 	template<typename TLayer>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
@@ -97,7 +90,7 @@ public:
         return std::static_pointer_cast<TLayer>(layer);
     }
 
-	void SetWindowSize(sf::Vector2u size);
+	void SetWindowSize(Vector2u size);
 	void SetWindowTitle(std::string title);
 
 	void PreloadSettings();

@@ -3,13 +3,21 @@
 #
 
 set(HEADERS
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h" 
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SettingsManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SettingsManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EntityManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AssetManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AssetManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SystemManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SystemManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AudioManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.inl"
@@ -25,6 +33,19 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/BaseWindow.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/VSyncMode.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Renderer.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector2.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector2.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector3.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector3.inl"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/VulkanFrameData.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/VulkanWindow.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/VulkanBoilerplate.h"
+
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayer.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.inl"
@@ -35,6 +56,10 @@ set(HEADERS
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/ViewSignals.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/AudioSignals.h"
+	
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Clock.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.inl"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
 
@@ -76,7 +101,8 @@ set(HEADERS
 )
 
 set(SOURCES
-	"Manager/ViewManager.cpp"	
+	"Manager/ViewManager.cpp"
+    "Manager/GraphicsManager.cpp"
 	"Manager/EventManager.cpp"
 	"Manager/SignalManager.cpp"
 	"Manager/EntityManager.cpp"
@@ -87,7 +113,14 @@ set(SOURCES
 	"Manager/UIManager.cpp"	
 
 	"Base/View.cpp"
+
+    "Graphics/BaseWindow.cpp"
+    "Graphics/Renderer.cpp"
 	
+    "Renderers/Vulkan.cpp"
+    "Renderers/VulkanWindow.cpp"
+    "Renderers/VulkanBoilerplate.cpp"
+
 	"View/ViewLayer.cpp"
 	"View/ViewLayerStack.cpp"
 
@@ -116,8 +149,12 @@ set(SOURCES
 	"UI/Elements/ProgressBar.cpp"
 
 	"Settings/GameSettings.cpp"
+	
+    "System/Clock.cpp"
+    "System/Time.cpp"
  
 	"Logger.cpp"
+    "vma.cpp"
 	
 	"Game.cpp"
 )
@@ -132,16 +169,44 @@ target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 if (MAKE_TEST_BUILD)
     target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_TEST)
 endif()
-if (USE_VULKAN)
+if (USE_VULKAN OR ON)
+    find_package(Vulkan REQUIRED volk)
+
+    target_compile_definitions(${PROJECT_NAME} PRIVATE VK_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_VULKAN)
+
+    target_include_directories(${PROJECT_NAME} PRIVATE "${SDL3_SOURCE_DIR}/include")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${VMA_SOURCE_DIR}/include")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
+    target_include_directories(${PROJECT_NAME} PRIVATE "${ImGui_SOURCE_DIR}")
+    target_link_libraries(${PROJECT_NAME}
+        PUBLIC 
+            SDL3
+            Vulkan::Vulkan
+            Vulkan::volk
+            VulkanMemoryAllocator
+            ImGui
+    )
+    if(WIN32)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE VK_USE_PLATFORM_WIN32_KHR)
+    elseif(APPLE)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE VK_USE_PLATFORM_MACOS_MVK)
+        target_link_libraries(${PROJECT_NAME} PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa")
+    elseif(UNIX AND NOT APPLE)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE VK_USE_PLATFORM_XCB_KHR)
+    endif()
+else()
+    target_link_libraries(${PROJECT_NAME}
+        PRIVATE
+        	sfml-graphics
+		    sfml-network 
+		    ImGui-SFML::ImGui-SFML
+    )
+    target_include_directories(${PROJECT_NAME} PRIVATE "${SFML_SOURCE_DIR}/include")
 endif()
 
 target_link_libraries(${PROJECT_NAME} 
 	PRIVATE 
-        SDL3
-		sfml-graphics 
-		sfml-network 
-		ImGui-SFML::ImGui-SFML
 		portaudio
 		miniaudio
 		sndfile
@@ -150,8 +215,6 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${SFML_SOURCE_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${SDL3_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")

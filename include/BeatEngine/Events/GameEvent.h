@@ -1,23 +1,22 @@
 #pragma once
 
 #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Graphics/Vector2.h"
 
-#include <SFML/System/Vector2.hpp>
-
-class GameSettingsChanged : public Base::Event {
+class EventGameSettingsChanged : public Base::Event {
 public:
-    GameSettingsChanged() : Base::Event(typeid(GameSettingsChanged)) {}
+    EventGameSettingsChanged() : Base::Event(typeid(EventGameSettingsChanged)) {}
 };
 
-class GameResized : public Base::Event {
+class EventGameResized : public Base::Event {
 public:
-    sf::Vector2u Size; 
+    Vector2u Size; 
 public:
-    GameResized(sf::Vector2u newSize) : Base::Event(typeid(GameResized)), Size(newSize) {} 
+    EventGameResized(Vector2u newSize) : Base::Event(typeid(EventGameResized)), Size(newSize) {} 
 };
 
-class GameExitingEvent : public Base::Event {
+class EventGameExiting : public Base::Event {
 public:
-    GameExitingEvent() : Base::Event(typeid(GameExitingEvent)) {}
+    EventGameExiting() : Base::Event(typeid(EventGameExiting)) {}
 };
 

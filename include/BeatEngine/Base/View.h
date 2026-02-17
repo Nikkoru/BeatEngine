@@ -1,11 +1,11 @@
 #pragma once
 
-#include <SFML/Graphics.hpp>
 #include <optional>
 #include <typeindex>
 
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/UIManager.h"
@@ -54,12 +54,12 @@ namespace Base {
 		/// Notifies the view to draw to the given window.
 		/// </summary>
 		/// <param name="window">the SFML window to draw</param>
-		virtual void OnDraw(sf::RenderWindow* window) = 0;
+		virtual void OnDraw(GraphicsManager* window) = 0;
 		/// <summary>
 		/// Notifies the view when SFML event is trigged
 		/// </summary>
 		/// <param name="event">the SFML event</param>
-		virtual void OnSFMLEvent(const std::optional<sf::Event> event) = 0;
+		virtual void OnEvent(const std::optional<Base::Event> event) = 0;
 		/// <summary>
 		/// Notifies the view to update.
 		/// </summary>

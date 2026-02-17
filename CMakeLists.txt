@@ -1,7 +1,7 @@
 ﻿# CMakeList.txt : Top-level CMake project file, do global configuration
 # and include sub-projects here.
 #
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.30)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
@@ -15,7 +15,8 @@ project("BeatEngine")
 
 option(BUILD_TESTS "Build & include tests" ON)
 option(MAKE_TEST_BUILD "Makes this project a BeatEngine Test Build" OFF)
-option(USE_VULKAN "Instead of using SFML/OpenGL, Makes the default BeatEngine renderer and window manager Vulkan/SDL" OFF)
+option(USE_VULKAN "Instead of using SFML/OpenGL, Makes the default BeatEngine renderer and window manager Vulkan/SDL" ON)
+option(BUILD_SHARED_LIBS, "build shared libraries" ON)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -27,8 +28,6 @@ set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 
 # Include sub-projects.
 add_subdirectory("externals")
-
-
 add_subdirectory("src")
 
 if (BUILD_TESTS)

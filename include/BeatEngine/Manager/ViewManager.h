@@ -7,6 +7,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/UIManager.h"
 
@@ -36,33 +37,17 @@ public:
 public:
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
-	void Push() {
-		Push(std::type_index(typeid(TView)));
-	}
+	void Push();
 	void Push(std::type_index viewID);
 
 	void Pop();
 
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
-	void RegisterView() {
-		auto ID = std::type_index(typeid(TView));
-		FabricCallback fabric = ([](GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr)
-			-> std::unique_ptr<Base::View> { return std::make_unique<TView>(context, assetMgr, settingsMgr, audioMgr, uiMgr); });
+	void RegisterView();
 
-		Logger::AddInfo(typeid(ViewManager), "Registing {}", typeid(TView).name());
-
-		bool firstView = ViewFabrics.empty();
-
-		if (ViewFabrics.find(ID) == ViewFabrics.end()) {
-			ViewFabrics.try_emplace(ID, fabric);
-			if (firstView)
-				MainView = ID;
-		}
-	}
-
-	bool OnSFMLEvent(std::optional<sf::Event> event);
-	bool OnDraw(sf::RenderWindow* window);
+	bool OnEvent(std::optional<Base::Event> event);
+	bool OnDraw(GraphicsManager* window);
 	bool OnUpdate(float dt);
 	bool OnExit();
 
@@ -77,3 +62,5 @@ public:
 public:
     void ShowImGuiDebugData();
 };
+
+#include "BeatEngine/Manager/ViewManager.inl"

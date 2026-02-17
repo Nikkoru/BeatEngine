@@ -6,13 +6,13 @@
 
 UIManager::UIManager(GameContext* context) : m_Context(context) {}
 
-void UIManager::OnSFMLEvent(std::optional<sf::Event> event) {
+void UIManager::OnEvent(std::optional<Base::Event> event) {
 	for (const auto& [name, layer] : m_GlobalLayers) {
-		layer->OnSFMLEvent(event);
+		layer->OnEvent(event);
 	}
 
 	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
-		layer->OnSFMLEvent(event);
+		layer->OnEvent(event);
 	}
 }
 
@@ -62,21 +62,13 @@ void UIManager::RemoveAllLayers() {
 	m_GlobalLayers.clear();
 }
 
-void UIManager::OnDraw(sf::RenderWindow* window) {
+void UIManager::OnDraw(GraphicsManager* window) {
 	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
-		window->draw(*layer);
+		// window->Render(*layer);
+        
 	}
 	for (const auto& [name, layer] : m_GlobalLayers) {
-		window->draw(*layer);
-	}
-}
-
-void UIManager::DrawLayer(const std::string layerName, sf::RenderWindow* window) {
-	if (m_GlobalLayers.contains(layerName)) {
-		window->draw(*m_GlobalLayers[layerName]);
-	}
-	else if (m_Layers[m_Context->ActiveView].contains(layerName)) {
-		window->draw(*m_Layers[m_Context->ActiveView][layerName]);
+		// window->Render(*layer);
 	}
 }
 

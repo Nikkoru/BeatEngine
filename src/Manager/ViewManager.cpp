@@ -5,6 +5,7 @@
 #include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Signals/ViewSignals.h"
@@ -29,7 +30,7 @@ ViewManager::ViewManager(GameContext* context) : MainView(typeid(nullptr)), m_Co
 		ViewStack.top()->OnResume();
 	});
     
-    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->Subscribe<EventGameExiting>([this](const std::shared_ptr<Base::Event> event) {
         while (!ViewStack.empty()) {
             ViewStack.top()->OnExit();
 
@@ -50,7 +51,7 @@ void ViewManager::Push(std::type_index viewID) {
             m_Context->ActiveView = MainView;
 
 			EventManager::GetInstance()->UpdateMainView(MainView);
-			EventManager::GetInstance()->Send(std::make_shared<ViewPushEvent>(MainView));
+			EventManager::GetInstance()->Send(std::make_shared<EventViewPush>(MainView));
 		}
 		else
 			Logger::AddError(typeid(ViewManager), "View not registed. You need to register the view with RegisterView<TView>()");
@@ -72,16 +73,16 @@ void ViewManager::Pop() {
         ViewStack.top()->OnResume();
 
 		EventManager::GetInstance()->UpdateMainView(MainView);
-		EventManager::GetInstance()->Send(std::make_shared<ViewPopEvent>(typeid(MainView)));
+		EventManager::GetInstance()->Send(std::make_shared<EventViewPop>(typeid(MainView)));
 	}
 	else
 		Logger::AddInfo(typeid(ViewManager), "Only one or no view. Not popping view");
 }
 
-bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
+bool ViewManager::OnEvent(std::optional<Base::Event> event) {
 	if (!ViewStack.empty()) {
-        if (!((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Context->VFlags & ViewFlags_DisableKeys))
-		    ViewStack.top()->OnSFMLEvent(event);
+        // if (!((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Context->VFlags & ViewFlags_DisableKeys))
+		    ViewStack.top()->OnEvent(event);
 		return true;
 	}
 	else {
@@ -90,7 +91,7 @@ bool ViewManager::OnSFMLEvent(std::optional<sf::Event> event) {
 	}
 }
 
-bool ViewManager::OnDraw(sf::RenderWindow* window) {
+bool ViewManager::OnDraw(GraphicsManager* window) {
 	if (!ViewStack.empty()) {
 		ViewStack.top()->OnDraw(window);
 		return true;

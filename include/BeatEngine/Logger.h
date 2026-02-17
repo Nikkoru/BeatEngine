@@ -3,20 +3,25 @@
 #include <string>
 #include <vector>
 #include <typeindex>
-#include <imgui.h>
 #include <memory>
 #include <ctime>
 
 #include "BeatEngine/Enum/LogType.h"
 
 class Logger {
+private:
+    static std::string GetColorViaLogType(LogType logType);
 public:
 	Logger() = default;
 
 	static std::shared_ptr<Logger> GetInstance();
    
     template<typename... Args>
+	static void AddLog(std::string logType, std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
 	static void AddLog(LogType logType, std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+	static void AddLog(std::string logType, std::type_index caller, std::string_view fmt = "", Args&&... elms);
     template<typename... Args>
 	static void AddLog(LogType logType, std::type_index caller, std::string_view fmt = "", Args&&... elms);
 

@@ -6,6 +6,10 @@
 # specific compile commands
 compile_commands.json
 
+# Temp directories
+[Tt]mp
+[Tt]emp
+
 # User-specific files
 *.rsuser
 *.suo

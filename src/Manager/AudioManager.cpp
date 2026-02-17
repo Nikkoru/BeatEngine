@@ -68,7 +68,7 @@ int AudioManager::AudioCallback(
 			if (auto it = std::ranges::find(_this->m_Streams, stream); it != _this->m_Streams.end()) {
 				stream->Stop();
                 Logger::AddInfo(typeid(AudioManager), "Stoped \"{}\"", stream->GetName());
-                EventManager::GetInstance()->Send(std::make_shared<AudioStreamStopedEvent>(stream->GetName()));
+                EventManager::GetInstance()->Send(std::make_shared<EventAudioStreamStoped>(stream->GetName()));
 				_this->m_Streams.erase(it);
 				_this->m_PendingRemovalStreams[read] = nullptr;
 			}
@@ -93,7 +93,7 @@ int AudioManager::AudioCallback(
 					it++;
 				}
 				else {
-                    EventManager::GetInstance()->Send(std::make_shared<SoundStopedEvent>(sound->GetName()));
+                    EventManager::GetInstance()->Send(std::make_shared<EventSoundStoped>(sound->GetName()));
 					it = _this->m_Sounds.erase(it);
                 } 
 			}
@@ -117,7 +117,7 @@ int AudioManager::AudioCallback(
 				}
 				if (stream->Erase()) {
                     Logger::AddInfo(typeid(AudioManager), "Stoped \"{}\"", stream->GetName());
-                    EventManager::GetInstance()->Send(std::make_shared<AudioStreamStopedEvent>(stream->GetName())); 
+                    EventManager::GetInstance()->Send(std::make_shared<EventAudioStreamStoped>(stream->GetName())); 
 					it = _this->m_Streams.erase(it);
                 }
 			}
@@ -130,96 +130,6 @@ int AudioManager::AudioCallback(
 	return paContinue;
 }
 AudioManager::AudioManager(GameContext* context): m_Context(context) {
-	Pa_Initialize();
-
-	PaStreamParameters outputParams{};
-
-	outputParams.channelCount = 2;
-	outputParams.sampleFormat = paInt16;
-	outputParams.hostApiSpecificStreamInfo = nullptr;
-
-	std::vector<int> preferredRates = { 48000, 44100, 96000 };
-
-	std::string deviceName;
-	std::string apiName;
-    
-
-    int platformApiIndex = -1;
-#ifdef _WIN32
-    Logger::AddInfo(typeid(AudioManager), "Windows detected. Using WASAPI");
-
-	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
-		const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
-		if (info->type == paWASAPI) {
-			platformApiIndex = i;
-			break;
-		}
-	}
-#elif defined(__linux__)
-    Logger::AddInfo(typeid(AudioManager), "Linux detected. Using PulseAudio API");
-
-	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
-		const PaHostApiInfo *info = Pa_GetHostApiInfo(i);
-		if (info->type == paPulseAudio) {
-			platformApiIndex = i;
-			break;
-		}
-	}
-#endif
-	apiName = Pa_GetHostApiInfo(platformApiIndex)->name;
-	PaDeviceIndex deviceIndex = Pa_GetHostApiInfo(platformApiIndex)->defaultOutputDevice;
-
-	if (deviceIndex == paNoDevice)
-		Logger::AddError(typeid(AudioManager), "No Default {} device");
-
-	const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
-	outputParams.device = deviceIndex;
-	outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
-
-	bool supported = false;
-
-	for (int rate : preferredRates) {
-		if (Pa_IsFormatSupported(nullptr, &outputParams, rate) == paFormatIsSupported) {
-			m_SampleRate = rate;
-			supported = true;
-			break;
-		}
-	}
-
-	if (!supported) {
-		std::string msg = std::format("Format given (rate=({}, {}, {}), device={}, api={}) is not supported", 
-			*preferredRates.begin(), 
-			*(preferredRates.begin() + 1), 
-			*(preferredRates.begin() + 2),
-			deviceInfo->name,
-			Pa_GetHostApiInfo(platformApiIndex)->name
-		);
-
-		Logger::AddCritical(typeid(AudioManager), msg);
-		THROW_RUNTIME_ERROR(msg);
-	}
-    Logger::AddInfo(typeid(AudioManager), "trying to get output devices");
-
-    for (int i = 0; i <= Pa_GetHostApiInfo(platformApiIndex)->deviceCount; i++) {
-        auto device = Pa_GetDeviceInfo(i);
-        if (!device)
-            Logger::AddWarning(typeid(AudioManager), "invalid index : {}", i);
-        Logger::AddLog(LogType::DebugTarget, typeid(AudioManager), device->name);
-    }
-
-    deviceName = deviceInfo->name;
-
-	auto err = Pa_OpenStream(&m_AudioStream, nullptr, &outputParams, m_SampleRate, 1024, paClipOff, AudioCallback, this);
-
-	if (err != paNoError || Pa_StartStream(m_AudioStream) != paNoError) {
-		std::string msg = "Failed to initialize audio stream";
-
-		Logger::AddCritical(typeid(AudioManager), msg);
-		THROW_RUNTIME_ERROR(msg);
-	}
-
-	Logger::AddInfo(typeid(AudioManager), "Audio Stream opened. Sample Rate = {} Device = {}, API = {}, Latency = {}", m_SampleRate, deviceName, apiName, outputParams.suggestedLatency);
-
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
 		if (audioSignal->AudioStreamHandle) {
@@ -272,8 +182,100 @@ AudioManager::~AudioManager() {
 	Pa_Terminate();
 }
 
+void AudioManager::Init() {
+    Pa_Initialize();
+
+	PaStreamParameters outputParams{};
+
+	outputParams.channelCount = 2;
+	outputParams.sampleFormat = paInt16;
+	outputParams.hostApiSpecificStreamInfo = nullptr;
+
+	std::vector<int> preferredRates = { 48000, 44100, 96000 };
+
+	std::string deviceName;
+	std::string apiName;
+    
+
+    int platformApiIndex = -1;
+#ifdef _WIN32
+    Logger::AddInfo(typeid(AudioManager), "Windows detected. Using WASAPI");
+
+	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
+		const PaHostApiInfo* info = Pa_GetHostApiInfo(i);
+		if (info->type == paWASAPI) {
+			platformApiIndex = i;
+			break;
+		}
+	}
+#elif defined(__linux__)
+    Logger::AddInfo(typeid(AudioManager), "Linux detected. Using PulseAudio API");
+
+	for (int i = 0; i < Pa_GetHostApiCount(); ++i) {
+		const PaHostApiInfo *info = Pa_GetHostApiInfo(i);
+		if (info->type == paPulseAudio) {
+			platformApiIndex = i;
+			break;
+		}
+	}
+#endif
+	apiName = Pa_GetHostApiInfo(platformApiIndex)->name;
+	PaDeviceIndex deviceIndex = Pa_GetHostApiInfo(platformApiIndex)->defaultOutputDevice;
+
+	if (deviceIndex == paNoDevice)
+		Logger::AddError(typeid(AudioManager), "No Default {} device", apiName);
+
+	const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(deviceIndex);
+	outputParams.device = deviceIndex;
+	outputParams.suggestedLatency = deviceInfo->defaultLowOutputLatency;
+
+	bool supported = false;
+
+	for (int rate : preferredRates) {
+		if (Pa_IsFormatSupported(nullptr, &outputParams, rate) == paFormatIsSupported) {
+			m_SampleRate = rate;
+			supported = true;
+			break;
+		}
+	}
+
+	if (!supported) {
+		std::string msg = std::format("Format given (rate=({}, {}, {}), device={}, api={}) is not supported", 
+			*preferredRates.begin(), 
+			*(preferredRates.begin() + 1), 
+			*(preferredRates.begin() + 2),
+			deviceInfo->name,
+			Pa_GetHostApiInfo(platformApiIndex)->name
+		);
+
+		Logger::AddCritical(typeid(AudioManager), msg);
+		THROW_RUNTIME_ERROR(msg);
+	}
+    Logger::AddInfo(typeid(AudioManager), "trying to get output devices");
+
+    for (int i = 0; i <= Pa_GetHostApiInfo(platformApiIndex)->deviceCount; i++) {
+        auto device = Pa_GetDeviceInfo(i);
+        if (!device)
+            Logger::AddWarning(typeid(AudioManager), "invalid index : {}", i);
+        Logger::AddLog(LogType::DebugTarget, typeid(AudioManager), device->name);
+    }
+
+    deviceName = deviceInfo->name;
+
+	auto err = Pa_OpenStream(&m_AudioStream, nullptr, &outputParams, m_SampleRate, 1024, paClipOff, AudioCallback, this);
+
+	if (err != paNoError || Pa_StartStream(m_AudioStream) != paNoError) {
+		std::string msg = "Failed to initialize audio stream";
+
+		Logger::AddCritical(typeid(AudioManager), msg);
+		THROW_RUNTIME_ERROR(msg);
+	}
+
+	Logger::AddInfo(typeid(AudioManager), "Audio Stream opened. Sample Rate = {} Device = {}, API = {}, Latency = {}", m_SampleRate, deviceName, apiName, outputParams.suggestedLatency);
+}
+
 void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
-    EventManager::GetInstance()->Send(std::make_shared<SoundStartedEvent>(sound->GetName()));
+    EventManager::GetInstance()->Send(std::make_shared<EventSoundStarted>(sound->GetName()));
 
 	size_t write = m_SoundWriteIndex.load();
 	size_t nextWrite = (write + 1) % MAX_PENDING_SOUNDS;
@@ -289,7 +291,7 @@ void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
 	Logger::AddInfo(typeid(AudioManager), "Adding \"{}\"onto the queue", stream->GetName());
     stream->ResetSeconds();
 
-    EventManager::GetInstance()->Send(std::make_shared<AudioStreamStartedEvent>(stream->GetName()));
+    EventManager::GetInstance()->Send(std::make_shared<EventAudioStreamStarted>(stream->GetName()));
 
 	size_t write = m_StreamWriteIndex.load();
 	size_t nextWrite = (write + 1) % MAX_PENDING_STREAMS;

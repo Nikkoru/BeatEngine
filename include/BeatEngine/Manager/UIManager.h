@@ -1,6 +1,8 @@
 #pragma once
 
+#include "BeatEngine/Base/Event.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UILayer.h"
 
 #include <typeindex>
@@ -15,7 +17,7 @@ public:
 	UIManager(GameContext* context);
 	~UIManager() = default;
 
-	void OnSFMLEvent(std::optional<sf::Event> event);
+	void OnEvent(std::optional<Base::Event> event);
 
 	std::shared_ptr<UILayer> AddLayer(const std::string layerName, bool global = false);
 	void RemoveLayer(const std::string layerName, bool global = false);
@@ -24,8 +26,7 @@ public:
 	void RemoveGlobalLayers();
 	void RemoveAllLayers();
 
-	void OnDraw(sf::RenderWindow* window);
-	void DrawLayer(const std::string layerName, sf::RenderWindow* window);
+	void OnDraw(GraphicsManager* window);
 
 	void Update(float dt);
     

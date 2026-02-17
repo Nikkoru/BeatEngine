@@ -7,7 +7,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
 
-#include <imgui.h>
+// #include <imgui.h>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -18,7 +18,7 @@ SettingsManager::SettingsManager(GameContext* context): m_Context(context) {
 
         SetSettings(setSignal->SettingsID, setSignal->Settings);
 
-        EventManager::GetInstance()->Send(std::make_shared<GameSettingsChanged>());
+        EventManager::GetInstance()->Send(std::make_shared<EventGameSettingsChanged>());
     });
 }
 
@@ -55,7 +55,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 		free(buf);
 	}
 	else {
-		Logger::AddWarning(typeid(SettingsManager), "File dosen't exists, creating");
+		Logger::AddWarning(typeid(SettingsManager), "File doesn't exists, creating file");
 		std::ofstream f(path);
 		f.close();
 	}
@@ -130,9 +130,9 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::DrawImGuiDebug() {
-    ImGui::Begin("BeatEngine SettingsManager Debug Window");
-    ImGui::Text("Settings : %zu", m_Settings.size());
-    ImGui::End();
+    // ImGui::Begin("BeatEngine SettingsManager Debug Window");
+    // ImGui::Text("Settings : %zu", m_Settings.size());
+    // ImGui::End();
 }
 
 char* SettingsManager::GetTextData(fs::path path) {

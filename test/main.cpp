@@ -20,10 +20,6 @@ int main() {
     game.UseImGui(true);
     game.UseImGuiDocking(true);
 
-	game.PreloadSettings();
-
-	auto settings = game.GetSettings<GameSettings>();
-
 	game.SetWindowTitle("Now you can change the title!");
 
 	game.LoadGlobalAssets({
@@ -41,10 +37,8 @@ int main() {
 		},
 	});
 
+    game.Initialize();
 	game.AddGlobalLayer<GlobalTestLayerUI>();
-    auto layer = game.GetGlobalLayer<GlobalTestLayerUI>();
-
-	game.SaveSettings();
 
 	game.Run();
 }

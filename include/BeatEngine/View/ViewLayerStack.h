@@ -2,9 +2,6 @@
 
 #include "BeatEngine/View/ViewLayer.h"
 
-#include <SFML/Graphics/Drawable.hpp>
-#include <SFML/Window/Event.hpp>
-
 #include <optional>
 #include <map>
 #include <typeindex>
@@ -14,7 +11,7 @@ namespace Base {
 	class View;
 }
 
-class ViewLayerStack : public sf::Drawable {
+class ViewLayerStack /*: public sf::Drawable*/ {
 private:
 	friend class Base::View;
 	std::map<std::type_index, std::shared_ptr<ViewLayer>> m_Layers;
@@ -31,10 +28,10 @@ public:
 
 	std::shared_ptr<ViewLayer> GetLayer(std::type_index id);
 
-	void OnSFMLEvent(std::optional<sf::Event> event);
+	void OnEvent(std::optional<Base::Event> event);
 	void OnUpdate(float dt);
 
-	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;
 };
 
 #include "BeatEngine/View/ViewLayerStack.inl"

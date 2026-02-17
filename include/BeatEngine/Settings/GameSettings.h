@@ -1,16 +1,16 @@
 #pragma once
 
 #include "BeatEngine/Base/Settings.h"
+#include "BeatEngine/Graphics/Vector2.h"
 
-#include <SFML/System/Vector2.hpp>
 
 class GameSettings : public Base::Settings {
 public:
 	unsigned int FpsLimit = 60;
     bool VSync = false;
 
-	sf::Vector2i WindowPosition = { -1, -1 };
-	sf::Vector2u WindowSize = { static_cast<unsigned int>(800), static_cast<unsigned int>(600) };
+	Vector2i WindowPosition = { -1, -1 };
+	Vector2u WindowSize = { static_cast<unsigned int>(800), static_cast<unsigned int>(600) };
 
     bool WindowFullScreen = false;
 public:

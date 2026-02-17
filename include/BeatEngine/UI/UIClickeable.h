@@ -26,9 +26,9 @@ public:
 
     bool IsHovered();
 
-	void EventHandler(std::optional<sf::Event> event) override;
+	void EventHandler(std::optional<Base::Event> event) override;
 private:
-	void OnMouseMove(sf::Vector2i position);
-	void OnMousePressed(sf::Mouse::Button button, sf::Vector2i position);
-	void OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position);
+	void OnMouseMove(Vector2i position);
+	// void OnMousePressed(sf::Mouse::Button button, sf::Vector2i position);
+	// void OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position);
 };

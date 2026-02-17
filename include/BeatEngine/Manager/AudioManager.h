@@ -47,6 +47,8 @@ public:
 	AudioManager(GameContext* context);
 	~AudioManager();
 public:
+    void Init();
+
 	void PlaySound(std::shared_ptr<Sound> sound);
 	void PlayStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::shared_ptr<AudioStream> stream);

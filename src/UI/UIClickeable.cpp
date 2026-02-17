@@ -3,7 +3,6 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Util/UIHelper.h"
-#include <SFML/Window/Cursor.hpp>
 #include <memory>
 
 void UIClickeable::SetOnRClick(std::function<void()> func) {
@@ -30,75 +29,75 @@ bool UIClickeable::IsHovered() {
     return this->m_Hovered;
 }
 
-void UIClickeable::EventHandler(std::optional<sf::Event> event) {
+void UIClickeable::EventHandler(std::optional<Base::Event> event) {
 	if (!event.has_value())
 		return;
 	
-	if (auto data = event->getIf<sf::Event::MouseMoved>())
-		OnMouseMove(data->position);
-	if (auto data = event->getIf<sf::Event::MouseButtonPressed>())
-		OnMousePressed(data->button, data->position);
-	if (auto data = event->getIf<sf::Event::MouseButtonReleased>())
-		OnMouseReleased(data->button, data->position);
+	// if (auto data = event->getIf<sf::Event::MouseMoved>())
+	// 	OnMouseMove(data->position);
+	// if (auto data = event->getIf<sf::Event::MouseButtonPressed>())
+	// 	OnMousePressed(data->button, data->position);
+	// if (auto data = event->getIf<sf::Event::MouseButtonReleased>())
+	// 	OnMouseReleased(data->button, data->position);
 }
 
-void UIClickeable::OnMouseMove(sf::Vector2i position) {
-	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
-
-	if (currentlyHovered && !m_Hovered) {
-        if (m_CursorFeedback)
-            SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Hand));
-		if (OnHover)
-			OnHover();
-	}
-	else if (!currentlyHovered && m_Hovered) {
-        if (m_CursorFeedback)
-            SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
-		if (OnUnHover)
-			OnUnHover();
-	}
-	m_Hovered = currentlyHovered;
-
-
-	if (m_Active)
-		m_Active = currentlyHovered;
+void UIClickeable::OnMouseMove(Vector2i position) {
+// 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
+//
+// 	if (currentlyHovered && !m_Hovered) {
+//         if (m_CursorFeedback)
+//             SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Hand));
+// 		if (OnHover)
+// 			OnHover();
+// 	}
+// 	else if (!currentlyHovered && m_Hovered) {
+//         if (m_CursorFeedback)
+//             SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
+// 		if (OnUnHover)
+// 			OnUnHover();
+// 	}
+// 	m_Hovered = currentlyHovered;
+//
+//
+// 	if (m_Active)
+// 		m_Active = currentlyHovered;
 }
 
-void UIClickeable::OnMousePressed(sf::Mouse::Button button, sf::Vector2i position) {
-	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
+// void UIClickeable::OnMousePressed(sf::Mouse::Button button, sf::Vector2i position) {
+// 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
+//
+// 	if (currentlyHovered) {
+// 		m_Active = true;
+//
+// 		if (OnActive)
+// 			OnActive();
+// 	}
+//
+// 	m_Hovered = currentlyHovered;
+// }
 
-	if (currentlyHovered) {
-		m_Active = true;
-
-		if (OnActive)
-			OnActive();
-	}
-
-	m_Hovered = currentlyHovered;
-}
-
-void UIClickeable::OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position) {
-	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
-
-	if (currentlyHovered && m_Active) {
-		switch (button) {
-		case sf::Mouse::Button::Left:
-			if (OnLClick)
-				OnLClick();
-			break;
-		case sf::Mouse::Button::Right:
-			if (OnRClick)
-				OnRClick();
-			break;
-		}
-
-		if (OnDeactive)
-			OnDeactive();
-	}
-	else {
-		if (OnUnHover)
-			OnUnHover();
-		m_Hovered = false;
-	}
-	m_Active = false;
-}
+// void UIClickeable::OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position) {
+// 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
+//
+// 	if (currentlyHovered && m_Active) {
+// 		switch (button) {
+// 		case sf::Mouse::Button::Left:
+// 			if (OnLClick)
+// 				OnLClick();
+// 			break;
+// 		case sf::Mouse::Button::Right:
+// 			if (OnRClick)
+// 				OnRClick();
+// 			break;
+// 		}
+//
+// 		if (OnDeactive)
+// 			OnDeactive();
+// 	}
+// 	else {
+// 		if (OnUnHover)
+// 			OnUnHover();
+// 		m_Hovered = false;
+// 	}
+// 	m_Active = false;
+// }

@@ -50,14 +50,14 @@ void UIElement::Update(float dt) {
             element->Update(dt);
 }
 
-void UIElement::SetSize(sf::Vector2f size) {
+void UIElement::SetSize(Vector2f size) {
 	this->m_Size = size;
-	this->m_LayoutRect.setSize(size);
+	// this->m_LayoutRect.setSize(size);
 }
 
-void UIElement::SetPosition(sf::Vector2f position) {
+void UIElement::SetPosition(Vector2f position) {
 	this->m_Position = position;
-    this->m_LayoutRect.setPosition(position);
+    // this->m_LayoutRect.setPosition(position);
 }
 
 void UIElement::AddTexture(std::string name, const Texture& texture) {
@@ -78,11 +78,11 @@ void UIElement::SetHAlignment(UIAlignmentH alignment) {
     this->m_HAlignment = alignment;
 }
 
-sf::Vector2f UIElement::GetSize() const {
+Vector2f UIElement::GetSize() const {
 	return m_Size;
 }
 
-sf::Vector2f UIElement::GetPosition() const {
+Vector2f UIElement::GetPosition() const {
 	return m_Position;
 }
 
@@ -115,7 +115,7 @@ void UIElement::RemoveChild(const std::string& name) {
 	}
 }
 
-void UIElement::OnSFMLEvent(std::optional<sf::Event> event) {
+void UIElement::OnEvent(std::optional<Base::Event> event) {
 	EventHandler(event);
 
 	if (!m_Childs.empty())
@@ -123,12 +123,12 @@ void UIElement::OnSFMLEvent(std::optional<sf::Event> event) {
 			element->EventHandler(event);
 }
 
-void UIElement::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    if (!m_Hidden)
-	    OnDraw(target, states);
-
-	if (!m_Childs.empty())
-		for (const auto& [childName, element] : m_Childs)
-            if (!element->m_Hidden)
-			    element->OnDraw(target, states);
+void UIElement::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
+ //    if (!m_Hidden)
+	//     OnDraw(target, states);
+	//
+	// if (!m_Childs.empty())
+	// 	for (const auto& [childName, element] : m_Childs)
+ //            if (!element->m_Hidden)
+	// 		    element->OnDraw(target, states);
 }

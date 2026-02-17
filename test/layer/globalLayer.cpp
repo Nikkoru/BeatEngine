@@ -1,6 +1,6 @@
 #include "globalLayer.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/Events/GameEvent.h"
+// #include "BeatEngine/Enum/GameFlags.h"
+// #include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 #include "BeatEngine/Signals/GameSignals.h"
@@ -11,11 +11,9 @@
 
 #include <BeatEngine/UI/Elements/Button.h>
 
-#include <SFML/Window/Event.hpp>
-#include <SFML/Window/Keyboard.hpp>
-#include <cmath>
+// #include <cmath>
 #include <format>
-#include <imgui.h>
+// #include <imgui.h>
 #include <memory>
 
 GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr, nullptr, nullptr, nullptr, nullptr) {
@@ -24,7 +22,7 @@ GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr, nul
 GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr) : ViewLayer(typeid(GlobalTestLayerUI), context, uiMgr, assetMgr, settingsMgr, audioMgr, systemMgr) {
 	m_HUD = uiMgr->AddLayer("GlobalTestLayerUI", true);
 
-	m_Font = assetMgr->Get<Font>("main-font").Get();
+	// m_Font = assetMgr->Get<Font>("main-font").Get();
     auto windowSize = m_Context->WindowSize;
 
 	auto root = m_HUD->SetRootElement<UI::Button>();
@@ -33,7 +31,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, Ass
     auto toggleVSyncBtn = root->AddChild<UI::Button>("vSyncToggle");
     auto toggleFullscreenBtn = root->AddChild<UI::Button>("fullscreenToggle");
 
-	root->SetFont(*m_Font);
+	// root->SetFont(*m_Font);
 	root->SetSize({80, 30});
     root->SetText("120 FPS");
 
@@ -44,7 +42,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, Ass
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
 
-    exitBtn->SetFont(*m_Font);
+    // exitBtn->SetFont(*m_Font);
     exitBtn->SetSize({ 80, 30 });
     exitBtn->SetText("Exit");
 
@@ -52,7 +50,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, Ass
         SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
     });
 
-    toggleVSyncBtn->SetFont(*m_Font);
+    // toggleVSyncBtn->SetFont(*m_Font);
     toggleVSyncBtn->SetSize({ 110, 30 });
     if (std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->VSync)
         toggleVSyncBtn->SetText("VSync On");
@@ -71,7 +69,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, Ass
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
 
-    toggleFullscreenBtn->SetFont(*m_Font);
+    // toggleFullscreenBtn->SetFont(*m_Font);
     toggleFullscreenBtn->SetSize({ 110, 30 });
     if (std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen)
         toggleFullscreenBtn->SetText("In fullscreen");
@@ -107,47 +105,47 @@ void GlobalTestLayerUI::OnAttach() {
 void GlobalTestLayerUI::OnDetach() {
 }
 
-void GlobalTestLayerUI::OnSFMLEvent(std::optional<sf::Event> event) {
-	m_HUD->OnSFMLEvent(event);
-
-    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
-        if (data->scancode == sf::Keyboard::Scan::Grave) {
-            ToggleImGuiDrawing();
-        }
-        else if (data->scancode == sf::Keyboard::Scan::F1) {
-            m_HUD->SetVisible(!m_HUD->IsVisible());
-        }
-    }
-    else if (event->is<sf::Event::Resized>()) {
-        UpdatePositions();
-    }
+void GlobalTestLayerUI::OnEvent(std::optional<Base::Event> event) {
+	// m_HUD->OnSFMLEvent(event);
+	//
+ //    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
+ //        if (data->scancode == sf::Keyboard::Scan::Grave) {
+ //            ToggleImGuiDrawing();
+ //        }
+ //        else if (data->scancode == sf::Keyboard::Scan::F1) {
+ //            m_HUD->SetVisible(!m_HUD->IsVisible());
+ //        }
+ //    }
+ //    else if (event->is<sf::Event::Resized>()) {
+ //        UpdatePositions();
+ //    }
 }
 
-void GlobalTestLayerUI::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-    auto font = m_Font->GetSFMLFont();
-
-	auto fpsText = sf::Text(*font, m_FPSText, 15);
-	fpsText.setPosition({ 0, 0 });
-    if (std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->VSync)
-        fpsText.setFillColor(sf::Color::Yellow);
-    else
-        fpsText.setFillColor(sf::Color::White);
-
-    auto deltaText = sf::Text(*font, m_DeltaText, 15);
-    deltaText.setPosition({0, fpsText.getGlobalBounds().size.y + 1});
-    deltaText.setFillColor(sf::Color::White);
-    
-    auto rect = sf::RectangleShape();
-    rect.setFillColor(sf::Color(50, 50, 50, 255));
-    rect.setSize({ 55, 30 }); 
-
-    target.draw(rect);
-
-	target.draw(fpsText);
-	target.draw(deltaText);
-	target.draw(*m_HUD);
-    if (m_DrawDebug)
-        DrawImGuiDebug();
+void GlobalTestLayerUI::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
+ //    auto font = m_Font->GetSFMLFont();
+	//
+	// auto fpsText = sf::Text(*font, m_FPSText, 15);
+	// fpsText.setPosition({ 0, 0 });
+ //    if (std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->VSync)
+ //        fpsText.setFillColor(sf::Color::Yellow);
+ //    else
+ //        fpsText.setFillColor(sf::Color::White);
+	//
+ //    auto deltaText = sf::Text(*font, m_DeltaText, 15);
+ //    deltaText.setPosition({0, fpsText.getGlobalBounds().size.y + 1});
+ //    deltaText.setFillColor(sf::Color::White);
+ //    
+ //    auto rect = sf::RectangleShape();
+ //    rect.setFillColor(sf::Color(50, 50, 50, 255));
+ //    rect.setSize({ 55, 30 }); 
+	//
+ //    target.draw(rect);
+	//
+	// target.draw(fpsText);
+	// target.draw(deltaText);
+	// target.draw(*m_HUD);
+ //    if (m_DrawDebug)
+ //        DrawImGuiDebug();
 }
 
 void GlobalTestLayerUI::ToggleImGuiDrawing() {
@@ -165,22 +163,22 @@ void GlobalTestLayerUI::UpdatePositions() {
     auto toggleFullscreenBtn = root->GetChild<UI::Button>("fullscreenToggle");
 
     root->SetPosition({ 90, 100 });
-    exitBtn->SetPosition({ 5, (windowSize.y - 5) - exitBtn->GetSize().y });
-    toggleVSyncBtn->SetPosition({ (windowSize.x - 5) - toggleVSyncBtn->GetSize().x, 100 });
-    toggleFullscreenBtn->SetPosition({(windowSize.x - 5) - toggleFullscreenBtn->GetSize().x, 135 });}
+    exitBtn->SetPosition({ 5, (windowSize.Y - 5) - exitBtn->GetSize().Y });
+    toggleVSyncBtn->SetPosition({ (windowSize.X - 5) - toggleVSyncBtn->GetSize().X, 100 });
+    toggleFullscreenBtn->SetPosition({(windowSize.X - 5) - toggleFullscreenBtn->GetSize().X, 135 });}
 
 void GlobalTestLayerUI::DrawImGuiDebug() const {
     auto text = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
 
-    ImGui::Begin("wa");
-    ImGui::Text("wa");
-    if (ImGui::Button(text)) {
-        auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
-        settings->WindowFullScreen = !settings->WindowFullScreen;
-
-        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
-    }
-    ImGui::End();
+    // ImGui::Begin("wa");
+    // ImGui::Text("wa");
+    // if (ImGui::Button(text)) {
+    //     auto settings = std::static_pointer_cast<GameSettings>(m_SettingsMgr->GetSettings(typeid(GameSettings)));
+    //     settings->WindowFullScreen = !settings->WindowFullScreen;
+    //
+    //     SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
+    // }
+    // ImGui::End();
 
 
     m_SettingsMgr->DrawImGuiDebug();

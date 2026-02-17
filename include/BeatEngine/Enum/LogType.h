@@ -12,6 +12,7 @@ enum class LogType : uint8_t {
 	Critical,
 	DebugTarget,
 	NoLogs = 99,
+    Custom,
 	None = 255
 };
 
@@ -22,13 +23,13 @@ public:
 	static std::map<LogType, std::string> GetTypeStringMap() { return _TypeString; }
 private:
 	static inline const std::map<LogType, std::string> _TypeString = {
-	{ LogType::All, "All" },
-	{ LogType::Info, "Info" },
-	{ LogType::Warning, "Warning" },
-	{ LogType::Error, "Error" },
-	{ LogType::Critical, "Critical" },
-	{ LogType::DebugTarget, "Debug Target" },
-	{ LogType::NoLogs, "No Logs" },
-	{ LogType::None, "None"}
+        { LogType::All, "All" },
+        { LogType::Info, "Info" },
+        { LogType::Warning, "Warning" },
+        { LogType::Error, "Error" },
+        { LogType::Critical, "Critical" },
+        { LogType::DebugTarget, "Debug Target" },
+        { LogType::NoLogs, "No Logs" },
+        { LogType::None, "None"}
 	};
 };

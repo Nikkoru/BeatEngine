@@ -2,7 +2,6 @@
 
 #include <ranges>
 
-#include <SFML/Graphics/RenderStates.hpp>
 
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
 	m_Layers.try_emplace(layer->m_ID, layer);
@@ -16,9 +15,9 @@ std::shared_ptr<ViewLayer> ViewLayerStack::GetLayer(std::type_index id) {
 	return nullptr;
 }
 
-void ViewLayerStack::OnSFMLEvent(std::optional<sf::Event> event) {
+void ViewLayerStack::OnEvent(std::optional<Base::Event> event) {
 	for (const auto& [type, layer] : m_Layers) {
-		layer->OnSFMLEvent(event);
+		layer->OnEvent(event);
 	}
 }
 
@@ -28,8 +27,8 @@ void ViewLayerStack::OnUpdate(float dt) {
 	}
 }
 
-void ViewLayerStack::draw(sf::RenderTarget& target, sf::RenderStates states) const {
-	for (const auto& [type, layer] : m_Layers) {
-		layer->draw(target, states);
-	}
+void ViewLayerStack::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
+	// for (const auto& [type, layer] : m_Layers) {
+	// 	layer->draw(target, states);
+	// }
 }

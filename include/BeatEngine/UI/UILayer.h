@@ -1,24 +1,25 @@
 #pragma once
 
 #include <memory>
-#include <SFML/Graphics.hpp>
 
+#include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
 #include "BeatEngine/UI/UIElement.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
 
-class UILayer : public sf::Drawable {
+class UILayer /*: public sf::Drawable*/ {
 private:
 	std::shared_ptr<UIElement> m_Root = nullptr;
 	std::shared_ptr<UIPanel> m_BackPanel = nullptr;
 
 	bool m_Hidden = false;
 
-	sf::Vector2f m_Size = { 0, 0 };
-	sf::Vector2f m_Position = { 0, 0 };
+	Vector2f m_Size = { 0, 0 };
+	Vector2f m_Position = { 0, 0 };
 public:
 	UILayer() = default;
-	UILayer(sf::Vector2f size, sf::Vector2f position);
+	UILayer(Vector2f size, Vector2f position);
 
 	template <typename TUI> 
 		requires(std::is_base_of_v<UIElement, TUI>)
@@ -30,10 +31,10 @@ public:
 
 	void SetLayerBackPanel();
 	void SetLayerBackPanel(std::shared_ptr<UIPanel> backPanel);
-	void OnSFMLEvent(std::optional<sf::Event> event);
+	void OnEvent(std::optional<Base::Event> event);
 	
 	void Update(float dt);
-	void draw(sf::RenderTarget& target, sf::RenderStates states) const override;
+	void Render(/*sf::RenderTarget& target, sf::RenderStates states */) const /*override*/;
 
     void SetVisible(bool visible);
 
