@@ -278,6 +278,8 @@ void Game::Update() {
 		// this->m_Window->close();
 		return;
 	}
+
+    m_GraphicsMgr->Update();
 	
     this->m_SystemMgr->Update(deltaTime);
 	m_GlobalLayers.OnUpdate(deltaTime);

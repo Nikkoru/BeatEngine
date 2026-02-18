@@ -36,6 +36,8 @@ private:
     VkDescriptorSet m_DescriptorSetTex{ VK_NULL_HANDLE };
 
     bool m_StopRendering{ false };
+    bool m_UpdateSwapchain{ false };
+    bool m_CreateDebugMessenger{ true };
     int m_FrameNumber{ 0 };
 private:
     VmaAllocator m_Allocator{ VK_NULL_HANDLE };
@@ -67,6 +69,8 @@ private:
 
     void pInitPipeline();
     void pUninitPipeline();
+private:
+    void CreateDebugCallback();
 public:
     void Init(std::string windowTitle, Vector2u windowSize) override;
     void Uninit() override;

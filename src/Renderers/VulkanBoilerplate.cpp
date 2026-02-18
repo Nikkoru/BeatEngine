@@ -3,6 +3,7 @@
 #include "BeatEngine/Util/Exception.h"
 
 #include <SDL3/SDL_vulkan.h>
+#include <cstdint>
 #include <print>
 #include <vector>
 #include <vulkan/vulkan_core.h>
@@ -19,12 +20,15 @@ void VK_CHECK(VkResult result) {
 }
 
 
-VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion) {
+VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::vector<const char*> pInstExt, std::vector<const char*> pInstLayers) {
     VkInstance instance{ VK_NULL_HANDLE };
 
     uint32_t instanceExtensionCount{};
 
     auto instanceExtension = SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount);
+    
+    for (auto i = 0; i < instanceExtensionCount; i++)
+        pInstExt.emplace_back(instanceExtension[i]);
 
     VkApplicationInfo appInfo{ 
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
@@ -35,8 +39,10 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion) {
     VkInstanceCreateInfo instanceInfo{
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
         .pApplicationInfo = &appInfo,
-        .enabledExtensionCount = instanceExtensionCount,
-        .ppEnabledExtensionNames = instanceExtension
+        .enabledLayerCount = static_cast<uint32_t>(pInstLayers.size()),
+        .ppEnabledLayerNames = pInstLayers.data(), 
+        .enabledExtensionCount = static_cast<uint32_t>(pInstExt.size()),
+        .ppEnabledExtensionNames = pInstExt.data()
     };
     
     VK_CHECK(vkCreateInstance(&instanceInfo, nullptr, &instance));
@@ -128,7 +134,7 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
     return device;
 }
 
-VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkFormat imageFormat) {
+VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkSwapchainKHR oldSwapchain, VkFormat imageFormat) {
     VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
 
     VkSurfaceCapabilitiesKHR surfaceCaps{};
@@ -150,6 +156,9 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = VK_PRESENT_MODE_FIFO_KHR
     };
+    if (oldSwapchain)
+        swapchainInfo.oldSwapchain = oldSwapchain;
+
     VK_CHECK(vkCreateSwapchainKHR(device, &swapchainInfo, nullptr, &swapchain));
 
     return swapchain;

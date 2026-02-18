@@ -25,7 +25,7 @@ void VulkanWindow::Init(std::string windowTitle, Vector2u windowSize) {
 
     SDL_Init(SDL_INIT_VIDEO);
     
-    SDL_WindowFlags winFlags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN);
+    SDL_WindowFlags winFlags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), size.X, size.Y, winFlags);
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Window created. Size = ({}, {}), Title = {}", size.X, size.Y, title);
 
