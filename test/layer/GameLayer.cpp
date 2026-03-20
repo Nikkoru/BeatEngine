@@ -1,19 +1,7 @@
 #include "GameLayer.h"
 #include "BeatEngine/View/ViewLayer.h"
+#include <memory>
 
-
-
-GameLayer::GameLayer(GameContext* context, 
-              UIManager* uiMgr, 
-              AssetManager* assetMgr,
-              SettingsManager* settingsMgr,
-              AudioManager* audioMgr,
-              SystemManager* systemMgr) 
-    : ViewLayer(typeid(GameLayer),
-                context,
-                uiMgr,
-                assetMgr,
-                settingsMgr,
-                audioMgr,
-                systemMgr) 
+GameLayer::GameLayer(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state)
+    : ViewLayer(typeid(GameLayer), context, state)
 {}

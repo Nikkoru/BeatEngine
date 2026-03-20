@@ -1,0 +1,108 @@
+set(HEADERS
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SettingsManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SettingsManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EntityManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AssetManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AssetManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SystemManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SystemManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/AudioManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/UIManager.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Managers.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Event.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/View.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Signal.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Settings.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/System.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Asset.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/Entity.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/BaseWindow.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/VSyncMode.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Renderer.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector2.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector2.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector3.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Vector3.inl"
+    
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Windows/SDL/Window.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Windows/GLFW/Window.h"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Renderer.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/FrameData.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Boilerplate.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Texture.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Shader.h"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/OpenGL/Renderer.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayer.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/View/ViewLayerStack.inl"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/Camera.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/CameraMode.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Camera/ShakeParams.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/ViewSignals.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Signals/AudioSignals.h"
+	
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Clock.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.inl"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/GameEvent.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/AudioEvent.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Texture.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Sound.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/AudioStream.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Shader.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Font.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/ChronoHelper.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UID.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Math.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Exception.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UIHelper.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Helper.h"
+	
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/Alignment.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AssetType.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/EnvFlags.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AssetType.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/GameFlags.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIElement.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UIClickeable.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Alignment.h"
+
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/UIPanel.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/Button.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/ProgressBar.h"
+
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Game.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Game.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/GameContext.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.inl"
+    PARENT_SCOPE
+)

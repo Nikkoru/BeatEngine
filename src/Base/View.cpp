@@ -15,19 +15,3 @@ void Base::View::OnResume() {
 bool Base::View::IsSuspended() const {
 	return b_mSuspended;
 }
-
-void Base::View::SetAssetManager(AssetManager* assetMgr) {
-	this->b_mAssetMgr = assetMgr;
-}
-
-void Base::View::SetSettingsManager(SettingsManager* settingsMgr) {
-	this->b_mSettingsMgr = settingsMgr;
-}
-
-void Base::View::SetAudioManager(AudioManager* audioMgr) {
-	this->b_mAudioMgr = audioMgr;
-}
-
-void Base::View::SetUIManager(UIManager* uiMgr) {
-	this->b_mUIMgr = uiMgr;
-}

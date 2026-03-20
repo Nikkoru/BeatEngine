@@ -3,6 +3,8 @@
 #include <memory>
 
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
@@ -18,21 +20,13 @@
 /// </summary>
 class Game {
 private:
-	ViewManager* m_ViewMgr{ nullptr };
-	SystemManager* m_SystemMgr{ nullptr };
-	AssetManager* m_AssetMgr{ nullptr };
-	SettingsManager* m_SettingsMgr{ nullptr };
-	AudioManager* m_AudioMgr{ nullptr };
-	UIManager* m_UIMgr { nullptr };
-    GraphicsManager* m_GraphicsMgr{ nullptr };
-private:
 	Clock m_Clock{};
     // sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
 
 	ViewLayerStack m_GlobalLayers{};
     
-    GameContext* m_Context{ nullptr };
-
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
     bool m_Running = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
@@ -53,42 +47,35 @@ public:
 	/// <typeparam name="TSystem">the custom system class</typeparam>
 	template<typename TSystem>
 		requires(std::is_base_of_v<Base::System, TSystem>)
-	void RegisterSystem() {
-		m_SystemMgr->RegisterSystem<TSystem>();
-	}
+	void RegisterSystem();
 	/// <summary>
 	/// Registers a view onto the ViewManger.
 	/// </summary>
 	/// <typeparam name="TView">the derivated view class</typeparam>
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
-	void RegisterView() {
-		m_ViewMgr->RegisterView<TView>();
-	}
+	void RegisterView();
+
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
-	void RegisterSettings() {
-		m_SettingsMgr->RegisterSettingsData<TSettings>();
-	}
+	void RegisterSettings();
+
+    template<typename TRenderer>
+        requires(std::is_base_of_v<Renderer, TRenderer>)
+    void SetRenderer();
+
+    void SetRenderer(std::shared_ptr<Renderer> renderer);
 
 	void UseImGui(bool show);
     void UseImGuiDocking(bool docking);
-    SettingsManager* GetSettingsManager();
 
 	template<typename TLayer>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
-	void AddGlobalLayer() {
-		std::shared_ptr<TLayer> layer = std::make_shared<TLayer>(m_Context, m_UIMgr, m_AssetMgr, m_SettingsMgr, m_AudioMgr, m_SystemMgr);
-
-		m_GlobalLayers.AttachLayer(layer);
-	}
+	void AddGlobalLayer();
     
     template<typename TLayer>
         requires(std::is_base_of_v<ViewLayer, TLayer>)
-    std::shared_ptr<TLayer> GetGlobalLayer() {
-        auto layer = m_GlobalLayers.GetLayer(typeid(TLayer));
-        return std::static_pointer_cast<TLayer>(layer);
-    }
+    std::shared_ptr<TLayer> GetGlobalLayer();
 
 	void SetWindowSize(Vector2u size);
 	void SetWindowTitle(std::string title);
@@ -99,11 +86,7 @@ public:
 
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
-	std::shared_ptr<TSettings> GetSettings() {
-		auto base = m_SettingsMgr->GetSettings(typeid(TSettings));
-
-		return std::static_pointer_cast<TSettings>(base);
-	}
+	std::shared_ptr<TSettings> GetSettings();
 
 	void SetConfigPath(std::filesystem::path path);
     void SetFlags(GameFlags flags);
@@ -166,3 +149,5 @@ private:
 	/// </summary>
 	void SubscribeToGameSignals();
 };
+
+#include "BeatEngine/Game.inl"

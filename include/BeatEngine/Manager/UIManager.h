@@ -2,9 +2,11 @@
 
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UILayer.h"
 
+#include <memory>
 #include <typeindex>
 
 class UIManager {
@@ -12,9 +14,10 @@ private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<UILayer>>> m_Layers;
 	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
 private:
-    GameContext* m_Context = nullptr;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 public:
-	UIManager(GameContext* context);
+	UIManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 	~UIManager() = default;
 
 	void OnEvent(std::optional<Base::Event> event);

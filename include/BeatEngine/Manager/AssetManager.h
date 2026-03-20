@@ -9,6 +9,7 @@
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 
 namespace fs = std::filesystem;
 
@@ -21,7 +22,7 @@ class AssetManager {
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset) : Handle(handle), Asset(asset) {}
 	};
 public:
-    AssetManager(GameContext* context);
+    AssetManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
     ~AssetManager();
 private:
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
@@ -29,7 +30,8 @@ private:
 private:
 	uint64_t m_AudioSampleRate = 48000;
 private:
-    GameContext* m_Context = nullptr;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)

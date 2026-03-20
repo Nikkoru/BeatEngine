@@ -12,7 +12,7 @@ public:
     virtual ~BaseWindow() = default;
 public:
 
-    virtual void Init(std::string windowTitle = "", Vector2u windowSize = { 0, 0 }) = 0;
+    virtual void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
     virtual void Uninit() = 0;
     // virtual void UpdateWindow();
 

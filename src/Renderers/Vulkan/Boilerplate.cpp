@@ -1,4 +1,4 @@
-#include "BeatEngine/Renderers/VulkanBoilerplate.h"
+#include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Exception.h"
 
@@ -151,7 +151,8 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
             .height = height
         },
         .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        .imageUsage = (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = VK_PRESENT_MODE_FIFO_KHR

@@ -5,15 +5,17 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "SDL3/SDL_video.h"
 #include <string>
-class VulkanWindow : public BaseWindow {
+class SDLWindow : public BaseWindow {
 private:
     SDL_Window* m_WindowImpl{ nullptr };
+    SDL_WindowFlags m_Flags{};
+
     bool m_Fullscreen{ false };
 public:
-    VulkanWindow() = default;
-    ~VulkanWindow() override = default;
+    SDLWindow() = default;
+    ~SDLWindow() override = default;
 public:
-    void Init(std::string windowTitle = "", Vector2u windowSize = { 0, 0 }) override;
+    void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
     void Uninit() override;
 
     void SetSize(const Vector2u size) override;
@@ -36,6 +38,14 @@ public:
     bool IsCursorVisible() const override;
 
     std::optional<Base::Event> PollEvent() override;
+public:
+    void SetFlags(SDL_WindowFlags flags);
+    void AddFlags(SDL_WindowFlags flags);
+    void RemoveFlags(SDL_WindowFlags flags);
+
+    void ClearFlags();
+private:
+    void LogActiveFlags();
 public:
     SDL_Window* GetWindowImpl();
 };

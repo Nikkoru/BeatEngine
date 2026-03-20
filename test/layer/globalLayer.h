@@ -2,11 +2,8 @@
 
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/GameContext.h"
-#include "BeatEngine/Manager/AudioManager.h"
-#include "BeatEngine/Manager/SettingsManager.h"
-#include "BeatEngine/Manager/SystemManager.h"
-#include <BeatEngine/View/ViewLayer.h>
-#include <BeatEngine/UI/UILayer.h>
+#include "BeatEngine/View/ViewLayer.h"
+#include "BeatEngine/UI/UILayer.h"
 
 #include <memory>
 #include <string>
@@ -20,7 +17,7 @@ private:
     bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(GameContext* context, UIManager* uiMgr, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, SystemManager* systemMgr);
+	GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 	~GlobalTestLayerUI() override = default;
 private:
 

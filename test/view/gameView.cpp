@@ -1,17 +1,16 @@
 #include "gameView.h"
 #include "../layer/GameLayer.h"
+#include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
+#include <memory>
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
 
-GameView::GameView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr) :
-Base::View(typeid(GameView), context, assetMgr, settingsMgr, audioMgr, uiMgr) {
+GameView::GameView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) :
+Base::View(typeid(GameView), context, state) {
     auto layer = b_mLayerStack.AttachLayer<GameLayer>();
     layer->SetGameContext(context);
-    layer->SetAssetManager(assetMgr);
-    layer->SetSettingsManager(settingsMgr);
-    layer->SetAudioManager(audioMgr);
-    layer->SetUIManager(uiMgr);
+    layer->SetGameState(state);
 }
 
 void GameView::OnDraw(GraphicsManager* window) {

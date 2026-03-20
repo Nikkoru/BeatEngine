@@ -1,5 +1,7 @@
 #include "BeatEngine/Manager/SystemManager.h"
 
+#include "BeatEngine/Logger.h"
+
 template <typename TSystem>
     requires(std::is_base_of_v<Base::System, TSystem>)
 void SystemManager::RegisterSystem() {

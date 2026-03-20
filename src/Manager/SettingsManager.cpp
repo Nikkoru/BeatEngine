@@ -12,7 +12,7 @@
 #include <fstream>
 #include <memory>
 
-SettingsManager::SettingsManager(GameContext* context): m_Context(context) {
+SettingsManager::SettingsManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state): m_Context(context) {
     SignalManager::GetInstance()->RegisterCallback<SetSettingsSignal>(typeid(SettingsManager), [this](const std::shared_ptr<Base::Signal> signal) {
         auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
 

@@ -27,13 +27,8 @@ private:
 	std::shared_ptr<Base::View> m_OwnerView = nullptr;
 	std::type_index m_ID = typeid(nullptr);
 protected:
-	UIManager* m_UIMgr = nullptr;
-	AssetManager* m_AssetMgr = nullptr;
-    SettingsManager* m_SettingsMgr = nullptr;
-    AudioManager* m_AudioMgr = nullptr;
-    SystemManager* m_SystemMgr = nullptr;
-protected:
-    GameContext* m_Context;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 private:
 	Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
@@ -45,13 +40,9 @@ private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
 	ViewLayer(std::type_index id,
-              GameContext* context = nullptr,
-              UIManager* uiMgr = nullptr, 
-              AssetManager* assetMgr = nullptr, 
-              SettingsManager* settingsMgr = nullptr, 
-              AudioManager* audioMgr = nullptr, 
-              SystemManager* systemMgr = nullptr)
-		: m_ID(id), m_Context(context), m_UIMgr(uiMgr), m_AssetMgr(assetMgr), m_SettingsMgr(settingsMgr), m_AudioMgr(audioMgr), m_SystemMgr(systemMgr) {}
+              std::shared_ptr<GameContext> context = nullptr,
+              std::shared_ptr<GameState> state = nullptr)
+		: m_ID(id), m_Context(context), m_State(state) {}
 
 	virtual ~ViewLayer() = default;
 
@@ -75,12 +66,8 @@ public:
 	void StartCamera();
 	void StopCamera();
     
-    void SetGameContext(GameContext* context) { m_Context = context; }
-	void SetUIManager(UIManager* mgr) { m_UIMgr = mgr; }
-    void SetAssetManager(AssetManager* mgr) { m_AssetMgr = mgr; }
-    void SetSettingsManager(SettingsManager* mgr) { m_SettingsMgr = mgr; }
-    void SetAudioManager(AudioManager* mgr) { m_AudioMgr = mgr; }
-    void SetSystemManager(SystemManager* mgr) { m_SystemMgr = mgr; }
+    void SetGameContext(std::shared_ptr<GameContext> context) { m_Context = context; }
+    void SetGameState(std::shared_ptr<GameState> state) { m_State = state; }
 private:
 	friend class Game;
 };

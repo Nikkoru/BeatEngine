@@ -1,10 +1,12 @@
 #include "BeatEngine/Manager/UIManager.h"
 
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Exception.h"
+#include <memory>
 
-UIManager::UIManager(GameContext* context) : m_Context(context) {}
+UIManager::UIManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : m_Context(context), m_State(state) {}
 
 void UIManager::OnEvent(std::optional<Base::Event> event) {
 	for (const auto& [name, layer] : m_GlobalLayers) {

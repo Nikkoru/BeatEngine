@@ -20,11 +20,11 @@
 #include "BeatEngine/UI/Elements/ProgressBar.h"
 // #include "gameView.h"
 
-TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr) 
-	: Base::View(typeid(TestView), context, assetMgr, settingsMgr, audioMgr, uiMgr) {
+TestView::TestView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) 
+	: Base::View(typeid(TestView), context, state) {
     auto windowSize = b_mContext->WindowSize;
     
-    m_HUD = uiMgr->AddLayer("mainViewUI");
+    m_HUD = state->UIMgr->AddLayer("mainViewUI");
 
     auto button = m_HUD->SetRootElement<UI::Button>();
     auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
@@ -96,7 +96,7 @@ TestView::TestView(GameContext* context, AssetManager* assetMgr, SettingsManager
         auto audioEvent = std::static_pointer_cast<EventAudioStreamStarted>(event);
 
         if (audioEvent->Name == "test-music") {
-            auto handle = b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView));
+            auto handle = b_mState->AssetMgr->Get<AudioStream>("test-music", typeid(TestView));
             auto musicProgressBar = button->AddChild<UI::ProgressBar>("musicProg", 0, handle.Get()->GetTotalSeconds());
 
             auto musicMetadata = handle.Get()->GetMetadata();
@@ -185,7 +185,7 @@ void TestView::OnUpdate(float dt) {
 
     if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
         auto musicProgressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("musicProg");
-        musicProgressBar->UpdateProgress(std::floor(b_mAssetMgr->Get<AudioStream>("test-music", typeid(TestView)).Get()->GetTranscurredSeconds()));
+        musicProgressBar->UpdateProgress(std::floor(b_mState->AssetMgr->Get<AudioStream>("test-music", typeid(TestView)).Get()->GetTranscurredSeconds()));
 
         musicProgressBar->SetPosition({ 400 - (musicProgressBar->GetSize().X / 2), 590 });
         musicProgressBar->SetSize({ 300, 5 });

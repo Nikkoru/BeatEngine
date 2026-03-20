@@ -1,14 +1,11 @@
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <typeindex>
 
 #include "BeatEngine/GameContext.h"
-#include "BeatEngine/Manager/AssetManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/Manager/SettingsManager.h"
-#include "BeatEngine/Manager/AudioManager.h"
-#include "BeatEngine/Manager/UIManager.h"
+#include "BeatEngine/GameState.h"
 
 #include "BeatEngine/View/ViewLayerStack.h"
 
@@ -20,12 +17,9 @@ namespace Base {
 		std::type_index b_ID;
 	protected:
 		bool b_mSuspended = false;
-		AssetManager* b_mAssetMgr = nullptr;
-		SettingsManager* b_mSettingsMgr = nullptr;
-		AudioManager* b_mAudioMgr = nullptr;
-		UIManager* b_mUIMgr = nullptr;
     protected:
-        GameContext* b_mContext = nullptr;
+        std::shared_ptr<GameContext> b_mContext{ nullptr };
+        std::shared_ptr<GameState> b_mState{ nullptr };
 	protected:
 		ViewLayerStack b_mLayerStack;
 	private:
@@ -45,8 +39,8 @@ namespace Base {
 		/// <param name="settingsMgr">the SettingsManager pointer</param>
 		/// <param name="audioMgr">the AudioManager pointer</param>
 		/// <param name="uiMgr">the UIManager pointer</param>
-		View(std::type_index id, GameContext* context, AssetManager* assetMgr = nullptr, SettingsManager* settingsMgr = nullptr, AudioManager* audioMgr = nullptr, UIManager* uiMgr = nullptr) 
-			: b_ID(id), b_mContext(context), b_mAssetMgr(assetMgr), b_mSettingsMgr(settingsMgr), b_mAudioMgr(audioMgr), b_mUIMgr(uiMgr) {}
+		View(std::type_index id, std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state = nullptr) 
+			: b_ID(id), b_mContext(context), b_mState(state) {}
 
 		virtual ~View() = default;
 	public: // Events
@@ -78,14 +72,5 @@ namespace Base {
 		/// </summary>
 		/// <returns>the suspended status</returns>
 		bool IsSuspended() const;
-	private: // Setters 
-		/// <summary>
-		/// Sets the AssetManager of the manager
-		/// </summary>
-		/// <param name="assetMgr">the AssetManager</param>
-		void SetAssetManager(AssetManager* assetMgr);
-		void SetSettingsManager(SettingsManager* settingsMgr);
-		void SetAudioManager(AudioManager* audioMgr);
-		void SetUIManager(UIManager* uiMgr);
 	};
 }

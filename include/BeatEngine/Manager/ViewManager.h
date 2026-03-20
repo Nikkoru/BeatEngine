@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Base/View.h"
+#include "BeatEngine/GameState.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/GameContext.h"
@@ -19,20 +20,16 @@
 
 class ViewManager {
 public:
-	using FabricCallback = std::function<std::unique_ptr<Base::View>(GameContext*, AssetManager*, SettingsManager*, AudioManager*, UIManager*)>;
+	using FabricCallback = std::function<std::unique_ptr<Base::View>(std::shared_ptr<GameContext>, std::shared_ptr<GameState>)>;
 public:
 	std::unordered_map<std::type_index, FabricCallback> ViewFabrics;
 	std::stack<std::unique_ptr<Base::View>> ViewStack;
 	std::type_index MainView;
 private:
-	AssetManager* m_GlobalViewAssetMgr = nullptr;
-	AudioManager* m_GlobalViewAudioMgr = nullptr;
-	SettingsManager* m_GlobalViewSettingsMgr = nullptr;
-	UIManager* m_GlobalViewUIMgr = nullptr;
-private:
-    GameContext* m_Context = nullptr;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 public:
-	ViewManager(GameContext* context);
+	ViewManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 	~ViewManager() = default;
 public:
 	template<typename TView>
@@ -54,11 +51,6 @@ public:
 	bool HasActiveViews();
 
 	void GetViewKeybinds();
-
-	void SetGlobalAssetManager(AssetManager* assetMgr);
-    void SetGlobalAudioManager(AudioManager* audioMgr);
-    void SetGlobalSettingsManager(SettingsManager* settingsMgr);
-    void SetGlobalUIManager(UIManager* uiMgr);
 public:
     void ShowImGuiDebugData();
 };

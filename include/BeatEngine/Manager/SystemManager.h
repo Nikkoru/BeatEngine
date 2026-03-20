@@ -1,19 +1,21 @@
 #pragma once
 
 #include <typeindex>
+#include <map>
 #include <memory>
 
 #include "BeatEngine/Base/System.h"
 #include "BeatEngine/GameContext.h"
-#include "BeatEngine/Logger.h"
+#include "BeatEngine/GameState.h"
 
 class SystemManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::System>> m_Systems;
 private:
-    GameContext* m_Context = nullptr;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 public:
-	SystemManager(GameContext* context);
+	SystemManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 	~SystemManager() = default;
 public:
 	template <typename TSystem>

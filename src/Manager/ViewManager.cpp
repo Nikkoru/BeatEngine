@@ -15,7 +15,7 @@
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Logger.h"
 
-ViewManager::ViewManager(GameContext* context) : MainView(typeid(nullptr)), m_Context(context) {
+ViewManager::ViewManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
 	SignalManager::GetInstance()->RegisterCallback<ViewPushSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto sigView = std::static_pointer_cast<ViewPushSignal>(sig);
 		Push(sigView->ViewID);
@@ -44,7 +44,7 @@ void ViewManager::Push(std::type_index viewID) {
 		if (ViewFabrics.contains(viewID)) {
             if (!ViewStack.empty())
                 ViewStack.top()->OnSuspend();
-			ViewStack.push(ViewFabrics[viewID](m_Context, m_GlobalViewAssetMgr, m_GlobalViewSettingsMgr, m_GlobalViewAudioMgr, m_GlobalViewUIMgr));
+			ViewStack.push(ViewFabrics[viewID](m_Context, m_State));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
@@ -128,20 +128,4 @@ bool ViewManager::HasActiveViews() {
 
 void ViewManager::GetViewKeybinds() {
 	// placeholder #TOIMPLEMENT
-}
-
-void ViewManager::SetGlobalAssetManager(AssetManager* assetMgr) {
-	this->m_GlobalViewAssetMgr = assetMgr;
-}
-
-void ViewManager::SetGlobalAudioManager(AudioManager* audioMgr) {
-    this->m_GlobalViewAudioMgr = audioMgr;
-}
-
-void ViewManager::SetGlobalSettingsManager(SettingsManager* settingsMgr) {
-    this->m_GlobalViewSettingsMgr = settingsMgr;
-}
-
-void ViewManager::SetGlobalUIManager(UIManager* uiMgr) {
-    this->m_GlobalViewUIMgr = uiMgr;
 }

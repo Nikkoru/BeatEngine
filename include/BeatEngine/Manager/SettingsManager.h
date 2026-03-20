@@ -2,7 +2,9 @@
 
 #include "BeatEngine/Base/Settings.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 
+#include <memory>
 #include <string>
 #include <filesystem>
 #include <map>
@@ -15,9 +17,10 @@ class SettingsManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::Settings>> m_Settings;
 private:
-    GameContext* m_Context = nullptr;
+    std::shared_ptr<GameContext> m_Context{ nullptr };
+    std::shared_ptr<GameState> m_State{ nullptr };
 public:
-	SettingsManager(GameContext* context); 
+	SettingsManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state); 
 	~SettingsManager() = default;
 private:
 	friend class Game;

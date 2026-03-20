@@ -1,6 +1,8 @@
 #pragma once
+#include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/Vector2.h"
+#include <filesystem>
 #include <memory>
 class Renderer {
 protected:
@@ -15,6 +17,8 @@ public:
     virtual void Display() = 0;
     virtual void Clear() = 0;
     virtual void Update() = 0;
+
+    virtual std::shared_ptr<Texture> CreateTexture(std::filesystem::path path) = 0;
 
     inline std::shared_ptr<BaseWindow> GetWindow() { return m_Window; }
 

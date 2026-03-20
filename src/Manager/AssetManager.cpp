@@ -1,6 +1,7 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
 #include <cstdint>
+#include <memory>
 #include <miniaudio.h>
 #include <sndfile.h>
 #include <taglib/taglib.h>
@@ -10,12 +11,14 @@
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 
+#include "BeatEngine/Manager/GraphicsManager.h"
+
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
 
-AssetManager::AssetManager(GameContext* context): m_Context(context) {}
+AssetManager::AssetManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state): m_Context(context), m_State(state) {}
 
 AssetManager::~AssetManager() {
    m_GlobalAssets.clear();
@@ -25,7 +28,6 @@ AssetManager::~AssetManager() {
 template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::path& path, std::type_index viewID) {
 	if (fs::exists(path)) {
 		std::string name = path.stem().string();
-		std::string fullpath = path.string();
 
 		Base::AssetHandle<Texture> handle;
 
@@ -33,11 +35,10 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-				// sf::Texture sfTexture(fullpath);
-				// auto texture = std::make_shared<Texture>(sfTexture);
-				//
-				// handle = Base::AssetHandle<Texture>(texture);
-				// m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+                auto texture = m_State->GraphicsMgr->CreateTexture(path);
+
+				handle = Base::AssetHandle<Texture>(texture);
+				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
@@ -48,11 +49,10 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-				// sf::Texture sfTexture(fullpath);
-				// auto texture = std::make_shared<Texture>(sfTexture);
+                auto texture = m_State->GraphicsMgr->CreateTexture(path);
 
-				// handle = Base::AssetHandle<Texture>(texture);
-				// m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+				handle = Base::AssetHandle<Texture>(texture);
+				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);

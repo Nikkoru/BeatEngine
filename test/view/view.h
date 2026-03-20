@@ -6,6 +6,7 @@
 #include <BeatEngine/Asset/Font.h>
 #include <BeatEngine/UI/Elements/Button.h>
 #include <BeatEngine/UI/Elements/ProgressBar.h>
+#include <memory>
 #include <string>
 
 class TestView : public Base::View {
@@ -24,7 +25,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(GameContext* context, AssetManager* assetMgr, SettingsManager* settingsMgr, AudioManager* audioMgr, UIManager* uiMgr);
+	TestView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 	~TestView() override = default;
 public:
 	void OnDraw(GraphicsManager* window) override;

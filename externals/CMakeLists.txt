@@ -28,9 +28,9 @@ add_library(ImGui STATIC
     ${imgui_SOURCE_DIR}/imstb_textedit.h
     ${imgui_SOURCE_DIR}/imstb_truetype.h
 )
-
-if (USE_VULKAN OR ON)
-
+if (USE_OPENGL)
+    add_subdirectory(glad)
+elseif (USE_VULKAN)
     # Fetch SDL
     FetchContent_Declare(SDL3
             GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -57,8 +57,7 @@ if (USE_VULKAN OR ON)
         EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_MakeAvailable(VMA)
-
-else()
+elseif(USE_SFML)
     # Fetch SFML (ON REMOVAL)
     FetchContent_Declare(SFML
             GIT_REPOSITORY https://github.com/SFML/SFML.git
