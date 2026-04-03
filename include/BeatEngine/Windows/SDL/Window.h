@@ -18,6 +18,8 @@ public:
     void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
     void Uninit() override;
 
+    void UninitImGui() override;
+
     void SetSize(const Vector2u size) override;
     void SetMinimumSize(const Vector2u size) override;
     void SetMaximumSize(const Vector2u size) override;
@@ -38,6 +40,9 @@ public:
     bool IsCursorVisible() const override;
 
     std::optional<Base::Event> PollEvent() override;
+
+    void OnRender() override;
+    void OnDisplay() override;
 public:
     void SetFlags(SDL_WindowFlags flags);
     void AddFlags(SDL_WindowFlags flags);

@@ -1,4 +1,7 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Asset/Shader.h"
+#include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/GameContext.h"
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -10,6 +13,10 @@
 #include <memory>
 #include <string>
 
+void GraphicsManager::MakeRenderer(std::shared_ptr<Renderer> renderer) {
+    m_Renderer = renderer;
+}
+
 void GraphicsManager::Init() {
 #ifdef BEATENGINE_VULKAN_RENDERER
     if (m_Renderer == nullptr)
@@ -20,8 +27,9 @@ void GraphicsManager::Init() {
 #else
     assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or Game::SetRenderer<T>()")
 #endif
+    bool useImGui = m_Context->GFlags & GameFlags_ImGui;
 
-    m_Renderer->Init(m_WindowTitle, m_WindowSize);
+    m_Renderer->Init(m_WindowTitle, m_WindowSize, useImGui);
 }
 
 void GraphicsManager::Update() {
@@ -39,8 +47,16 @@ void GraphicsManager::SetWindowTitle(std::string windowTitle) {
         m_Renderer->GetWindow()->SetTitle(windowTitle);
 }
 
+void GraphicsManager::SetFramerateLimit(unsigned int fps) {
+    
+}
+
 void GraphicsManager::Render() {
     m_Renderer->Render();
+}
+
+void GraphicsManager::RenderImGui() {
+    m_Renderer->RenderImGui();
 }
 
 void GraphicsManager::Display() {
@@ -57,6 +73,10 @@ std::shared_ptr<Renderer> GraphicsManager::GetRenderer() {
 
 std::shared_ptr<Texture> GraphicsManager::CreateTexture(std::filesystem::path path) {
     return m_Renderer->CreateTexture(path);
+}
+
+std::shared_ptr<Shader> GraphicsManager::CreateShader(std::filesystem::path path, Shader::Type type) {
+    return m_Renderer->CreateShader(path, type);
 }
 
 std::shared_ptr<BaseWindow> GraphicsManager::GetWindow() {

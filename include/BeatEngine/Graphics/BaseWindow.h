@@ -14,6 +14,8 @@ public:
 
     virtual void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
     virtual void Uninit() = 0;
+
+    virtual void UninitImGui() = 0;
     // virtual void UpdateWindow();
 
     // virtual void ProcessEvents();
@@ -38,4 +40,7 @@ public:
     virtual bool IsFullscreen() const { return {}; }
     virtual bool IsCursorGrabbed() const { return {}; }
     virtual bool IsCursorVisible() const { return {}; }
+
+    virtual void OnRender() {};
+    virtual void OnDisplay() {};
 };

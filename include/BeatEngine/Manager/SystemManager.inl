@@ -1,4 +1,5 @@
 #include "BeatEngine/Manager/SystemManager.h"
+#include "BeatEngine/Base/System.h"
 
 #include "BeatEngine/Logger.h"
 

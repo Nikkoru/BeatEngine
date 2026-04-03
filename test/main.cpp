@@ -1,7 +1,7 @@
-#include "view/gameView.h"
 #define BEATENGINE_TEST
-#define BEATENGINE_VULKAN
 
+#include "BeatEngine/Logger.h"
+#include "view/gameView.h"
 #include <BeatEngine/Game.h>
 #include <BeatEngine/Enum/AssetType.h>
 #include <BeatEngine/Settings/GameSettings.h>
@@ -13,6 +13,8 @@
 #include "layer/globalLayer.h"
 
 int main() {
+    // Logger::GetInstance()->SetLogLevel();
+
 	Game game;
 
 	game.RegisterView<TestView>();
@@ -25,7 +27,7 @@ int main() {
 
     // game.SetRenderer<OpenGLRenderer>();
 
-	game.SetWindowTitle("Now you can change the title!");
+	// game.SetWindowTitle("Now you can change the title!");
 
 	game.LoadGlobalAssets({
 		{

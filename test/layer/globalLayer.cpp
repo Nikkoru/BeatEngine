@@ -5,6 +5,7 @@
 #include "BeatEngine/Settings/GameSettings.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
+#include "BeatEngine/GameState.h"
 
 #include <BeatEngine/Manager/SignalManager.h>
 #include <BeatEngine/Signals/ViewSignals.h>
@@ -19,8 +20,8 @@
 GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr) {
 }
 
-GlobalTestLayerUI::GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : ViewLayer(typeid(GlobalTestLayerUI), context, state) {
-	m_HUD = state->UIMgr->AddLayer("GlobalTestLayerUI", true);
+GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : ViewLayer(typeid(GlobalTestLayerUI), context, state) {
+	m_HUD = state->GetUIMgr().AddLayer("GlobalTestLayerUI", true);
 
 	// m_Font = assetMgr->Get<Font>("main-font").Get();
     auto windowSize = m_Context->WindowSize;
@@ -30,13 +31,13 @@ GlobalTestLayerUI::GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::
     auto exitBtn = root->AddChild<UI::Button>("exitBtn");
     auto toggleVSyncBtn = root->AddChild<UI::Button>("vSyncToggle");
     auto toggleFullscreenBtn = root->AddChild<UI::Button>("fullscreenToggle");
+    auto settings = std::static_pointer_cast<GameSettings>(m_State->GetSettingsMgr().GetSettings(typeid(GameSettings)));
 
 	// root->SetFont(*m_Font);
 	root->SetSize({80, 30});
     root->SetText("120 FPS");
 
-    root->SetOnLClick([this]() {
-        auto settings = std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)));
+    root->SetOnLClick([this, settings]() {
         settings->FpsLimit = 120;
 
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
@@ -52,13 +53,12 @@ GlobalTestLayerUI::GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::
 
     // toggleVSyncBtn->SetFont(*m_Font);
     toggleVSyncBtn->SetSize({ 110, 30 });
-    if (std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)))->VSync)
+    if (settings->VSync)
         toggleVSyncBtn->SetText("VSync On");
     else
         toggleVSyncBtn->SetText("VSync Off");
 
-    toggleVSyncBtn->SetOnLClick([toggleVSyncBtn, this]() {
-        auto settings = std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)));
+    toggleVSyncBtn->SetOnLClick([toggleVSyncBtn, settings, this]() {
         
         settings->VSync = !settings->VSync;
         if (settings->VSync) 
@@ -71,12 +71,11 @@ GlobalTestLayerUI::GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::
 
     // toggleFullscreenBtn->SetFont(*m_Font);
     toggleFullscreenBtn->SetSize({ 110, 30 });
-    if (std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen)
+    if (settings->WindowFullScreen)
         toggleFullscreenBtn->SetText("In fullscreen");
     else
         toggleFullscreenBtn->SetText("In window");
-    toggleFullscreenBtn->SetOnLClick([toggleFullscreenBtn, this]() {
-        auto settings = std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)));
+    toggleFullscreenBtn->SetOnLClick([toggleFullscreenBtn, settings, this]() {
 
         settings->WindowFullScreen = !settings->WindowFullScreen;
 
@@ -168,7 +167,7 @@ void GlobalTestLayerUI::UpdatePositions() {
     toggleFullscreenBtn->SetPosition({(windowSize.X - 5) - toggleFullscreenBtn->GetSize().X, 135 });}
 
 void GlobalTestLayerUI::DrawImGuiDebug() const {
-    auto text = std::static_pointer_cast<GameSettings>(m_State->SettingsMgr->GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
+    auto text = std::static_pointer_cast<GameSettings>(m_State->GetSettingsMgr().GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
 
     // ImGui::Begin("wa");
     // ImGui::Text("wa");
@@ -181,9 +180,9 @@ void GlobalTestLayerUI::DrawImGuiDebug() const {
     // ImGui::End();
 
 
-    m_State->SettingsMgr->DrawImGuiDebug();
-    m_State->UIMgr->DrawImGuiDebug();
-    m_State->AssetMgr->DrawImGuiDebug();
+    m_State->GetSettingsMgr().DrawImGuiDebug();
+    m_State->GetUIMgr().DrawImGuiDebug();
+    m_State->GetAssetMgr().DrawImGuiDebug();
     // m_AudioMgr->DrawImGuiDebug();
-    m_State->SystemMgr->DrawImGuiDebug();
+    m_State->GetSystemMgr().DrawImGuiDebug();
 }

@@ -11,6 +11,7 @@ std::string Logger::GetColorViaLogType(LogType logType) {
     const std::string yellow = "\e[0;33m";
     const std::string purple = "\e[0;35m";
     const std::string cyan = "\e[0;36m";
+    const std::string blue = "\e[0;34m";
     const std::string hiRed = "\e[0;91m";
 
     std::string color;
@@ -20,6 +21,9 @@ std::string Logger::GetColorViaLogType(LogType logType) {
         case LogType::None:
         case LogType::All:
         case LogType::NoLogs:
+        case LogType::Debug:
+            color = blue;
+            break;
         case LogType::Info:
             color = cyan;
             break;

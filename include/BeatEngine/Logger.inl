@@ -1,11 +1,12 @@
-#include "BeatEngine/Enum/LogType.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Enum/LogType.h"
+#include "BeatEngine/System/Clock.h"
+#include "BeatEngine/System/Time.h"
 
 #include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <ctime>
-#include <chrono>
 #include <iostream>
 #include <format>
 #include <string>
@@ -30,13 +31,13 @@ void Logger::AddLog(std::string logType, std::string caller, std::string_view fm
     }
     else
         preFormattedLog = fmt;
+    
+    auto now = Clock::GetNow();
+	auto nowT = now.AsTimeT(); 
 
-	auto nowTp = std::chrono::system_clock::now();
-	std::time_t nowT = std::chrono::system_clock::to_time_t(nowTp);
-
-	std::tm* now = std::localtime(&nowT);
+	std::tm* nowTM = std::localtime(&nowT);
 	char nowStr[80];
-	std::strftime(nowStr, sizeof(nowStr), "%T", now);
+	std::strftime(nowStr, sizeof(nowStr), "%T", nowTM);
 
 	if (caller != "") {
 		formattedLog = std::format("{} [{}] {} ({})", nowStr, logType, preFormattedLog, caller);
@@ -49,7 +50,7 @@ void Logger::AddLog(std::string logType, std::string caller, std::string_view fm
 
     std::cout << formattedLog << std::endl;
 
-	GetInstance()->m_Logs.push_back({ nowT, { LogTypeUtils::StringToType(logType), savedLog } });
+	GetInstance()->m_Logs.push_back({ now.AsMicroseconds(), { LogTypeUtils::StringToType(logType), savedLog } });
 }
 template<typename... Args>
 void Logger::AddLog(LogType logType, std::string caller, std::string_view fmt, Args&&... elms) {
@@ -78,6 +79,15 @@ void Logger::AddLog(LogType logType, std::type_index caller, std::string_view fm
     AddLog(std::format("{}{}\033[0m", GetColorViaLogType(logType), LogTypeUtils::TypeToString(logType)), caller, fmt, elms...);
 }
 
+
+template<typename... Args>
+void Logger::AddDebug(std::string caller, std::string_view fmt, Args&&... elms) {
+    AddLog(LogType::Debug, caller, fmt, elms...);
+}
+template<typename... Args>
+void Logger::AddDebug(std::type_index caller, std::string_view fmt, Args&&... elms) {
+    AddLog(LogType::Debug, caller, fmt, elms...);
+}
 template<typename... Args>
 void Logger::AddInfo(std::string caller, std::string_view fmt, Args&&... elms) {
     AddLog(LogType::Info, caller, fmt, elms...);

@@ -14,7 +14,7 @@ namespace Base {
 	private:
 		template <typename> friend class AssetHandle;
 
-		UID m_AssetID = 0;
+		UID m_AssetID{ 0 };
 		std::weak_ptr<T> m_Ptr;
 	public:
 		AssetHandle() = default;

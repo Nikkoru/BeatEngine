@@ -15,3 +15,8 @@ namespace vkb {
 
     uint32_t GetQueueFamily(VkPhysicalDevice device);
 }
+
+namespace vki {
+    VkImageCreateInfo GetImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent);
+    VkImageViewCreateInfo GetImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags);
+}

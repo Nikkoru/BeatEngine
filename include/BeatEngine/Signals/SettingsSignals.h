@@ -3,8 +3,8 @@
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Base/Settings.h"
 
-#include <typeindex>
 #include <memory>
+#include <typeindex>
  
 class SetSettingsSignal : public Base::Signal {
 public:

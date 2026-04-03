@@ -1,35 +1,32 @@
 #pragma once
 
-#include "BeatEngine/Base/View.h"
-#include "BeatEngine/GameState.h"
-#include "BeatEngine/Logger.h"
-#include "BeatEngine/Manager/AudioManager.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/Manager/EventManager.h"
-#include "BeatEngine/Events/ViewEvent.h"
-#include "BeatEngine/Manager/AssetManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/Manager/SettingsManager.h"
-#include "BeatEngine/Manager/UIManager.h"
-
 #include <functional>
 #include <memory>
 #include <typeindex>
 #include <stack>
 #include <unordered_map>
 
+
+namespace Base {
+    class Event;
+    class View;
+};
+class GraphicsManager;
+class GameContext;
+class GameState;
 class ViewManager {
 public:
-	using FabricCallback = std::function<std::unique_ptr<Base::View>(std::shared_ptr<GameContext>, std::shared_ptr<GameState>)>;
+	using FabricCallback = std::function<std::shared_ptr<Base::View>(GameContext*, GameState*)>;
 public:
 	std::unordered_map<std::type_index, FabricCallback> ViewFabrics;
-	std::stack<std::unique_ptr<Base::View>> ViewStack;
+	std::stack<std::shared_ptr<Base::View>> ViewStack;
 	std::type_index MainView;
 private:
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 public:
-	ViewManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+    ViewManager() : ViewManager(nullptr, nullptr) {}
+	ViewManager(GameContext* context, GameState* state);
 	~ViewManager() = default;
 public:
 	template<typename TView>

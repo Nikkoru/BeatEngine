@@ -3,20 +3,19 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/Vector2.h"
 
-class EventGameSettingsChanged : public Base::Event {
+class GameSettingsChangedEvent : public Base::Event {
 public:
-    EventGameSettingsChanged() : Base::Event(typeid(EventGameSettingsChanged)) {}
+    GameSettingsChangedEvent() : Base::Event(typeid(GameSettingsChangedEvent)) {}
 };
 
-class EventGameResized : public Base::Event {
+class GameResizedEvent : public Base::Event {
 public:
     Vector2u Size; 
 public:
-    EventGameResized(Vector2u newSize) : Base::Event(typeid(EventGameResized)), Size(newSize) {} 
+    GameResizedEvent(Vector2u newSize) : Base::Event(typeid(GameResizedEvent)), Size(newSize) {} 
 };
 
-class EventGameExiting : public Base::Event {
+class GameExitingEvent : public Base::Event {
 public:
-    EventGameExiting() : Base::Event(typeid(EventGameExiting)) {}
+    GameExitingEvent() : Base::Event(typeid(GameExitingEvent)) {}
 };
-

@@ -1,4 +1,4 @@
-﻿set(SOURCES
+﻿list(APPEND SOURCES
     "${PROJECT_SOURCE_DIR}/src/Manager/ViewManager.cpp"
     "${PROJECT_SOURCE_DIR}/src/Manager/GraphicsManager.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Manager/EventManager.cpp"
@@ -17,6 +17,10 @@
 
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Renderer.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Boilerplate.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/UninitQueue.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/PipelineManager.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/DescriptorBuilder.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/DescriptorAllocator.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Assets/Texture.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Assets/Shader.cpp"
 
@@ -29,6 +33,7 @@
 
 	"${PROJECT_SOURCE_DIR}/src/Asset/Sound.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Asset/AudioStream.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Asset/Shader.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Asset/Font.cpp" 
 	"${PROJECT_SOURCE_DIR}/src/Asset/Texture.cpp"
 
@@ -59,6 +64,8 @@
 	"${PROJECT_SOURCE_DIR}/src/Logger.cpp"
     "${PROJECT_SOURCE_DIR}/src/vma.cpp"
 
+    "${PROJECT_SOURCE_DIR}/src/GameState.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Game.cpp"
-    PARENT_SCOPE
 )
+
+set(SOURCES ${SOURCES} PARENT_SCOPE)

@@ -6,6 +6,7 @@
 
 enum class LogType : uint8_t {
 	All = 0,
+    Debug,
 	Info,
 	Warning,
 	Error,
@@ -24,6 +25,7 @@ public:
 private:
 	static inline const std::map<LogType, std::string> _TypeString = {
         { LogType::All, "All" },
+        { LogType::Debug, "Debug" },
         { LogType::Info, "Info" },
         { LogType::Warning, "Warning" },
         { LogType::Error, "Error" },

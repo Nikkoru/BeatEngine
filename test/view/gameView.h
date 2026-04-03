@@ -9,7 +9,7 @@ class GameView : public Base::View {
 private:
     ViewLayerStack m_LayerStack;
 public:
-    GameView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+    GameView(GameContext* context, GameState* state);
 public:
     void OnDraw(GraphicsManager* window) override;
     void OnEvent(const std::optional<Base::Event> event) override;

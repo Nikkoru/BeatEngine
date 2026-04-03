@@ -1,6 +1,7 @@
 #include "BeatEngine/Manager/SettingsManager.h"
 
 #include "BeatEngine/Logger.h"
+#include <memory>
 
 template<typename TSettings>
     requires(std::is_base_of_v<Base::Settings, TSettings>)

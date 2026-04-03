@@ -1,23 +1,27 @@
 #pragma once
 
-#include "BeatEngine/Base/Event.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/UI/UILayer.h"
 
 #include <memory>
 #include <typeindex>
+#include <unordered_map>
 
+namespace Base {
+    class Event;
+};
+class UILayer;
+class GameContext;
+class GameState;
 class UIManager {
 private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<UILayer>>> m_Layers;
 	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
 private:
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 public:
-	UIManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+    UIManager() : UIManager(nullptr, nullptr) {}
+	UIManager(GameContext* context, GameState* state);
 	~UIManager() = default;
 
 	void OnEvent(std::optional<Base::Event> event);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <vector>
 #include <typeindex>
 #include <memory>
@@ -25,6 +26,10 @@ public:
     template<typename... Args>
 	static void AddLog(LogType logType, std::type_index caller, std::string_view fmt = "", Args&&... elms);
 
+    template<typename... Args>
+    static void AddDebug(std::string caller = "", std::string_view fmt = "", Args&&... elms);
+    template<typename... Args>
+    static void AddDebug(std::type_index caller, std::string_view fmt = "", Args&&... elms);
     template<typename... Args>
 	static void AddInfo(std::string caller = "", std::string_view fmt = "", Args&&... elms);
     template<typename... Args>

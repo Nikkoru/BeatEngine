@@ -25,7 +25,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+	TestView(GameContext* context, GameState* state);
 	~TestView() override = default;
 public:
 	void OnDraw(GraphicsManager* window) override;

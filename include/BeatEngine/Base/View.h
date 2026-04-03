@@ -4,13 +4,12 @@
 #include <optional>
 #include <typeindex>
 
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
 
 #include "BeatEngine/View/ViewLayerStack.h"
 
 class ViewManager;
-
+class GameContext;
+class GameState;
 namespace Base {
 	class View {
 	public:
@@ -18,8 +17,8 @@ namespace Base {
 	protected:
 		bool b_mSuspended = false;
     protected:
-        std::shared_ptr<GameContext> b_mContext{ nullptr };
-        std::shared_ptr<GameState> b_mState{ nullptr };
+        GameContext* b_mContext{ nullptr };
+        GameState* b_mState{ nullptr };
 	protected:
 		ViewLayerStack b_mLayerStack;
 	private:
@@ -39,7 +38,7 @@ namespace Base {
 		/// <param name="settingsMgr">the SettingsManager pointer</param>
 		/// <param name="audioMgr">the AudioManager pointer</param>
 		/// <param name="uiMgr">the UIManager pointer</param>
-		View(std::type_index id, std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state = nullptr) 
+		View(std::type_index id, GameContext* context, GameState* state = nullptr) 
 			: b_ID(id), b_mContext(context), b_mState(state) {}
 
 		virtual ~View() = default;

@@ -27,8 +27,8 @@ private:
 	std::shared_ptr<Base::View> m_OwnerView = nullptr;
 	std::type_index m_ID = typeid(nullptr);
 protected:
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 private:
 	Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
@@ -40,8 +40,8 @@ private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
 	ViewLayer(std::type_index id,
-              std::shared_ptr<GameContext> context = nullptr,
-              std::shared_ptr<GameState> state = nullptr)
+              GameContext* context = nullptr,
+              GameState* state = nullptr)
 		: m_ID(id), m_Context(context), m_State(state) {}
 
 	virtual ~ViewLayer() = default;
@@ -66,8 +66,8 @@ public:
 	void StartCamera();
 	void StopCamera();
     
-    void SetGameContext(std::shared_ptr<GameContext> context) { m_Context = context; }
-    void SetGameState(std::shared_ptr<GameState> state) { m_State = state; }
+    void SetGameContext(GameContext* context) { m_Context = context; }
+    void SetGameState(GameState* state) { m_State = state; }
 private:
 	friend class Game;
 };

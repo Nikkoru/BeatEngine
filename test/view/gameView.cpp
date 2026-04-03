@@ -6,7 +6,7 @@
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
 
-GameView::GameView(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) :
+GameView::GameView(GameContext* context, GameState* state) :
 Base::View(typeid(GameView), context, state) {
     auto layer = b_mLayerStack.AttachLayer<GameLayer>();
     layer->SetGameContext(context);

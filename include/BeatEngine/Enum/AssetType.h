@@ -6,6 +6,7 @@ enum class AssetType : uint8_t {
 	Texture = 0,
 	Sound,
 	AudioStream,
-    Shader,
+    VertexShader,
+    FragmentShader,
 	Font
 };

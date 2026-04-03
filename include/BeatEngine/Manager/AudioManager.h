@@ -2,7 +2,6 @@
 
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/AudioStream.h"
-#include "BeatEngine/GameContext.h"
 
 #include <portaudio.h>
 #include <atomic>
@@ -10,21 +9,22 @@
 #include <vector>
 #include <cstdint>
 
-
+class GameContext;
+class GameState;
 class AudioManager {
 private:
-	PaStream* m_AudioStream;
-	uint64_t m_SampleRate = 48000;
+	PaStream* m_AudioStream{ nullptr };
+	uint64_t m_SampleRate{ 48000 };
 
 	std::vector<std::shared_ptr<Sound>> m_Sounds;
 	std::vector<std::shared_ptr<AudioStream>> m_Streams;
 
-	static constexpr int MAX_PENDING_SOUNDS = 64;
+	static constexpr int MAX_PENDING_SOUNDS{ 64 };
 	std::array<std::shared_ptr<Sound>, MAX_PENDING_SOUNDS> m_PendingSounds;
 	std::atomic<int> m_SoundReadIndex;
 	std::atomic<int> m_SoundWriteIndex;
 
-	static constexpr int MAX_PENDING_STREAMS = 8;
+	static constexpr int MAX_PENDING_STREAMS{ 8 };
 	std::array<std::shared_ptr<AudioStream>, MAX_PENDING_STREAMS> m_PendingStreams;
 	std::atomic<int> m_StreamReadIndex;
 	std::atomic<int> m_StreamWriteIndex;
@@ -33,7 +33,8 @@ private:
 	std::atomic<int> m_StreamRemoveReadIndex;
 	std::atomic<int> m_StreamRemoveWriteIndex;
 private:
-    GameContext* m_Context = nullptr;
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 public:
 	static int AudioCallback(
 		const void* inputBuffer, 
@@ -44,7 +45,8 @@ public:
 		void* userData
 	);
 public:
-	AudioManager(GameContext* context);
+    AudioManager() : AudioManager(nullptr, nullptr) {}
+	AudioManager(GameContext* context, GameState* state);
 	~AudioManager();
 public:
     void Init();

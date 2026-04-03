@@ -12,13 +12,14 @@
 #include <fstream>
 #include <memory>
 
-SettingsManager::SettingsManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state): m_Context(context) {
+SettingsManager::SettingsManager(GameContext* context, GameState* state) 
+    : m_Context(context), m_State(state) {
     SignalManager::GetInstance()->RegisterCallback<SetSettingsSignal>(typeid(SettingsManager), [this](const std::shared_ptr<Base::Signal> signal) {
         auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
 
         SetSettings(setSignal->SettingsID, setSignal->Settings);
 
-        EventManager::GetInstance()->Send(std::make_shared<EventGameSettingsChanged>());
+        EventManager::GetInstance()->Send(std::make_shared<GameSettingsChangedEvent>());
     });
 }
 
@@ -31,7 +32,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 		char* const buf = (char*)malloc(iniSize);
 		char* const bufEnd = buf + iniSize;
 
-		std::shared_ptr<Base::Settings> settings = nullptr;
+        std::shared_ptr<Base::Settings> settings = nullptr;
 
 		memcpy(buf, iniData, iniSize);
 

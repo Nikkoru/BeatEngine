@@ -1,9 +1,5 @@
 #pragma once
 
-#include "BeatEngine/Base/Settings.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
-
 #include <memory>
 #include <string>
 #include <filesystem>
@@ -12,15 +8,21 @@
 
 namespace fs = std::filesystem;
 
+namespace Base {
+    class Settings;
+};
 class Game;
+class GameContext;
+class GameState;
 class SettingsManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::Settings>> m_Settings;
 private:
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 public:
-	SettingsManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state); 
+    SettingsManager() : SettingsManager(nullptr, nullptr) {}
+	SettingsManager(GameContext* context, GameState* state); 
 	~SettingsManager() = default;
 private:
 	friend class Game;
@@ -30,8 +32,8 @@ public:
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
 	void RegisterSettingsData(); 
-	std::shared_ptr<Base::Settings> GetSettings(std::string tag);
-	std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
+    std::shared_ptr<Base::Settings> GetSettings(std::string tag);
+    std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
 
 	void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
 	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);

@@ -2,11 +2,12 @@
 
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/GameState.h"
+#include "BeatEngine/UI/UILayer.h"
 #include "BeatEngine/Logger.h"
-#include "BeatEngine/Util/Exception.h"
 #include <memory>
 
-UIManager::UIManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : m_Context(context), m_State(state) {}
+UIManager::UIManager(GameContext* context, GameState* state)
+    : m_Context(context), m_State(state) {}
 
 void UIManager::OnEvent(std::optional<Base::Event> event) {
 	for (const auto& [name, layer] : m_GlobalLayers) {
@@ -31,7 +32,7 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
     }
 	else {
         if (!m_Layers.contains(m_Context->ActiveView)) {
-            Logger::AddInfo(typeid(UIManager), "View \"{}\" doesn't have a entry. Creating and adding layer \"{}\"", m_Context->ActiveView.name(), layerName);
+            Logger::AddDebug(typeid(UIManager), "View \"{}\" doesn't have a entry. Creating and adding layer \"{}\"", m_Context->ActiveView.name(), layerName);
             m_Layers[m_Context->ActiveView].try_emplace(layerName, layer);
         }
         else {

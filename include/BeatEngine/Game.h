@@ -6,7 +6,6 @@
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/Managers.h"
 #include "BeatEngine/Base/System.h"
 #include "BeatEngine/Enum/GameFlags.h"
 
@@ -21,12 +20,11 @@
 class Game {
 private:
 	Clock m_Clock{};
-    // sf::Cursor m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
 
 	ViewLayerStack m_GlobalLayers{};
     
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext m_Context{};
+    GameState m_State{};
     bool m_Running = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";

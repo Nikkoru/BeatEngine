@@ -17,7 +17,7 @@ private:
     bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+	GlobalTestLayerUI(GameContext* context, GameState* state);
 	~GlobalTestLayerUI() override = default;
 private:
 

@@ -1,11 +1,13 @@
 #include "BeatEngine/Windows/SDL/Window.h"
+#include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Logger.h"
-#include "SDL3/SDL_scancode.h"
 
+#include <backends/imgui_impl_sdl3.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_mouse.h>
@@ -17,6 +19,9 @@ void SDLWindow::Init(std::string windowTitle, Vector2u windowSize) {
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Initializing SDL Window");
 
     SDL_Init(SDL_INIT_VIDEO);
+
+    if (windowTitle == "")
+        windowTitle = "BeatEngine Game";
     
     m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_Flags);
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Window created. Size = ({}, {}), Title = {}", windowSize.X, windowSize.Y, windowTitle);
@@ -31,17 +36,9 @@ void SDLWindow::Uninit() {
 	SDL_Quit();
 }
 
-// void SDLWindow::UpdateWindow() {
-//     SDL_SetWindowTitle(m_WindowImpl, m_WindowTitle.c_str());
-//     SDL_SetWindowPosition(m_WindowImpl, m_WindowPosition.X, m_WindowPosition.Y);
-//     SDL_SetWindowSize(m_WindowImpl, m_WindowSize.X, m_WindowSize.Y);
-//     SDL_SetWindowFullscreen(m_WindowImpl, m_Fullscreen);
-//     if (m_VSync)
-//         SDL_SetWindowSurfaceVSync(m_WindowImpl, 1);
-//     else
-//         SDL_SetWindowSurfaceVSync(m_WindowImpl, SDL_WINDOW_SURFACE_VSYNC_DISABLED);
-// }
-//
+void SDLWindow::UninitImGui() {
+    ImGui_ImplSDL3_Shutdown();
+}
 
 void SDLWindow::SetSize(const Vector2u size) {
     SDL_SetWindowSize(m_WindowImpl, size.X, size.Y);
@@ -147,15 +144,36 @@ bool SDLWindow::IsCursorVisible() const {
 std::optional<Base::Event> SDLWindow::PollEvent() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        if (e.type == SDL_EVENT_QUIT) {
-            SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
-        }
-        else if (e.type == SDL_EVENT_KEY_DOWN) {
-            if (e.key.scancode == SDL_SCANCODE_ESCAPE)
+        switch (e.type) {
+            case SDL_EVENT_QUIT:
                 SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+                break;
+            case SDL_EVENT_WINDOW_RESIZED:
+                EventManager::GetInstance()->Send(std::make_shared<GameResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
+                break;
+            case SDL_EVENT_KEY_DOWN:
+                if (e.key.key == SDLK_PIPE) {
+                    SignalManager::GetInstance()->Send(std::make_shared<GameToggleImGui>());
+               }
         }
+
+        ImGui_ImplSDL3_ProcessEvent(&e);
     } 
+
     return {};
+}
+
+void SDLWindow::OnRender() {
+    ImGui_ImplSDL3_NewFrame();
+    ImGui::NewFrame();
+
+    ImGui::ShowDemoWindow();
+
+    ImGui::Render();
+}
+
+void SDLWindow::OnDisplay() {
+
 }
 
 void SDLWindow::SetFlags(SDL_WindowFlags flags) {

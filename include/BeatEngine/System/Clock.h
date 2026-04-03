@@ -19,4 +19,6 @@ public:
     Time Get();
     Time GetAndStop();
     Time GetAndReset();
+
+    static Time GetNow();
 };

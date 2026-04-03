@@ -38,3 +38,7 @@ Time Clock::GetAndReset() {
     m_StopPoint = {};
     return elapsed;
 }
+
+Time Clock::GetNow() {
+    return std::chrono::duration_cast<std::chrono::microseconds>(ClockImpl::now() - ClockImpl::time_point());
+}

@@ -61,7 +61,7 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceI
     
     VkPhysicalDeviceProperties2 devProperties{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
     if (deviceIndex >= devices.size()) {
-        std::println("Not a valid index. autoselecting index 0");
+        Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Not a valid index. autoselecting index 0");
         deviceIndex = 0;
     }
 
@@ -117,12 +117,18 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .dynamicRendering = true
     };
 	const VkPhysicalDeviceFeatures features10{ .samplerAnisotropy = VK_TRUE };
-
-    const std::vector<const char*> deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
+    
+    const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_LOCAL_READ_FEATURES,
+        .pNext = &features13,
+        .dynamicRendering = VK_TRUE,
+    };
+        
+    const std::vector<const char*> deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
 
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &features13,
+        .pNext = &renderingFeatures,
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueInfo,
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
@@ -163,4 +169,36 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
     VK_CHECK(vkCreateSwapchainKHR(device, &swapchainInfo, nullptr, &swapchain));
 
     return swapchain;
+}
+
+VkImageCreateInfo vki::GetImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .pNext = nullptr,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format = format,
+        .extent = extent,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = usageFlags
+    };
+}
+
+VkImageViewCreateInfo vki::GetImageViewCreateInfo(VkFormat format, VkImage image, VkImageAspectFlags aspectFlags) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .pNext = nullptr,
+        .image = image,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = format,
+        .subresourceRange {
+            .aspectMask = aspectFlags,
+            .baseMipLevel = 0,
+            .levelCount = 1,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
 }

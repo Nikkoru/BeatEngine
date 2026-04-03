@@ -1,21 +1,32 @@
 #pragma once
 
-#include <memory>
+#include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/SettingsManager.h"
+#include "BeatEngine/Manager/ViewManager.h"
+#include "BeatEngine/Manager/SystemManager.h"
+#include "BeatEngine/Manager/UIManager.h"
+#include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 
-class ViewManager;
-class SystemManager;
-class AssetManager;
-class SettingsManager;
-class AudioManager;
-class UIManager;
-class GraphicsManager;
-struct GameState {
+class GameContext;
+class GameState {
+private:
+    ViewManager ViewMgr;
+	SystemManager SystemMgr;
+	AssetManager AssetMgr;
+	SettingsManager SettingsMgr;
+	AudioManager AudioMgr;
+	UIManager UIMgr;
+    GraphicsManager GraphicsMgr;
 public:
-    std::shared_ptr<ViewManager> ViewMgr{ nullptr };
-	std::shared_ptr<SystemManager> SystemMgr{ nullptr };
-	std::shared_ptr<AssetManager> AssetMgr{ nullptr };
-	std::shared_ptr<SettingsManager> SettingsMgr{ nullptr };
-	std::shared_ptr<AudioManager> AudioMgr{ nullptr };
-	std::shared_ptr<UIManager> UIMgr{ nullptr };
-    std::shared_ptr<GraphicsManager> GraphicsMgr{ nullptr };
+    GameState() = default;
+    void CreateManagers(GameContext* context);
+public:
+    ViewManager& GetViewMgr();
+    SystemManager& GetSystemMgr();
+    AssetManager& GetAssetMgr();
+    SettingsManager& GetSettingsMgr();
+    AudioManager& GetAudioMgr();
+    UIManager& GetUIMgr();
+    GraphicsManager& GetGraphicsMgr();
 };

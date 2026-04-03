@@ -129,7 +129,7 @@ int AudioManager::AudioCallback(
 
 	return paContinue;
 }
-AudioManager::AudioManager(GameContext* context): m_Context(context) {
+AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(context), m_State(state) {
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
 		if (audioSignal->AudioStreamHandle) {

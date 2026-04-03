@@ -1,4 +1,4 @@
-set(HEADERS
+list(APPEND HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.inl"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.h"
@@ -42,7 +42,11 @@ set(HEADERS
 
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Renderer.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/FrameData.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/DescriptorBuilder.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/DescriptorAllocator.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/UninitQueue.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Boilerplate.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/PipelineManager.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Texture.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Shader.h"
 
@@ -66,6 +70,7 @@ set(HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/WindowEvents.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/GameEvent.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/AudioEvent.h"
 
@@ -104,5 +109,5 @@ set(HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/GameContext.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.inl"
-    PARENT_SCOPE
 )
+set(HEADERS ${HEADERS} PARENT_SCOPE)

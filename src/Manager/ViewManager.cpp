@@ -2,20 +2,21 @@
 
 #include <memory>
 
-#include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Events/GameEvent.h"
-#include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Signals/ViewSignals.h"
-
 #include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Base/View.h"
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 
-ViewManager::ViewManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
+ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
+    if (context != nullptr)
+        context->ActiveView = MainView;
 	SignalManager::GetInstance()->RegisterCallback<ViewPushSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto sigView = std::static_pointer_cast<ViewPushSignal>(sig);
 		Push(sigView->ViewID);
@@ -30,7 +31,7 @@ ViewManager::ViewManager(std::shared_ptr<GameContext> context, std::shared_ptr<G
 		ViewStack.top()->OnResume();
 	});
     
-    EventManager::GetInstance()->Subscribe<EventGameExiting>([this](const std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event> event) {
         while (!ViewStack.empty()) {
             ViewStack.top()->OnExit();
 
@@ -44,7 +45,7 @@ void ViewManager::Push(std::type_index viewID) {
 		if (ViewFabrics.contains(viewID)) {
             if (!ViewStack.empty())
                 ViewStack.top()->OnSuspend();
-			ViewStack.push(ViewFabrics[viewID](m_Context, m_State));
+			ViewStack.push(std::move(ViewFabrics[viewID](m_Context, m_State)));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
@@ -81,7 +82,6 @@ void ViewManager::Pop() {
 
 bool ViewManager::OnEvent(std::optional<Base::Event> event) {
 	if (!ViewStack.empty()) {
-        // if (!((event->is<sf::Event::KeyPressed>() || event->is<sf::Event::KeyReleased>()) && m_Context->VFlags & ViewFlags_DisableKeys))
 		    ViewStack.top()->OnEvent(event);
 		return true;
 	}
@@ -124,6 +124,7 @@ bool ViewManager::OnExit() {
 
 bool ViewManager::HasActiveViews() {
 	return !ViewStack.empty();
+    return true;
 }
 
 void ViewManager::GetViewKeybinds() {

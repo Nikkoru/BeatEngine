@@ -5,7 +5,7 @@ include(FetchContent)
 # Fetch ImGui
 FetchContent_Declare(ImGui
         GIT_REPOSITORY https://github.com/ocornut/imgui
-        GIT_TAG v1.91.1-docking
+        # GIT_TAG v1.91.1-docking
         GIT_SHALLOW ON
         EXCLUDE_FROM_ALL
         SYSTEM)
@@ -15,22 +15,25 @@ if(NOT ImGui_POPULATED)
     FetchContent_MakeAvailable(ImGui)
 endif()
 
-add_library(ImGui STATIC
-    ${imgui_SOURCE_DIR}/imconfig.h
-    ${imgui_SOURCE_DIR}/imgui.h
+set(IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)
+list(APPEND SOURCES
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_demo.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_internal.h
     ${imgui_SOURCE_DIR}/imgui_tables.cpp
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+)
+
+list(APPEND HEADERS
+    ${imgui_SOURCE_DIR}/imconfig.h
+    ${imgui_SOURCE_DIR}/imgui.h
+    ${imgui_SOURCE_DIR}/imgui_internal.h
     ${imgui_SOURCE_DIR}/imstb_rectpack.h
     ${imgui_SOURCE_DIR}/imstb_textedit.h
     ${imgui_SOURCE_DIR}/imstb_truetype.h
 )
-if (USE_OPENGL)
-    add_subdirectory(glad)
-elseif (USE_VULKAN)
+
+if (USE_SDL_WINDOW)
     # Fetch SDL
     FetchContent_Declare(SDL3
             GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
@@ -39,6 +42,19 @@ elseif (USE_VULKAN)
             EXCLUDE_FROM_ALL
             SYSTEM)
     FetchContent_MakeAvailable(SDL3)
+
+    list(APPEND SOURCES
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.cpp
+    )
+    list(APPEND HEADERS
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_sdl3.h
+    )
+elseif(USE_GLFW_WINDOW)
+endif()
+
+if (USE_OPENGL_RENDERER)
+    find_package(OpenGL)
+    add_subdirectory(glad)
     # Fetch glm
     FetchContent_Declare(glm
         GIT_REPOSITORY https://github.com/g-truc/glm.git
@@ -47,7 +63,17 @@ elseif (USE_VULKAN)
         EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_MakeAvailable(glm)
+    
+    list(APPEND SOURCES
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl2.cpp
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+    )
+    list(APPEND HEADERS
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl2.h
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.h
+    )
 
+elseif (USE_VULKAN_RENDERER)
     # Fetch VMA
     option(VMA_BUILD_SAMPLES "Build samples" ON)
     FetchContent_Declare(VMA
@@ -57,6 +83,13 @@ elseif (USE_VULKAN)
         EXCLUDE_FROM_ALL
         SYSTEM)
     FetchContent_MakeAvailable(VMA)
+
+    list(APPEND SOURCES
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.cpp 
+    )
+    list(APPEND HEADERS 
+        ${imgui_SOURCE_DIR}/backends/imgui_impl_vulkan.h 
+    )
 elseif(USE_SFML)
     # Fetch SFML (ON REMOVAL)
     FetchContent_Declare(SFML
@@ -120,3 +153,6 @@ FetchContent_Declare(taglib
     EXCLUDE_FROM_ALL
     SYSTEM)
 FetchContent_MakeAvailable(taglib)
+
+set(SOURCES ${SOURCES} PARENT_SCOPE)
+set(HEADERS ${HEADERS} PARENT_SCOPE)

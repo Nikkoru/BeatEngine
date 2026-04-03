@@ -1,8 +1,9 @@
 #include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/GameContext.h"
-#include <memory>
+#include "BeatEngine/Base/System.h"
 
-SystemManager::SystemManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state) : m_Context(context), m_State(state) {}
+SystemManager::SystemManager(GameContext* context, GameState* state) 
+    : m_Context(context), m_State(state) {}
 
 void SystemManager::StartSystems() {
 	for (auto& [index, system] : m_Systems) {

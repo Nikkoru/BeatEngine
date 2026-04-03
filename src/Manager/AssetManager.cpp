@@ -1,24 +1,30 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <memory>
 #include <miniaudio.h>
 #include <sndfile.h>
 #include <taglib/taglib.h>
+#include <typeindex>
 
+#include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/GameState.h"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
 
-AssetManager::AssetManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state): m_Context(context), m_State(state) {}
+AssetManager::AssetManager(GameContext* context, GameState* state)
+    : m_Context(context), m_State(state) {}
 
 AssetManager::~AssetManager() {
    m_GlobalAssets.clear();
@@ -35,7 +41,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-                auto texture = m_State->GraphicsMgr->CreateTexture(path);
+                auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
 
 				handle = Base::AssetHandle<Texture>(texture);
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
@@ -49,7 +55,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-                auto texture = m_State->GraphicsMgr->CreateTexture(path);
+                auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
 
 				handle = Base::AssetHandle<Texture>(texture);
 				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
@@ -248,16 +254,58 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 				// m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
-				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
+				Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
 				handle = Base::AssetHandle<Font>::Cast(m_ViewAssets.at(viewID)[name].Handle);
 			}
 		}
 		return handle;
 	}
 	else {
-		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
+		Logger::AddError(typeid(AssetManager), "File \"{}\" doesn't exist", path.string());
 		return Base::AssetHandle<Font>();
 	}
+}
+
+Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID) {
+    if (!fs::exists(path)) {
+		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
+		return Base::AssetHandle<Shader>();
+    }
+
+    std::string name = path.stem().string();
+
+    Base::AssetHandle<Shader> handle;
+
+    bool global = viewID == typeid(nullptr);
+
+    if (global) {
+        if (m_GlobalAssets.contains(name)) {
+            Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
+            handle = Base::AssetHandle<Shader>::Cast(m_GlobalAssets[name].Handle);
+        }
+        else {
+            auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
+            handle = Base::AssetHandle<Shader>(shader);
+
+            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader) };
+        }
+    }
+    else {
+        if (!m_ViewAssets.contains(viewID))
+            m_ViewAssets[viewID];
+        if (!m_ViewAssets.at(viewID).contains(name)) {
+            auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
+            handle = Base::AssetHandle<Shader>(shader);
+
+            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader) };
+        }
+        else {
+            Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
+            handle = Base::AssetHandle<Shader>::Cast(m_ViewAssets.at(viewID)[name].Handle);
+        }
+    }
+
+    return handle;
 }
 
 bool AssetManager::Has(std::string name, const std::type_index viewID) {

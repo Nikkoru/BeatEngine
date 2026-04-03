@@ -7,12 +7,13 @@
 #include <unordered_map>
 #include <cstdint>
 
+#include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Asset.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
 
 namespace fs = std::filesystem;
 
+class GameContext;
+class GameState;
 class AssetManager {
 	struct Slot {
 		Base::AssetHandle<void> Handle;
@@ -22,7 +23,8 @@ class AssetManager {
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset) : Handle(handle), Asset(asset) {}
 	};
 public:
-    AssetManager(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+    AssetManager() : AssetManager(nullptr, nullptr) {}
+    AssetManager(GameContext* context, GameState* state);
     ~AssetManager();
 private:
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
@@ -30,12 +32,13 @@ private:
 private:
 	uint64_t m_AudioSampleRate = 48000;
 private:
-    std::shared_ptr<GameContext> m_Context{ nullptr };
-    std::shared_ptr<GameState> m_State{ nullptr };
+    GameContext* m_Context{ nullptr };
+    GameState* m_State{ nullptr };
 public:
 	template <typename TAsset>
-		requires(std::is_base_of_v<Base::Asset, TAsset>)
+		requires(std::is_base_of_v<Base::Asset, TAsset> && !std::is_base_of_v<Shader, TAsset>)
 	Base::AssetHandle<TAsset> Load(const fs::path& path, const std::type_index viewID = typeid(nullptr));
+    Base::AssetHandle<Shader> LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID = typeid(nullptr));
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)
 	Base::AssetHandle<TAsset> Get(const std::string assetName, const std::type_index viewID = typeid(nullptr));

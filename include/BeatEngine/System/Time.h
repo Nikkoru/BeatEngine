@@ -14,6 +14,8 @@ public:
     constexpr float AsSeconds() const;
     constexpr int32_t AsMilliseconds() const;
     constexpr int64_t AsMicroseconds() const;
+    constexpr std::chrono::time_point<std::chrono::system_clock> AsTimePoint() const;
+    constexpr time_t AsTimeT() const;
     constexpr std::chrono::microseconds GetDuration() const;
     
     template<typename Rep, typename Period>
