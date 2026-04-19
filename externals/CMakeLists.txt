@@ -5,7 +5,7 @@ include(FetchContent)
 # Fetch ImGui
 FetchContent_Declare(ImGui
         GIT_REPOSITORY https://github.com/ocornut/imgui
-        # GIT_TAG v1.91.1-docking
+        GIT_TAG v1.92.7-docking
         GIT_SHALLOW ON
         EXCLUDE_FROM_ALL
         SYSTEM)

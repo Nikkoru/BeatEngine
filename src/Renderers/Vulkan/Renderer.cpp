@@ -1,5 +1,7 @@
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 
+#include "BeatEngine/Enum/EnvFlags.h"
+#include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Logger.h"
@@ -11,6 +13,7 @@
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/System/Time.h"
 #include "BeatEngine/Util/Exception.h"
+#include "BeatEngine/GameContext.h"
 
 #include <SDL3/SDL_video.h>
 #include <imgui.h>
@@ -62,7 +65,17 @@ void VulkanRenderer::pInitVulkan() {
     AddVulkanLog("Initializing Vulkan handlers");
     volkInitialize();
 
-    m_Instance = vkb::CreateInstance("BeatEngine Game", VK_API_VERSION_1_3, { VK_EXT_DEBUG_REPORT_EXTENSION_NAME, VK_EXT_DEBUG_UTILS_EXTENSION_NAME }, { "VK_LAYER_KHRONOS_validation" });
+    std::vector<const char*> extensions = {};
+    std::vector<const char*> layers = {};
+
+    if (m_Context->EFlags & EnvFlags_Debug) {
+        extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+        extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+
+        layers.emplace_back("VK_LAYER_KHRONOS_validation");
+    }
+
+    m_Instance = vkb::CreateInstance("BeatEngine Game", VK_API_VERSION_1_3, extensions, layers);
     volkLoadInstance(m_Instance);
 
     m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance);
@@ -87,8 +100,9 @@ void VulkanRenderer::pInitVulkan() {
         .instance = m_Instance
     };
     VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_Allocator));
-
-    CreateDebugCallback();
+    
+    if (m_Context->EFlags & EnvFlags_Debug)
+        CreateDebugCallback();
 
     SDL_Vulkan_CreateSurface(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl(), m_Instance, nullptr, &m_Surface);
     
@@ -115,11 +129,13 @@ void VulkanRenderer::pInitSwapchain() {
     };
 
     m_Swapchain = vkb::CreateSwapchainKHR(m_Device, m_PhysicalDevice, m_Surface, width, height);
+    m_SwapchainImages = vkb::GetSwapchainImages(m_Device, m_Swapchain);
+    m_SwapchainImageViews = vkb::GetSwapchainImageViews(m_Device, m_SwapchainImages, m_SwapchainFormat);
     AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
     
     m_DrawImage = {
         .ImageExtent = extent,
-        .ImageFormat = VK_FORMAT_R16G16B16A16_SFLOAT
+        .ImageFormat = m_SwapchainFormat
     };
 
     VkImageUsageFlags drawImageUsages = 
@@ -136,11 +152,11 @@ void VulkanRenderer::pInitSwapchain() {
     };
 
     vmaCreateImage(m_Allocator, &info, &allocInfo, &m_DrawImage.Image, &m_DrawImage.Allocation, nullptr);
-    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_IMAGE, (uint64_t)m_DrawImage.Image, "VkImage");
+    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_IMAGE, (uint64_t)m_DrawImage.Image, "AllocatedImage_VkImage");
     
     VkImageViewCreateInfo viewInfo = vki::GetImageViewCreateInfo(m_DrawImage.ImageFormat, m_DrawImage.Image, VK_IMAGE_ASPECT_COLOR_BIT); 
     VK_CHECK(vkCreateImageView(m_Device, &viewInfo, nullptr, &m_DrawImage.ImageView));
-    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)m_DrawImage.ImageView, "VkImageView");
+    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)m_DrawImage.ImageView, "AllocatedImage_VkImageView");
 
     m_Uninitializers.AddCallback([this]() {
         AddVulkanLog("Destroying Swapchain");
@@ -160,26 +176,25 @@ void VulkanRenderer::pInitCommands() {
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 
         .queueFamilyIndex = m_GraphicsQueueFamily
     };
-	VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_CommandPool));
-    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_COMMAND_POOL, uint64_t(m_CommandPool), "VkCommandPool");
 
-	VkCommandBufferAllocateInfo cbAllocInfo{
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, 
-        .commandPool = m_CommandPool, 
-        .commandBufferCount = FRAME_OVERLAP
-    };
-	VK_CHECK(vkAllocateCommandBuffers(m_Device, &cbAllocInfo, m_CommandBuffers.data()));
+    for (auto i = 0; i < FRAME_OVERLAP; i++) {
+        VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool));
+        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_COMMAND_POOL, uint64_t(m_Frames[i].CommandPool), std::format("VkCommandPool_Frame{}", i));
 
-    for (int i = 0; i < FRAME_OVERLAP; i++) {
-        auto cb = m_CommandBuffers[i];
-        auto name = std::format("VkCommandBuffer_Frame{}", i);
-        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_COMMAND_BUFFER, (uint64_t)cb, name);
+        VkCommandBufferAllocateInfo cbAllocInfo{
+            .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, 
+            .commandPool = m_Frames[i].CommandPool, 
+            .commandBufferCount = 1
+        };
+        VK_CHECK(vkAllocateCommandBuffers(m_Device, &cbAllocInfo, &m_Frames[i].ActiveCmdBuffer));
     }
+
+
 
     m_Uninitializers.AddCallback([this]() {
         AddVulkanLog("Destroying Command interface");
-
-        vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+        //
+        // vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
     });
 }
 
@@ -191,17 +206,17 @@ void VulkanRenderer::pInitSyncStructures() {
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
     for (auto i = 0; i < FRAME_OVERLAP; i++) {
-        auto semaphoreName = std::format("VkSemaphore_Present{}", i);
+        auto semaphorePresentName = std::format("VkSemaphore_Present{}", i);
+        auto semaphoreRenderName = std::format("VkSemaphore_Render{}", i);
         auto fenceName = std::format("VkFence_Render{}", i);
 
         VK_CHECK(vkCreateFence(m_Device, &fenceInfo, nullptr, &m_Frames[i].RenderFence));
         AddNameToVKObject(m_Device, VK_OBJECT_TYPE_FENCE, (uint64_t)m_Frames[i].RenderFence, fenceName);
         VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_Frames[i].PresentSemaphore));
-        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].PresentSemaphore, semaphoreName);
+        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].PresentSemaphore, semaphorePresentName);
+        VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_Frames[i].RenderSemaphore));
+        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].RenderSemaphore, semaphoreRenderName);
     }
-
-    VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_DrawImage.RenderSemaphore));
-    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_DrawImage.RenderSemaphore, "AllocatedImage_VkSemaphore");
 
     m_Uninitializers.AddCallback([this]() {
         AddVulkanLog("Destroying Sync Structures");
@@ -209,8 +224,8 @@ void VulkanRenderer::pInitSyncStructures() {
         for (auto i = 0; i < FRAME_OVERLAP; i++) {
             vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
             vkDestroySemaphore(m_Device, m_Frames[i].PresentSemaphore, nullptr);
+            vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
         }
-        vkDestroySemaphore(m_Device, m_DrawImage.RenderSemaphore, nullptr);
     });
 }
 
@@ -239,14 +254,14 @@ void VulkanRenderer::pInitRenderPass() {
         .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
     };
 
-    VkSubpassDependency subpassDependecy{
-            .srcSubpass = VK_SUBPASS_EXTERNAL,
-            .dstSubpass = 0,
-            .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
-            .srcAccessMask = 0,
-            .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
-    };
+    // VkSubpassDependency subpassDependecy{
+    //     .srcSubpass = VK_SUBPASS_EXTERNAL,
+    //     .dstSubpass = 0,
+    //     .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    //     .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    //     .srcAccessMask = 0,
+    //     .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+    // };
 
     VkRenderPassCreateInfo renderPassInfo{
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
@@ -254,8 +269,9 @@ void VulkanRenderer::pInitRenderPass() {
         .pAttachments = &attachmentDescriptions,
         .subpassCount = 1,
         .pSubpasses = &subpassDescriptions,
-        .dependencyCount = 1,
-        .pDependencies = &subpassDependecy    
+        .dependencyCount = 0
+        // .dependencyCount = 1,
+        // .pDependencies = &subpassDependecy    
     };
 
     VK_CHECK(vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &m_RenderPass));
@@ -378,6 +394,10 @@ void VulkanRenderer::pInitImGui() {
 	VK_CHECK(vkCreateDescriptorPool(m_Device, &poolInfo, nullptr, &imguiPool));
 
     ImGui::CreateContext();
+    
+    if (m_Context->GFlags & GameFlags_ImGuiDocking)
+        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
     ImGui_ImplSDL3_InitForVulkan(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl());
     
     ImGui_ImplVulkan_InitInfo info{
@@ -411,7 +431,7 @@ void VulkanRenderer::pInitImGui() {
     });
 }
 
-void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, bool imgui) {
+void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize) {
     AddVulkanLog("Initializing VulkanRenderer");
 
     if (m_Window == nullptr) {
@@ -419,7 +439,7 @@ void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, bool img
         std::static_pointer_cast<SDLWindow>(m_Window)->SetFlags(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
     }
 
-    m_Window->Init(windowTitle, windowSize);
+    m_Window->Init(m_Context, windowTitle, windowSize);
 
     pInitVulkan();
     pInitSwapchain();
@@ -430,7 +450,7 @@ void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, bool img
     pInitPipeline();
     pInitSyncStructures();
     
-    if (imgui) 
+    if (m_Context->GFlags & GameFlags_ImGui) 
         pInitImGui();
 }
 
@@ -535,25 +555,25 @@ void VulkanRenderer::Uninit() {
 }
 
 void VulkanRenderer::Render() {
-    ImGui_ImplVulkan_NewFrame();
+    if (m_Context->GFlags & GameFlags_ImGui)
+        ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
-    // static Clock clock;
-    // clock.Start();
     
     auto frameIndex = (m_FrameNumber % FRAME_OVERLAP);
     
-    VK_CHECK(vkWaitForFences(m_Device, 1, &GetCurrentFrame().RenderFence, true, 1000000000));
+    VK_CHECK(vkWaitForFences(m_Device, 1, &GetCurrentFrame().RenderFence, true, 1'000'000'000));
     VK_CHECK(vkResetFences(m_Device, 1, &GetCurrentFrame().RenderFence));
 
-    m_UpdateSwapchain = VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1000000000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex));
+    if (VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1'000'000'000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex)))
+        UpdateSwapchain();
    
-    m_ActiveCmdBuffer = m_CommandBuffers[frameIndex];
-    VK_CHECK(vkResetCommandBuffer(m_ActiveCmdBuffer, 0));
+    VK_CHECK(vkResetCommandBuffer(GetCurrentFrame().ActiveCmdBuffer, 0));
     VkCommandBufferBeginInfo cmdInfo {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
         .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
     };
-    VK_CHECK(vkBeginCommandBuffer(m_ActiveCmdBuffer, &cmdInfo));
+    VK_CHECK(vkBeginCommandBuffer(GetCurrentFrame().ActiveCmdBuffer, &cmdInfo));
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
     
     VkRenderingInfo renderingInfo{
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
@@ -565,12 +585,12 @@ void VulkanRenderer::Render() {
         .colorAttachmentCount = 0,
     };
 
-    static Clock clock{};
-    clock.Start();
-    auto time = clock.Get();
-    auto sec = time.AsSeconds();
-    VkClearValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
-    
+    // static Clock clock{};
+    // clock.Start();
+    // auto time = clock.Get();
+    // auto sec = time.AsSeconds();
+    // VkClearValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
+    // 
     VkRenderPassBeginInfo renderPassInfo {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
         .renderPass = m_RenderPass,
@@ -581,63 +601,55 @@ void VulkanRenderer::Render() {
                 .height = static_cast<uint32_t>(GetWindow()->GetSize().Y),
             }
         },
-        .clearValueCount = 1,
-        .pClearValues = &clearColor
+        .clearValueCount = 0
     };
 
-    if (m_PipelineMgr.BindIfAny(m_ActiveCmdBuffer))
-        vkCmdDraw(m_ActiveCmdBuffer, 3, 1, 0, 0);
-    else
-        vkCmdBeginRenderPass(m_ActiveCmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    if (m_PipelineMgr.BindIfAny(GetCurrentFrame().ActiveCmdBuffer)) {
+        VkExtent2D extent{
+            .width = m_Window->GetSize().X,
+            .height = m_Window->GetSize().Y
+        };
+        auto colorAttachment = vki::GetRenderingAttachmentInfo(m_DrawImage.ImageView, nullptr, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        auto renderInfo = vki::GetRenderingInfo(extent, &colorAttachment, nullptr);
+        vkCmdBeginRendering(GetCurrentFrame().ActiveCmdBuffer, &renderInfo);
+    }
+    else {
+        vkCmdBeginRenderPass(GetCurrentFrame().ActiveCmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    }
 
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), m_ActiveCmdBuffer);
+    // vkCmdDraw(GetCurrentFrame().ActiveCmdBuffer, 3, 1, 0, 0);
 }
 
 void VulkanRenderer::RenderImGui() {
-    
+    ImGui::Render();
+    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), GetCurrentFrame().ActiveCmdBuffer);
 }
 
 void VulkanRenderer::Display() {
-    auto frameIndex = (m_FrameNumber % FRAME_OVERLAP);
+    RenderImGui();
 
-    vkCmdEndRenderPass(m_ActiveCmdBuffer);
-    // vkCmdEndRendering(m_ActiveCmdBuffer);
-    // VkImageMemoryBarrier2 barrierClearToPresent{
-    //     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-    //     .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-    //     .srcAccessMask = VK_ACCESS_MEMORY_WRITE_BIT,
-    //     .dstStageMask = VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
-    //     .dstAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-    //     .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-    //     .newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
-    //     .image = m_Images[frameIndex],
-    //     .subresourceRange{.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, .levelCount = 1, .layerCount = 1 }
-    // };
-    //
-    // VkDependencyInfo barrierPresentDependencyInfo{
-    //     .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-    //     .imageMemoryBarrierCount = 1,
-    //     .pImageMemoryBarriers = &barrierClearToPresent
-    // };
-    // vkCmdPipelineBarrier2(m_ActiveCmdBuffer, &barrierPresentDependencyInfo);
-    VK_CHECK(vkEndCommandBuffer(m_ActiveCmdBuffer));
+    auto frameIndex = (m_FrameNumber % FRAME_OVERLAP);
     
-    VkPipelineStageFlags waitStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-    VkSubmitInfo submitInfo{
-        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
-        .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &GetCurrentFrame().PresentSemaphore,
-        .pWaitDstStageMask = &waitStages,
-        .commandBufferCount = 1,
-        .pCommandBuffers = &m_ActiveCmdBuffer,
-        .signalSemaphoreCount = 1,
-        .pSignalSemaphores = &m_DrawImage.RenderSemaphore
-    };
-    vkQueueSubmit(m_GraphicsQueue, 1, &submitInfo, GetCurrentFrame().RenderFence);
+    if (m_PipelineMgr.Has())
+        vkCmdEndRendering(GetCurrentFrame().ActiveCmdBuffer);
+    else
+        vkCmdEndRenderPass(GetCurrentFrame().ActiveCmdBuffer);
+
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    VK_CHECK(vkEndCommandBuffer(GetCurrentFrame().ActiveCmdBuffer));
+
+    auto cmdInfo = vki::GetCommandBufferSubmitInfo(GetCurrentFrame().ActiveCmdBuffer);
+    auto waitInfo = vki::GetSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, GetCurrentFrame().PresentSemaphore);
+    auto signalInfo = vki::GetSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, GetCurrentFrame().RenderSemaphore);
+    
+    auto submitInfo = vki::GetSubmitInfo(&cmdInfo, &signalInfo, &waitInfo);
+    vkQueueSubmit2(m_GraphicsQueue, 1, &submitInfo, GetCurrentFrame().RenderFence);
+
     VkPresentInfoKHR presentInfo{
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pNext = nullptr,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &m_DrawImage.RenderSemaphore,
+        .pWaitSemaphores = &GetCurrentFrame().RenderSemaphore,
         .swapchainCount = 1,
         .pSwapchains = &m_Swapchain,
         .pImageIndices = &m_ActiveImageIndex
@@ -648,78 +660,80 @@ void VulkanRenderer::Display() {
 }
 
 void VulkanRenderer::Clear() {
-    // static Clock clock{};
-    // clock.Start();
-    // auto time = clock.Get();
-    // auto sec = time.AsSeconds();
+    static Clock clock{};
+    clock.Start();
+    auto time = clock.Get();
+    auto sec = time.AsSeconds();
+
+    VkClearColorValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
+    VkImageSubresourceRange imageRange{
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel = 0,
+        .levelCount = 1,
+        .baseArrayLayer = 0,
+        .layerCount = 1
+    };
     //
-    // VkClearColorValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
-    // VkImageSubresourceRange imageRange{
-    //     .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-    //     .baseMipLevel = 0,
-    //     .levelCount = 1,
-    //     .baseArrayLayer = 0,
-    //     .layerCount = 1
-    // };
+    VkImageMemoryBarrier2 presentToClearBarrier{
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
+        .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = m_SwapchainImages[m_ActiveImageIndex],
+        .subresourceRange = imageRange
+    };
+
+    VkDependencyInfo barrierDependency{
+        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+        .imageMemoryBarrierCount = 1,
+        .pImageMemoryBarriers = &presentToClearBarrier
+    };
     //
-    // VkImageMemoryBarrier2 presentToClearBarrier{
-    //     .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-    //     .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-    //     .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-    //     .dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-    //     .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-    //     .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-    //     .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-    //     .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-    //     .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-    //     .image = m_Images[m_ActiveImageIndex],
-    //     .subresourceRange = imageRange
-    // };
+    vkCmdPipelineBarrier2(GetCurrentFrame().ActiveCmdBuffer, &barrierDependency);
     //
-    // VkDependencyInfo barrierDependency{
-    //     .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-    //     .imageMemoryBarrierCount = 1,
-    //     .pImageMemoryBarriers = &presentToClearBarrier
-    // };
-    //
-    // vkCmdPipelineBarrier2(m_ActiveCmdBuffer, &barrierDependency);
-    //
-    // vkCmdClearColorImage(m_ActiveCmdBuffer, m_Images[m_ActiveImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageRange);
+    vkCmdClearColorImage(GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageRange);
 }
 
 void VulkanRenderer::Update() {
-    if (m_UpdateSwapchain) {
+}
 
-        m_UpdateSwapchain = false;
+void VulkanRenderer::SetGlobalShader(std::shared_ptr<Shader> shader) {
 
-        auto oldSwapchain = m_Swapchain;
+}
 
-        auto size = m_Window->GetSize();
-        Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Updating swapchain to size ({}, {})", size.X, size.Y);
-        VK_CHECK(vkDeviceWaitIdle(m_Device));
-        
-        m_Swapchain = vkb::CreateSwapchainKHR(m_Device, m_PhysicalDevice, m_Surface, size.X, size.Y, oldSwapchain);
-        vkDestroyImageView(m_Device, m_DrawImage.ImageView, nullptr);
+void VulkanRenderer::UpdateSwapchain() {
+    auto oldSwapchain = m_Swapchain;
 
-        uint32_t imageCount{};
-        VK_CHECK(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &imageCount, &m_DrawImage.Image));
+    auto size = m_Window->GetSize();
+    Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Updating swapchain to size ({}, {})", size.X, size.Y);
+    VK_CHECK(vkDeviceWaitIdle(m_Device));
+    
+    m_Swapchain = vkb::CreateSwapchainKHR(m_Device, m_PhysicalDevice, m_Surface, size.X, size.Y, oldSwapchain);
+    vkDestroyImageView(m_Device, m_DrawImage.ImageView, nullptr);
 
-        VkImageViewCreateInfo viewInfo{ 
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, 
-            .image = m_DrawImage.Image, 
-            .viewType = VK_IMAGE_VIEW_TYPE_2D, 
-            .format = VK_FORMAT_B8G8R8A8_SRGB, 
-            .subresourceRange = {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, 
-                .levelCount = 1, 
-                .layerCount = 1
-            }
-        };
-        VK_CHECK(vkCreateImageView(m_Device, &viewInfo, nullptr, &m_DrawImage.ImageView));
+    uint32_t imageCount{};
+    VK_CHECK(vkGetSwapchainImagesKHR(m_Device, m_Swapchain, &imageCount, &m_DrawImage.Image));
 
-        vkDestroySwapchainKHR(m_Device, oldSwapchain, nullptr);
-        AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
-    }
+    VkImageViewCreateInfo viewInfo{ 
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, 
+        .image = m_DrawImage.Image, 
+        .viewType = VK_IMAGE_VIEW_TYPE_2D, 
+        .format = VK_FORMAT_B8G8R8A8_UNORM, 
+        .subresourceRange = {
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT, 
+            .levelCount = 1, 
+            .layerCount = 1
+        }
+    };
+    VK_CHECK(vkCreateImageView(m_Device, &viewInfo, nullptr, &m_DrawImage.ImageView));
+
+    vkDestroySwapchainKHR(m_Device, oldSwapchain, nullptr);
+    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
 }
 
 std::shared_ptr<Texture> VulkanRenderer::CreateTexture(std::filesystem::path path) {
@@ -727,7 +741,7 @@ std::shared_ptr<Texture> VulkanRenderer::CreateTexture(std::filesystem::path pat
 }
 
 std::shared_ptr<Shader> VulkanRenderer::CreateShader(std::filesystem::path path, Shader::Type type) {
-    std::shared_ptr<VulkanShader> shader;
+    std::shared_ptr<VulkanShader> shader = std::make_shared<VulkanShader>();
         
     shader->SetType(type);
     shader->GetFileContents(path);

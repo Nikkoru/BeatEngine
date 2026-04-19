@@ -8,7 +8,9 @@
 #include "BeatEngine/Asset/AudioStream.h"
 
 // #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 // #include "BeatEngine/Manager/SignalManager.h"
@@ -112,7 +114,7 @@ TestView::TestView(GameContext* context, GameState* state)
     });
 }
 
-void TestView::OnDraw(GraphicsManager* window) {
+void TestView::OnDraw() {
 	// auto font = m_Font->GetSFMLFont();
  //    
  //    auto musicTitle = sf::Text(*font, m_MusicTitleText, 15);
@@ -158,6 +160,8 @@ void TestView::OnDraw(GraphicsManager* window) {
 	//
 	// window->draw(percentage);
 	// window->draw(count);
+    //
+    // b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
 }
 
 void TestView::OnEvent(std::optional<Base::Event> event) {
@@ -198,7 +202,6 @@ void TestView::OnUpdate(float dt) {
 	progressBar->SetPosition({ 400 - (progressBar->GetSize().X / 2), 0});
 	progressBar->SetSize({ 725, 5 });
 	progressBar->Update(dt);
-
 }
 
 void TestView::OnExit() {

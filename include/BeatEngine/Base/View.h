@@ -47,7 +47,7 @@ namespace Base {
 		/// Notifies the view to draw to the given window.
 		/// </summary>
 		/// <param name="window">the SFML window to draw</param>
-		virtual void OnDraw(GraphicsManager* window) = 0;
+		virtual void OnDraw() = 0;
 		/// <summary>
 		/// Notifies the view when SFML event is trigged
 		/// </summary>

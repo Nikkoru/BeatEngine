@@ -13,11 +13,11 @@ namespace Base {
     public:
         template<typename TEvent>
             requires(std::is_base_of_v<Base::Event, TEvent>)
-        bool Is();
+        bool Is() { return ID == typeid(TEvent); };
 
         template<typename TEvent>
             requires(std::is_base_of_v<Base::Event, TEvent>)
-        std::shared_ptr<TEvent> GetIf();
+        std::shared_ptr<TEvent> GetIf() { if (Is<TEvent>()) return std::static_pointer_cast<TEvent>(this); }
 	public:
 		std::type_index ID;
 	};

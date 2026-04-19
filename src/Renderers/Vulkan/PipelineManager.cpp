@@ -76,3 +76,7 @@ bool PipelineManager::BindIfAny(VkCommandBuffer cmd) {
 
     return false;
 }
+
+bool PipelineManager::Has() {
+    return m_Pipeline != VK_NULL_HANDLE;
+}

@@ -8,5 +8,6 @@ enum class AssetType : uint8_t {
 	AudioStream,
     VertexShader,
     FragmentShader,
+    ComputeShader,
 	Font
 };

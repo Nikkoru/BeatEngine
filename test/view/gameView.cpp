@@ -13,7 +13,7 @@ Base::View(typeid(GameView), context, state) {
     layer->SetGameState(state);
 }
 
-void GameView::OnDraw(GraphicsManager* window) {
+void GameView::OnDraw() {
 
 }
 void GameView::OnEvent(const std::optional<Base::Event> event) {

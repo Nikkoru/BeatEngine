@@ -6,19 +6,20 @@
 #include <optional>
 #include <string>
 
+class GameContext;
 class BaseWindow {
+protected:
+    GameContext* m_Context{ nullptr };
 public:
     BaseWindow() = default;
     virtual ~BaseWindow() = default;
 public:
 
-    virtual void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
+    virtual void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
     virtual void Uninit() = 0;
 
     virtual void UninitImGui() = 0;
     // virtual void UpdateWindow();
-
-    // virtual void ProcessEvents();
 
     virtual std::optional<Base::Event> PollEvent() = 0;
 

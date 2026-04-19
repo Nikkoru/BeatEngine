@@ -2,6 +2,7 @@
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Graphics/Vector2.h"
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -27,9 +28,7 @@ void GraphicsManager::Init() {
 #else
     assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or Game::SetRenderer<T>()")
 #endif
-    bool useImGui = m_Context->GFlags & GameFlags_ImGui;
-
-    m_Renderer->Init(m_WindowTitle, m_WindowSize, useImGui);
+    m_Renderer->Init(m_WindowTitle, m_WindowSize);
 }
 
 void GraphicsManager::Update() {
@@ -45,6 +44,13 @@ void GraphicsManager::SetWindowTitle(std::string windowTitle) {
 
     if (m_Renderer != nullptr && m_Renderer->GetWindow() != nullptr)
         m_Renderer->GetWindow()->SetTitle(windowTitle);
+}
+
+void GraphicsManager::SetWindowSize(Vector2u size) {
+    m_WindowSize = size;
+
+    if (m_Renderer != nullptr && m_Renderer->GetWindow() != nullptr)
+        m_Renderer->GetWindow()->SetSize(size);
 }
 
 void GraphicsManager::SetFramerateLimit(unsigned int fps) {

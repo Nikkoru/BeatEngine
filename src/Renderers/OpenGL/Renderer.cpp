@@ -4,7 +4,7 @@
 #include "SDL3/SDL_video.h"
 #include <memory>
 
-void OpenGLRenderer::Init(std::string windowTitle, Vector2u windowSize, bool imgui) {
+void OpenGLRenderer::Init(std::string windowTitle, Vector2u windowSize) {
     if (m_Window == nullptr) {
         m_Window = std::make_shared<SDLWindow>();
         std::static_pointer_cast<SDLWindow>(m_Window)->SetFlags(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
@@ -12,7 +12,7 @@ void OpenGLRenderer::Init(std::string windowTitle, Vector2u windowSize, bool img
         SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     }
     
-    m_Window->Init(windowTitle, windowSize);
+    m_Window->Init(m_Context, windowTitle, windowSize);
     auto a = SDL_GL_CreateContext(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl());
 }
 

@@ -4,6 +4,7 @@
 #include <string>
 #include <filesystem>
 #include <map>
+#include <type_traits>
 #include <typeindex>
 
 namespace fs = std::filesystem;
@@ -34,6 +35,10 @@ public:
 	void RegisterSettingsData(); 
     std::shared_ptr<Base::Settings> GetSettings(std::string tag);
     std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
+
+    template<typename TSettings>
+        requires(std::is_base_of_v<Base::Settings, TSettings>)
+    bool HasSettings();
 
 	void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
 	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);

@@ -15,6 +15,7 @@
 #include "BeatEngine/Asset/AudioStream.h"
 
 #include "BeatEngine/Base/Asset.h"
+#include "BeatEngine/Enum/AssetType.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
 #include "BeatEngine/GameContext.h"
@@ -22,6 +23,7 @@
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
+#include "imgui.h"
 
 AssetManager::AssetManager(GameContext* context, GameState* state)
     : m_Context(context), m_State(state) {}
@@ -30,6 +32,12 @@ AssetManager::~AssetManager() {
    m_GlobalAssets.clear();
    m_ViewAssets.clear();
 }
+
+
+void AssetManager::Uninit() {
+
+}
+
 
 template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::path& path, std::type_index viewID) {
 	if (fs::exists(path)) {
@@ -308,6 +316,61 @@ Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader:
     return handle;
 }
 
+bool AssetManager::Preload(AssetType type, const fs::path& path, std::type_index viewID) {
+    switch (type) {
+    case AssetType::Texture:
+    case AssetType::FragmentShader:
+    case AssetType::VertexShader:
+    case AssetType::Font:
+        if (!m_AssetsToLoad.contains(type))
+            m_AssetsToLoad[type];
+        m_AssetsToLoad.at(type) = path;
+        return false;
+    case AssetType::AudioStream:
+        Load<AudioStream>(path);
+        return true;
+    case AssetType::Sound:
+        Load<Sound>(path);
+        return true;
+    default:
+        return false;
+    }
+}
+
+void AssetManager::Init() {
+    if (!m_AssetsToLoad.empty())
+        Logger::AddDebug(typeid(AssetManager), "Some assets were requested to load when preloading. loading...");
+    auto totalAssetLoaded = m_AssetsToLoad.size();
+    for (const auto& [type, asset] : m_AssetsToLoad) {
+        Logger::AddDebug(typeid(AssetManager), "Loading \"{}\"", asset.string());
+        switch (type) {
+        case AssetType::Texture:
+            if (Load<Texture>(asset)) {
+                totalAssetLoaded--;
+            }
+            break;
+        case AssetType::FragmentShader:
+            if (LoadShader(asset, Shader::Type::Fragment)) {
+                totalAssetLoaded--;
+            }
+            break;
+        case AssetType::VertexShader:
+            if (LoadShader(asset, Shader::Type::Vertex)) {
+                totalAssetLoaded--;
+            }
+            break;
+        case AssetType::Font:
+            if (Load<Font>(asset)) {
+                totalAssetLoaded--;
+            }
+            break;
+        default:
+            break;
+        }
+    }
+    Logger::AddDebug(typeid(AssetManager), "Loaded {} assets", totalAssetLoaded);
+}
+
 bool AssetManager::Has(std::string name, const std::type_index viewID) {
 	bool global = viewID == typeid(nullptr);
 
@@ -322,8 +385,8 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 }
 
 void AssetManager::DrawImGuiDebug() {
-    // ImGui::Begin("BeatEngine AssetManager Debug Window");
-    // ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
-    // ImGui::Text("View Assets: %zu", m_ViewAssets.size());
-    // ImGui::End();
+    ImGui::Begin("BeatEngine AssetManager Debug Window");
+    ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
+    ImGui::Text("View Assets: %zu", m_ViewAssets.size());
+    ImGui::End();
 }

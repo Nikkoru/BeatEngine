@@ -13,8 +13,6 @@
 #include "layer/globalLayer.h"
 
 int main() {
-    // Logger::GetInstance()->SetLogLevel();
-
 	Game game;
 
 	game.RegisterView<TestView>();
@@ -28,6 +26,7 @@ int main() {
     // game.SetRenderer<OpenGLRenderer>();
 
 	// game.SetWindowTitle("Now you can change the title!");
+    game.SetWindowSize({ 1280, 720 });
 
 	game.LoadGlobalAssets({
 		{
@@ -42,6 +41,24 @@ int main() {
 				"assets/sounds/test-sound.mp3"
 			}
 		},
+        // {
+        //     AssetType::FragmentShader,
+        //     {
+        //         "assets/shaders/shader.frag"
+        //     }
+        // },
+        // {
+        //     AssetType::VertexShader,
+        //     {
+        //         "assets/shaders/shader.vert"
+        //     }
+        // }
+        {
+            AssetType::ComputeShader,
+            {
+                "assets/shaders/gradient.comp"
+            }
+        }
 	});
 
     game.Initialize();

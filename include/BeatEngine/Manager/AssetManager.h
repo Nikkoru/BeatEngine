@@ -9,6 +9,7 @@
 
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Asset.h"
+#include "BeatEngine/Enum/AssetType.h"
 
 namespace fs = std::filesystem;
 
@@ -26,7 +27,11 @@ public:
     AssetManager() : AssetManager(nullptr, nullptr) {}
     AssetManager(GameContext* context, GameState* state);
     ~AssetManager();
+public:
+    void Init();
+    void Uninit();
 private:
+    std::unordered_map<AssetType, fs::path> m_AssetsToLoad;
 	std::unordered_map<std::string, Slot> m_GlobalAssets;
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
 private:
@@ -44,6 +49,7 @@ public:
 	Base::AssetHandle<TAsset> Get(const std::string assetName, const std::type_index viewID = typeid(nullptr));
     bool Has(std::string name, const std::type_index viewID = typeid(nullptr));
 
+    bool Preload(AssetType type, const fs::path& path, const std::type_index viewID = typeid(nullptr));
     void DrawImGuiDebug();
 };
 

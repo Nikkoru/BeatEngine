@@ -18,4 +18,5 @@ public:
     void DestroyAll(VkDevice device);
     void LoadShader(VkDevice device, std::shared_ptr<Shader> shader, VkShaderStageFlagBits stageFlags);
     bool BindIfAny(VkCommandBuffer cmd);
+    bool Has();
 };

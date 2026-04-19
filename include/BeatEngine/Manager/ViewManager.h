@@ -29,6 +29,9 @@ public:
 	ViewManager(GameContext* context, GameState* state);
 	~ViewManager() = default;
 public:
+    void Init();
+    void Uninit();
+public:
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
 	void Push();
@@ -41,7 +44,7 @@ public:
 	void RegisterView();
 
 	bool OnEvent(std::optional<Base::Event> event);
-	bool OnDraw(GraphicsManager* window);
+	bool OnDraw();
 	bool OnUpdate(float dt);
 	bool OnExit();
 

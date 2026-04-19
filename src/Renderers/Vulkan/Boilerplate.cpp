@@ -1,10 +1,10 @@
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Renderers/Vulkan/PipelineManager.h"
 #include "BeatEngine/Util/Exception.h"
 
 #include <SDL3/SDL_vulkan.h>
 #include <cstdint>
-#include <print>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
@@ -33,7 +33,8 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
     VkApplicationInfo appInfo{ 
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
         .pApplicationName = appName.c_str(),
-        .apiVersion = apiVersion
+        .pEngineName = "BeatEngine",
+        .apiVersion = apiVersion,
     };
 
     VkInstanceCreateInfo instanceInfo{
@@ -91,6 +92,37 @@ uint32_t vkb::GetQueueFamily(VkPhysicalDevice device) {
     return queueFamily;
 }
 
+std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain) {
+    uint32_t imageCount{ 0 };
+    std::vector<VkImage> images; 
+    VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
+    images.resize(imageCount);
+    VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, images.data()));
+
+    return images;
+}
+
+std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage> images, VkFormat format) {
+    std::vector<VkImageView> imageViews(images.size());
+
+    for (auto i = 0; i < images.size(); i++) {
+        VkImageViewCreateInfo info{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .flags = 0,
+            .image = images[i],
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            .format = format,
+            .subresourceRange {
+                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .levelCount = 1,
+                .layerCount = 1
+            }
+        };
+        VK_CHECK(vkCreateImageView(device, &info, nullptr, &imageViews[i]));
+    }
+    return imageViews;
+}
+
 VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily) {
     VkDevice device { VK_NULL_HANDLE };
     const float qfpriorities{ 1.0f };
@@ -114,21 +146,25 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
         .pNext = &features12,
         .synchronization2 = true,        
-        .dynamicRendering = true
+        // .dynamicRendering = true
     };
 	const VkPhysicalDeviceFeatures features10{ .samplerAnisotropy = VK_TRUE };
     
-    const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_LOCAL_READ_FEATURES,
-        .pNext = &features13,
-        .dynamicRendering = VK_TRUE,
-    };
+    // const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
+    //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+    //     .pNext = &features13,
+    //     .dynamicRendering = VK_TRUE,
+    // };
         
-    const std::vector<const char*> deviceExtensions{ VK_KHR_SWAPCHAIN_EXTENSION_NAME, VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME };
+    const std::vector<const char*> deviceExtensions{ 
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+        // VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
+    };
 
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &renderingFeatures,
+        // .pNext = &renderingFeatures,
+        .pNext = &features13,
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueInfo,
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
@@ -151,13 +187,13 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
         .surface = surface,
         .minImageCount = surfaceCaps.minImageCount,
         .imageFormat = imageFormat,
-        .imageColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR,
+        .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
         .imageExtent{
             .width = width,
             .height = height
         },
         .imageArrayLayers = 1,
-        .imageUsage = (VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT),
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
@@ -169,6 +205,42 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
     VK_CHECK(vkCreateSwapchainKHR(device, &swapchainInfo, nullptr, &swapchain));
 
     return swapchain;
+}
+
+VkImageSubresourceRange vkb::GetImageSubresourceRange(VkImageAspectFlags flags) {
+    return {
+        .aspectMask = flags,
+        .baseMipLevel = 0,
+        .levelCount = VK_REMAINING_MIP_LEVELS,
+        .baseArrayLayer = 0,
+        .layerCount = VK_REMAINING_ARRAY_LAYERS
+    };
+}
+
+void vku::TransitionImage(PipelineManager mgr, VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout) {
+    VkImageMemoryBarrier2 imageBarrier {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
+    imageBarrier.pNext = nullptr;
+
+    imageBarrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    imageBarrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
+    imageBarrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
+    imageBarrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
+
+    imageBarrier.oldLayout = curLayout;
+    imageBarrier.newLayout = newLayout;
+
+    VkImageAspectFlags aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+    imageBarrier.subresourceRange = vkb::GetImageSubresourceRange(aspectMask);
+    imageBarrier.image = image;
+
+    VkDependencyInfo depInfo {};
+    depInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
+    depInfo.pNext = nullptr;
+
+    depInfo.imageMemoryBarrierCount = 1;
+    depInfo.pImageMemoryBarriers = &imageBarrier;
+
+    vkCmdPipelineBarrier2(cmd, &depInfo);
 }
 
 VkImageCreateInfo vki::GetImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent) {
@@ -200,5 +272,70 @@ VkImageViewCreateInfo vki::GetImageViewCreateInfo(VkFormat format, VkImage image
             .baseArrayLayer = 0,
             .layerCount = 1
         }
+    };
+}
+
+VkRenderingAttachmentInfo vki::GetRenderingAttachmentInfo(VkImageView target, VkClearValue* clear, VkImageLayout layout) {
+    VkRenderingAttachmentInfo colorAttachment {
+        .sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+        .pNext = nullptr,
+        .imageView = target,
+        .imageLayout = layout,
+        .loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .clearValue = clear ? *clear : VkClearValue(),
+    };
+
+    return colorAttachment;
+}
+VkRenderingInfo vki::GetRenderingInfo(VkExtent2D extent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment) {
+    VkRenderingInfo renderInfo {
+        .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+        .pNext = nullptr,
+        .renderArea = VkRect2D{ VkOffset2D { 0, 0 }, extent },
+        .layerCount = 1,
+        .colorAttachmentCount = 1,
+        .pColorAttachments = colorAttachment,
+        .pDepthAttachment = depthAttachment,
+        .pStencilAttachment = nullptr
+    };
+
+    return renderInfo;
+}
+
+VkSubmitInfo2 vki::GetSubmitInfo(VkCommandBufferSubmitInfo *cmdInfo, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo) {
+    auto info = VkSubmitInfo2{
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+        .pNext = nullptr,
+        .commandBufferInfoCount = 1,
+        .pCommandBufferInfos = cmdInfo
+    };
+
+    info.waitSemaphoreInfoCount = waitSemaphoreInfo == nullptr ? 0 : 1;
+    info.pWaitSemaphoreInfos = waitSemaphoreInfo;
+
+    info.signalSemaphoreInfoCount = signalSemaphoreInfo == nullptr ? 0 : 1;
+    info.pSignalSemaphoreInfos = signalSemaphoreInfo;
+
+    return info;
+}
+
+VkCommandBufferSubmitInfo vki::GetCommandBufferSubmitInfo(VkCommandBuffer cmd) {
+	return {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+        .pNext = nullptr,
+        .commandBuffer = cmd,
+        .deviceMask = 0
+    };
+}
+
+VkSemaphoreSubmitInfo vki::GetSemaphoreSubmitInfo(VkPipelineStageFlags2 stageFlags, VkSemaphore semaphore) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_SUBMIT_INFO,
+        .pNext = nullptr,
+        .semaphore = semaphore,
+        .value = 1,
+        .stageMask = stageFlags,
+        .deviceIndex = 0
     };
 }

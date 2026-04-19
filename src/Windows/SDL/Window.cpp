@@ -1,5 +1,7 @@
 #include "BeatEngine/Windows/SDL/Window.h"
+#include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/SignalManager.h"
@@ -15,7 +17,9 @@
 
 #include <memory>
 
-void SDLWindow::Init(std::string windowTitle, Vector2u windowSize) {
+void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u windowSize) {
+    m_Context = context;
+
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Initializing SDL Window");
 
     SDL_Init(SDL_INIT_VIDEO);
@@ -24,6 +28,9 @@ void SDLWindow::Init(std::string windowTitle, Vector2u windowSize) {
         windowTitle = "BeatEngine Game";
     
     m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_Flags);
+    if (windowSize == Vector2u{}) {
+        windowSize = GetSize();
+    }
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Window created. Size = ({}, {}), Title = {}", windowSize.X, windowSize.Y, windowTitle);
     LogActiveFlags();
 }
@@ -146,14 +153,13 @@ std::optional<Base::Event> SDLWindow::PollEvent() {
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
             case SDL_EVENT_QUIT:
-                SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
-                break;
+                return GameExitingEvent();
             case SDL_EVENT_WINDOW_RESIZED:
                 EventManager::GetInstance()->Send(std::make_shared<GameResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
                 break;
             case SDL_EVENT_KEY_DOWN:
                 if (e.key.key == SDLK_PIPE) {
-                    SignalManager::GetInstance()->Send(std::make_shared<GameToggleImGui>());
+                    SignalManager::GetInstance()->Send(std::make_shared<GameToggleDrawingDebugInfo>());
                }
         }
 
@@ -164,12 +170,12 @@ std::optional<Base::Event> SDLWindow::PollEvent() {
 }
 
 void SDLWindow::OnRender() {
-    ImGui_ImplSDL3_NewFrame();
-    ImGui::NewFrame();
+    if (m_Context->GFlags & GameFlags_ImGui) {
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
 
-    ImGui::ShowDemoWindow();
-
-    ImGui::Render();
+        ImGui::ShowDemoWindow();
+    }
 }
 
 void SDLWindow::OnDisplay() {

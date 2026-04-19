@@ -11,7 +11,7 @@ private:
 public:
     GameView(GameContext* context, GameState* state);
 public:
-    void OnDraw(GraphicsManager* window) override;
+    void OnDraw() override;
     void OnEvent(const std::optional<Base::Event> event) override;
     void OnUpdate(float dt) override;
     void OnExit() override;

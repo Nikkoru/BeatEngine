@@ -32,12 +32,18 @@ ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(type
 	});
     
     EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event> event) {
-        while (!ViewStack.empty()) {
-            ViewStack.top()->OnExit();
-
-            ViewStack.pop();
-        }    
     }); 
+}
+
+void ViewManager::Init() {
+
+}
+
+void ViewManager::Uninit() {
+    while (!ViewStack.empty()) {
+        ViewStack.top()->OnExit();
+        ViewStack.pop();
+    }
 }
 
 void ViewManager::Push(std::type_index viewID) {
@@ -91,9 +97,9 @@ bool ViewManager::OnEvent(std::optional<Base::Event> event) {
 	}
 }
 
-bool ViewManager::OnDraw(GraphicsManager* window) {
+bool ViewManager::OnDraw() {
 	if (!ViewStack.empty()) {
-		ViewStack.top()->OnDraw(window);
+		ViewStack.top()->OnDraw();
 		return true;
 	}
 	else {

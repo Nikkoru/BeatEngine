@@ -3,16 +3,17 @@
 #include <cstddef>
 #include <cstdlib>
 #include <imgui.h>
-// #include <imgui_internal.h>
-// #include <imgui-SFML.h>
+#include <imgui_internal.h>
 #include <memory>
 
-#include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Signal.h"
+#include "BeatEngine/Enum/AssetType.h"
+#include "BeatEngine/Enum/EnvFlags.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Logger.h"
 
+#include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/Font.h"
@@ -62,7 +63,9 @@ void Game::Run() {
 	}
 
 	while (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
-		while (const auto event = m_State.GetGraphicsMgr().PollEvent()) {
+		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
+            if (event->Is<GameExitingEvent>())
+                Uninitialize();
 			// if (m_Context->GFlags & GameFlags_ImGui)
 			// 	ImGui::SFML::ProcessEvent(*m_Window, *event);
             if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
@@ -96,9 +99,9 @@ void Game::Initialize() {
 
     InitSettings();
 	InitAudio();
-	InitAssets();
 	InitSystems();
 	InitWindow();
+	InitAssets();
 	InitUI();
 	InitViews();
 	InitKeybinds();
@@ -111,13 +114,14 @@ void Game::Uninitialize() {
     Logger::AddInfo(typeid(Game), "Game in shutdown");
 
     // m_State->KeybindsMgr->Uninit();
-    // m_State->ViewMgr->Uninit();
+    m_State.GetViewMgr().Uninit();
     // m_State->UIMgr->Uninit();
     m_State.GetGraphicsMgr().Close();
     m_State.GetSystemMgr().StopSystems();
     // m_AssetMgr->Uninit();
     // m_AudioMgr->Uninit();
     // m_SettingsMgr->Uninit();
+    m_Running = false;
 }
 
 void Game::UseImGui(bool show) {
@@ -128,17 +132,18 @@ void Game::UseImGui(bool show) {
 }
 
 void Game::UseImGuiDocking(bool docking) {
-    // if (docking)
-    //     ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
-    // else
-    //     ImGui::GetIO().ConfigFlags &= ~ImGuiConfigFlags_DockingEnable;
+    if (docking)
+        m_Context.GFlags |= GameFlags_ImGuiDocking;
+    else
+        m_Context.GFlags &= ~GameFlags_ImGuiDocking;
 }
 
 void Game::SetWindowSize(Vector2u size) {
-    auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
-    settings->WindowSize = size;
-
-	m_State.GetGraphicsMgr().GetWindow()->SetSize(size);
+    if (m_State.GetSettingsMgr().HasSettings<GameSettings>()) {
+        auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
+        settings->WindowSize = size;
+    }
+    m_State.GetGraphicsMgr().SetWindowSize(size);
 }
 
 void Game::SetWindowTitle(std::string title) {
@@ -170,6 +175,8 @@ void Game::RemoveFlags(GameFlags flags) {
 void Game::DrawImGuiDebug() {
     ImGui::Begin("BeatEngine Game Debug Window");
     bool imguiToggle = m_Context.GFlags & GameFlags_ImGui;
+    bool imguiDockingToggle = m_Context.GFlags & GameFlags_ImGuiDocking;
+    bool runningToggle = m_Context.GFlags & GameFlags_Running;
     bool preloadToggle = m_Context.GFlags & GameFlags_Preload;
     bool fullscreenToggle = m_Context.GFlags & GameFlags_Fullscreen;
     bool cursorChangedToggle = m_Context.GFlags & GameFlags_CursorChanged;
@@ -178,15 +185,25 @@ void Game::DrawImGuiDebug() {
 
     bool viewDisableKeyToggle = m_Context.VFlags & ViewFlags_DisableKeys;
 
+    bool envDebugToggle = m_Context.EFlags & EnvFlags_Debug;
+    bool envTestToggle = m_Context.EFlags & EnvFlags_TestBuild;
 
+    ImGui::Text("GameFlags: %#.8x", m_Context.GFlags);
     ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
+    ImGui::Checkbox("GameFlags_ImGuiDocking", &imguiDockingToggle);
+    ImGui::Checkbox("GameFlags_Running", &runningToggle);
     ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
     ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
     ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
     ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
     ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
     ImGui::NewLine();
+    ImGui::Text("ViewFlags: %#.8x", m_Context.VFlags);
     ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
+    ImGui::NewLine();
+    ImGui::Text("EnvFlags: %#.8x", m_Context.EFlags);
+    ImGui::Checkbox("EnvFlags_Debug", &envDebugToggle);
+    ImGui::Checkbox("EnvFlags_TestBuild", &envTestToggle);
     ImGui::End();
 }
 
@@ -194,65 +211,37 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 	if (globalAssets.empty())
 		return;
     size_t assets{};
-	for (auto& [type, vecPath] : globalAssets) {
+	for (const auto& [type, vecPath] : globalAssets) {
         auto vecSize = vecPath.size();
-		switch (type) {
-		case AssetType::Texture:
-			for (auto& path : vecPath)
-				if (!m_State.GetAssetMgr().Load<Texture>(path))
-                    vecSize--;
-			break;
-		case AssetType::AudioStream:
-			for (auto& path : vecPath)
-				if (!m_State.GetAssetMgr().Load<AudioStream>(path))
-                    vecSize--;
-			break;
-		case AssetType::Sound:
-			for (auto& path : vecPath)
-				if (!m_State.GetAssetMgr().Load<Sound>(path))
-                    vecSize--;
-			break;
-		case AssetType::Font:
-			for (auto& path : vecPath)
-				if (!m_State.GetAssetMgr().Load<Font>(path))
-                    vecSize--;
-        case AssetType::VertexShader:
-            for (auto& path : vecPath)
-                if (!m_State.GetAssetMgr().LoadShader(path, Shader::Type::Vertex))
-                    vecSize--;
-            break;
-        case AssetType::FragmentShader:
-            for (auto& path : vecPath)
-                if (!m_State.GetAssetMgr().LoadShader(path, Shader::Type::Fragment))
-                    vecSize--;
-		}
+        for (const auto& path : vecPath) {
+            if (!m_State.GetAssetMgr().Preload(type, path))
+            vecSize--;
+        }
         assets += vecSize;
 	}
 
-    Logger::AddDebug(typeid(Game), "Created {} assets", assets);
+    Logger::AddDebug(typeid(Game), "Preloaded {} assets", assets);
 }
 
 void Game::Display() {
-    if (m_Context.GFlags & GameFlags_ImGui)
-        m_State.GetGraphicsMgr().RenderImGui();
+    if (m_Context.GFlags & GameFlags_ImGui && m_Context.GFlags & GameFlags_DrawDebugInfo) {
+        DrawImGuiDebug();
+    }
 
+    m_State.GetGraphicsMgr().Clear();
 	m_State.GetGraphicsMgr().Display();
 }
 
 void Game::Draw() {
     m_State.GetGraphicsMgr().Render();
-    m_State.GetGraphicsMgr().Clear();
-//
-// 	// m_AnimationMgr->DrawActiveAnimation(m_DeltaClock);
-// 	if (!m_ViewMgr->OnDraw(m_Window))
-// 		m_Window->close();
+
+	if (!m_State.GetViewMgr().OnDraw())
+		Uninitialize();
 //
 // 	m_Window->draw(m_GlobalLayers);
 //
 //     m_UIMgr->OnDraw(m_Window);
 //
-//     if ((m_Context->GFlags & GameFlags_DrawDebugInfo) && (m_Context->GFlags & GameFlags_ImGui))
-//         DrawImGuiDebug();
 }
 
 void Game::Update() {
@@ -318,6 +307,8 @@ void Game::InitSystems() {
 
 void Game::InitAssets() {
 	Logger::AddDebug(typeid(Game), "Initializing assets...");
+
+    m_State.GetAssetMgr().Init();
 }
 
 void Game::InitWindow() {

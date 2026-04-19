@@ -38,6 +38,7 @@ public:
     void Close();
 
     void SetWindowTitle(std::string windowTitle);
+    void SetWindowSize(Vector2u size);
     void SetFramerateLimit(unsigned int fps);
 
     void Render();

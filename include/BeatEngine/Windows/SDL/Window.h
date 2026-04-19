@@ -5,17 +5,20 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "SDL3/SDL_video.h"
 #include <string>
+
 class SDLWindow : public BaseWindow {
 private:
     SDL_Window* m_WindowImpl{ nullptr };
     SDL_WindowFlags m_Flags{};
+
+
 
     bool m_Fullscreen{ false };
 public:
     SDLWindow() = default;
     ~SDLWindow() override = default;
 public:
-    void Init(std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
+    void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
     void Uninit() override;
 
     void UninitImGui() override;
