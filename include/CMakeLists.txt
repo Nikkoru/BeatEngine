@@ -68,6 +68,7 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.inl"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameDebugSettings.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/WindowEvents.h"

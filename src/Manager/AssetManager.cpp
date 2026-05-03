@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <memory>
 #include <miniaudio.h>
+#include <numeric>
 #include <sndfile.h>
 #include <taglib/taglib.h>
 #include <typeindex>
@@ -16,6 +17,7 @@
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Enum/AssetType.h"
+#include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
 #include "BeatEngine/GameContext.h"
@@ -218,9 +220,13 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, ref, seconds, static_cast<uint64_t>(totalFrames));
 
 			handle = Base::AssetHandle<AudioStream>(stream);
-
-			m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
+            if (global)
+                m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
+            else
+                m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
 		}
+
+        Logger::AddDebug(typeid(AudioManager), "Asset {} created", name);
 		return handle;
 	}
 	else {
@@ -239,11 +245,13 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-				// sf::Font sfFont(fullpath);
-				// auto font = std::make_shared<Font>(sfFont);
+                // if (m_Context->GFlags & GameFlags_ImGui)
+                    // ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str());
 
-				// handle = Base::AssetHandle<Font>(font);
-				// m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				auto font = std::make_shared<Font>();
+
+				handle = Base::AssetHandle<Font>(font);
+				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
 				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -255,11 +263,10 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-				// Font sfFont(fullpath);
-				// auto font = std::make_shared<Font>(sfFont);
+				auto font = std::make_shared<Font>();
 
-				// handle = Base::AssetHandle<Font>(font);
-				// m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				handle = Base::AssetHandle<Font>(font);
+				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -327,10 +334,10 @@ bool AssetManager::Preload(AssetType type, const fs::path& path, std::type_index
         m_AssetsToLoad.at(type) = path;
         return false;
     case AssetType::AudioStream:
-        Load<AudioStream>(path);
+        Load<AudioStream>(path, viewID);
         return true;
     case AssetType::Sound:
-        Load<Sound>(path);
+        Load<Sound>(path, viewID);
         return true;
     default:
         return false;
@@ -384,9 +391,151 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 	}
 }
 
-void AssetManager::DrawImGuiDebug() {
+void AssetManager::ShowImGuiDebugWindow() {
     ImGui::Begin("BeatEngine AssetManager Debug Window");
     ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
     ImGui::Text("View Assets: %zu", m_ViewAssets.size());
+    if (ImGui::Button("See Assets")) {
+        m_ShowAssetList = true;
+    }
+    
+    static char buf[100];
+
+    ImGui::InputTextWithHint("Path", "asset.mp3", buf, 100);
+
+    static AssetType selectedType = AssetType::AudioStream;
+    static uint8_t index{};
+    static uint8_t selectedIndex{}; 
+
+    if (ImGui::BeginCombo("Type", AssetTypeUtils::TypeToString(selectedType).c_str(), ImGuiComboFlags_WidthFitPreview | ImGuiComboFlags_PopupAlignLeft)) {
+        index = 0;
+        for (const auto& [type, typeStr] : AssetTypeUtils::GetMap()) {
+            if (type == AssetType::None)
+                continue;
+            const bool selected = (index == selectedIndex);
+            if (ImGui::Selectable(typeStr.c_str(), selected)) {
+                selectedType = AssetTypeUtils::StringToType(typeStr);
+                selectedIndex = index;
+            }
+            index++;
+        }
+        ImGui::EndCombo();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Load For Global")) {
+        switch (selectedType) {
+            case AssetType::AudioStream:
+                Load<AudioStream>(buf);
+                break;
+            case AssetType::Sound:
+                Load<Sound>(buf);
+                break;
+            case AssetType::Texture:
+                Load<Texture>(buf);
+                break;
+            case AssetType::Font:
+                Load<Font>(buf);
+                break;
+            case AssetType::VertexShader:
+                LoadShader(buf, Shader::Type::Vertex);
+                break;
+            case AssetType::FragmentShader:
+                LoadShader(buf, Shader::Type::Fragment);
+                break;
+            case AssetType::ComputeShader:
+                Logger::AddInfo("Still i don't implement compute shaders");
+                break;
+            case AssetType::None:
+                break;
+        }
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Load For Active View")) {
+        auto activeView = m_Context->ActiveView;
+        switch (selectedType) {
+            case AssetType::AudioStream:
+                Load<AudioStream>(buf, activeView);
+                break;
+            case AssetType::Sound:
+                Load<Sound>(buf, activeView);
+                break;
+            case AssetType::Texture:
+                Load<Texture>(buf, activeView);
+                break;
+            case AssetType::Font:
+                Load<Font>(buf, activeView);
+                break;
+            case AssetType::VertexShader:
+                LoadShader(buf, Shader::Type::Vertex, activeView);
+                break;
+            case AssetType::FragmentShader:
+                LoadShader(buf, Shader::Type::Fragment, activeView);
+                break;
+            case AssetType::ComputeShader:
+                Logger::AddInfo("Still i don't implement compute shaders");
+                break;
+            case AssetType::None:
+                break;
+        }
+    }
+    if (ImGui::Button("Clear View Assets")) {
+        ImGui::OpenPopup("View Sure?");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear Global Assets")) {
+        ImGui::OpenPopup("Global Sure?");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Clear ALL Assets")) {
+
+    }
+    auto center = ImGui::GetMainViewport()->GetCenter();
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+    if (ImGui::BeginPopupModal("View Sure?", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("This action will delete all assets in a view!\nIf the view tries to get a previously loaded asset WILL throw a runtime error!\nAre you sure to continue?");
+        ImGui::Separator();
+        if (ImGui::Button("Yes")) {
+            ImGui::CloseCurrentPopup();
+            m_ViewAssets.clear();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("Global Sure?", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("This action will delete all global assets!\nIf something tries to get a previously loaded asset WILL throw a runtime error!\nAre you sure to continue?");
+        ImGui::Separator();
+        if (ImGui::Button("Yes")) {
+            ImGui::CloseCurrentPopup();
+            m_GlobalAssets.clear();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
+    if (ImGui::BeginPopupModal("Sure?", NULL, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::Text("This action will delete ALL assets available!\nAre you sure to continue?");
+        ImGui::Separator();
+        if (ImGui::Button("Yes")) {
+            ImGui::CloseCurrentPopup();
+            m_ViewAssets.clear();
+            m_GlobalAssets.clear();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("No")) {
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::EndPopup();
+    }
     ImGui::End();
+
+    if (m_ShowAssetList) {
+        ImGui::Begin("Asset List", &m_ShowAssetList);
+        ImGui::End();
+    }
 }

@@ -7,7 +7,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
 
-// #include <imgui.h>
+#include <imgui.h>
 #include <iostream>
 #include <fstream>
 #include <memory>
@@ -24,6 +24,9 @@ SettingsManager::SettingsManager(GameContext* context, GameState* state)
 }
 
 void SettingsManager::ReadConfig(fs::path path) {
+    if (path.empty())
+        return;
+
 	Logger::AddInfo(typeid(SettingsManager), "Reading config file \"{}\"", path.stem().string());
 	const char* iniData = GetTextData(path);
 	if (iniData != NULL) {
@@ -64,6 +67,9 @@ void SettingsManager::ReadConfig(fs::path path) {
 }
 
 void SettingsManager::WriteConfig(fs::path path) {
+    if (path.empty())
+        return;
+
 	Logger::AddInfo(typeid(SettingsManager), "Writing config");
 
 	std::ofstream file(path);
@@ -130,10 +136,17 @@ void SettingsManager::SetDefaults() {
 		settings->SetDefaults();
 }
 
-void SettingsManager::DrawImGuiDebug() {
-    // ImGui::Begin("BeatEngine SettingsManager Debug Window");
-    // ImGui::Text("Settings : %zu", m_Settings.size());
-    // ImGui::End();
+void SettingsManager::ShowImGuiDebugWindow() {
+    ImGui::Begin("BeatEngine SettingsManager Debug Window");
+    static char path[50];
+    ImGui::Text("Settings : %zu", m_Settings.size());
+    ImGui::InputText("Path to write/read from", path, 50);
+    if (ImGui::Button("Write"))
+        WriteConfig(path);
+    ImGui::SameLine();
+    if (ImGui::Button("Read"))
+        ReadConfig(path);
+    ImGui::End();
 }
 
 char* SettingsManager::GetTextData(fs::path path) {

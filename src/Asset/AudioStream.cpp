@@ -6,10 +6,22 @@
 #include "BeatEngine/Util/Math.h"
 #include <cmath>
 #include <cstdint>
+#include <extras/nodes/ma_vocoder_node/ma_vocoder_node.h>
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
+#include <thread>
 
 void AudioStream::FillBuffers() {
+    using namespace std::chrono_literals;
+
+    static Clock timeToClock;
+    static Clock usageClock;
+    static float seconds{};
+    static float delta{};
+    static std::vector<float> aprox;
+    timeToClock.Start();
+    usageClock.Start();
+
     while (m_Fill.load()) {
         int bufferToFill = -1;
 
@@ -20,8 +32,11 @@ void AudioStream::FillBuffers() {
             }
         }
 
-        if (bufferToFill == -1)
-            continue;
+        if (bufferToFill == -1) {
+            m_Fill.store(false);
+            break;
+        }
+
 
         memset(m_ResampledBuffer[bufferToFill].data(), 0, m_ResampledBuffer[bufferToFill].size() * sizeof(float));
 
@@ -30,7 +45,11 @@ void AudioStream::FillBuffers() {
 
         if (framesCount < m_DataBufferFrameCount) {
             if (m_Loop) {
+                m_CurrentBuffer = 0;
+                ma_decoder_seek_to_pcm_frame(&m_Decoder, 0);
 
+                ResetReadFrames();
+                ResetSeconds();
             }
             else {
                 memset(m_BufferToResample.data() + framesCount * 2, 0, ((m_DataBufferFrameCount - framesCount) * 2) * sizeof(int16_t));
@@ -55,30 +74,63 @@ void AudioStream::FillBuffers() {
         else {
             m_BufferedFrameCount[bufferToFill] = m_SrcData.output_frames_gen;
 
-            if (m_SrcData.output_frames_gen == 0 && m_LastBufferRound) {
-                m_Playing = false;
-                m_Erase = true;
-                m_LastBufferRound = false;
+            if (m_SrcData.output_frames_gen == 0) {
+                if (m_LastBufferRound) {
+                    m_Playing = false;
+                    m_Erase = true;
+                    m_LastBufferRound = false;
 
-                break;
+                    break;
+                }
+                else 
+                    Play();
             }
 
             m_IsBufferReady[bufferToFill].store(true);
         }
+
+        delta = timeToClock.GetAndReset().AsSeconds();
+        if (seconds += delta; seconds >= 1) {
+            float pro{}; 
+
+            for (const auto& time : aprox) {
+                pro += time;
+            }
+
+            Logger::AddLog(LogType::DebugTarget, "", "time aproximated for filling: {:.3f}s ({} fills per second)", pro / aprox.size(), aprox.size());
+            aprox.clear();
+
+            seconds = 0;
+        }
+        else {
+            aprox.emplace_back(delta);
+        }
 	}
+
+    auto time = usageClock.GetAndStop();
+    Logger::AddLog(LogType::DebugTarget, "", "stop filling, running for {:.3f}s", time.AsSeconds());
+}
+
+void AudioStream::AsyncFillBuffers() {
+    if (!m_Fill && m_BufferThread.joinable()) {
+        m_BufferThread.join();
+        m_Fill.store(true);
+
+        m_BufferThread = std::jthread(&AudioStream::FillBuffers, this);
+    }
 }
 
 AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds, uint64_t totalFrames)
     : m_Name(name), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalSeconds(totalSeconds), m_MetadataReference(fileRef), m_TotalFrames(totalFrames) {
 
     m_SrcRatio = static_cast<double>(m_TargetSampleRate)  / static_cast<double>(m_DefaultSampleRate);
-    m_OutputFrameCount = static_cast<uint64_t>(m_SrcRatio * m_DataBufferFrameCount + 256);
+    m_OutputFrameCount = static_cast<uint64_t>(m_SrcRatio * m_DataBufferFrameCount);
 
     int err = 0;
 
     m_SrcState = src_new(SRC_SINC_BEST_QUALITY, 2, &err);
 
-    if (!m_SrcState) {
+    if (!m_SrcState && err > 0) {
         std::string msg = "Failed to initialized libsamplerate converter" + std::string(src_strerror(err));
         Logger::AddCritical(typeid(AudioStream), msg);
         THROW_RUNTIME_ERROR(msg);
@@ -126,6 +178,8 @@ std::array<float, 2> AudioStream::GetNextFrame() {
 
             if (m_ResampledFrameCount == 0)
                 return frame;
+
+            AsyncFillBuffers();
         }
         else
             return frame;
@@ -135,13 +189,16 @@ std::array<float, 2> AudioStream::GetNextFrame() {
     float leftPan = std::cos(angle);
     float rightPan = std::sin(angle);
 
-    float left = m_ResampledBuffer[m_CurrentBuffer][m_CurrentFrame * 2] * m_Volume;
-    float right = m_ResampledBuffer[m_CurrentBuffer][m_CurrentFrame * 2 + 1] * m_Volume;
+    float left = m_ResampledBuffer[m_CurrentBuffer][m_CurrentFrame * 2] * leftPan * m_Volume;
+    float right = m_ResampledBuffer[m_CurrentBuffer][m_CurrentFrame * 2 + 1] * rightPan * m_Volume;
 
     frame[0] = left;
     frame[1] = right;
 
     m_CurrentFrame++;
+    m_TotalReadFrames++;
+
+
     return frame;
 }
 
@@ -163,10 +220,15 @@ void AudioStream::Play() {
     }
 
     m_Playing = true;
+    m_Erase = false;
+
+    Logger::AddDebug("", "Stream \"{}\" playing!", m_Name);
 }
 
 void AudioStream::Pause() {
+    m_Fill.store(false);
     m_Playing = false;
+    Logger::AddDebug("", "Stream \"{}\" paused!", m_Name);
 }
 
 void AudioStream::Stop() {
@@ -189,10 +251,14 @@ void AudioStream::Stop() {
 
     ResetReadFrames();
     ResetSeconds();
+
+    Logger::AddDebug("", "Stream \"{}\" stoped!", m_Name);
 }
 
 void AudioStream::Resume() {
+    m_Fill.store(false);
     m_Playing = true;
+    Logger::AddDebug("", "Stream \"{}\" resumed!", m_Name);
 }
 
 void AudioStream::AddSeconds(float seconds) {
@@ -241,6 +307,18 @@ AudioStreamMetadata AudioStream::GetMetadata() {
 
 TagLib::FileRef AudioStream::GetFileReference() {
     return m_MetadataReference;
+}
+
+const std::vector<float> AudioStream::GetResampledBufferL() {
+    return m_ResampledBuffer[0];
+}
+
+int AudioStream::GetCurrentFrameOffset() {
+    return m_CurrentFrame;
+}
+
+const std::vector<float> AudioStream::GetResampledBufferR() {
+    return m_ResampledBuffer[1];
 }
 
 float AudioStream::GetTotalSeconds() {

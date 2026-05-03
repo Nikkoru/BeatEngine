@@ -26,8 +26,7 @@ public:
 	void OnAttach() override;
 	void OnDetach() override;
 	void OnEvent(std::optional<Base::Event> event) override;
-
-	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;
+	void OnDraw() override;
 
     void ToggleImGuiDrawing();
 

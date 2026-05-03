@@ -100,7 +100,7 @@ TestView::TestView(GameContext* context, GameState* state)
     EventManager::GetInstance()->SubscribeView<EventAudioStreamStarted>(typeid(TestView), [this, button](std::shared_ptr<Base::Event> event) {
         auto audioEvent = std::static_pointer_cast<EventAudioStreamStarted>(event);
 
-        if (audioEvent->Name == "test-music") {
+        if (audioEvent->Name == "test-music" && b_mState->GetAssetMgr().Has("test-music", typeid(TestView))) {
             auto handle = b_mState->GetAssetMgr().Get<AudioStream>("test-music", typeid(TestView));
             auto musicProgressBar = button->AddChild<UI::ProgressBar>("musicProg", 0, handle.Get()->GetTotalSeconds());
 
@@ -162,6 +162,11 @@ void TestView::OnDraw() {
 	// window->draw(count);
     //
     // b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
+    b_mState->GetGraphicsMgr().ShowImGuiDebugWindow();
+    b_mState->GetSettingsMgr().ShowImGuiDebugWindow();
+    b_mState->GetAssetMgr().ShowImGuiDebugWindow();
+    b_mState->GetAudioMgr().ShowImGuiDebugWindow();
+    b_mState->GetUIMgr().ShowImGuiDebugWindow();
 }
 
 void TestView::OnEvent(std::optional<Base::Event> event) {

@@ -33,9 +33,9 @@ public:
 	void RemoveGlobalLayers();
 	void RemoveAllLayers();
 
-	void OnDraw(GraphicsManager* window);
+	void OnDraw();
 
 	void Update(float dt);
     
-    void DrawImGuiDebug();
+    void ShowImGuiDebugWindow();
 };

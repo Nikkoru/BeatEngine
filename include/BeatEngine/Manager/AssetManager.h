@@ -36,6 +36,7 @@ private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
 private:
 	uint64_t m_AudioSampleRate = 48000;
+    bool m_ShowAssetList{ false };
 private:
     GameContext* m_Context{ nullptr };
     GameState* m_State{ nullptr };
@@ -50,7 +51,8 @@ public:
     bool Has(std::string name, const std::type_index viewID = typeid(nullptr));
 
     bool Preload(AssetType type, const fs::path& path, const std::type_index viewID = typeid(nullptr));
-    void DrawImGuiDebug();
+
+    void ShowImGuiDebugWindow();
 };
 
 #include "BeatEngine/Manager/AssetManager.inl"

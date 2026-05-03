@@ -8,6 +8,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Logger.h"
+#include "imgui.h"
 
 #include <backends/imgui_impl_sdl3.h>
 #include <SDL3/SDL_events.h>
@@ -26,7 +27,10 @@ void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u win
 
     if (windowTitle == "")
         windowTitle = "BeatEngine Game";
-    
+
+    if (windowSize == Vector2u{ static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) })
+        m_Flags |= SDL_WINDOW_FULLSCREEN; 
+
     m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_Flags);
     if (windowSize == Vector2u{}) {
         windowSize = GetSize();
@@ -123,10 +127,7 @@ Vector2u SDLWindow::GetMaximumSize() const {
 }
 
 std::string SDLWindow::GetTitle() const {
-    std::string title{};
-    SDL_SetWindowTitle(m_WindowImpl, title.data());
-
-    return title;
+    return SDL_GetWindowTitle(m_WindowImpl);
 }
 
 Vector2i SDLWindow::GetPosition() const {

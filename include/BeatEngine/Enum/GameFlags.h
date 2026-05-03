@@ -12,4 +12,5 @@ enum GameFlags_ {
     GameFlags_CursorChanged             = 1 << 5,
     GameFlags_DisableKeyPressEvents     = 1 << 6,
     GameFlags_DrawDebugInfo             = 1 << 7,
+    GameFlags_DebugDock                 = 1 << 8,
 };

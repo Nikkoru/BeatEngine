@@ -7,7 +7,7 @@ void GameState::CreateManagers(GameContext* context) {
     AssetMgr = AssetManager(context, this);
     SettingsMgr = SettingsManager(context, this);
     UIMgr = UIManager(context, this);
-    // AudioMgr = AudioManager(context, this);
+    AudioMgr = AudioManager(context, this);
     GraphicsMgr = GraphicsManager(context, this);
 }
 

@@ -28,6 +28,8 @@ public:
     virtual std::shared_ptr<Texture> CreateTexture(std::filesystem::path path) = 0;
     virtual std::shared_ptr<Shader> CreateShader(std::filesystem::path path, Shader::Type type) = 0;
 
+    virtual void ShowImGuiRenderTabContent() {}
+
     inline std::shared_ptr<BaseWindow> GetWindow() { return m_Window; }
 
     virtual std::optional<Base::Event> PollEvent() const = 0;

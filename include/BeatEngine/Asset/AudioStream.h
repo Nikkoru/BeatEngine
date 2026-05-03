@@ -1,8 +1,10 @@
 #pragma once
 
+#include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Base/Asset.h"
 
 #include <miniaudio.h>
+#include <portaudio.h>
 #include <taglib/fileref.h>
 #include <samplerate.h>
 #include <taglib/tag.h>
@@ -27,6 +29,9 @@ public:
 };
 
 class AudioStream : public Base::Asset {
+protected:
+    PaStream* m_Stream{ nullptr };
+    friend class AudioManager;
 private:
 	std::string m_Name = "";
 
@@ -72,6 +77,7 @@ private:
 	bool m_LastBufferRound = false;
 private:
 	void FillBuffers();
+    void AsyncFillBuffers();
 public:
 	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds = -1, uint64_t totalFrames = -1);
 	~AudioStream() override;
@@ -100,6 +106,10 @@ public:
 
     AudioStreamMetadata GetMetadata();
     TagLib::FileRef GetFileReference();
+
+    const std::vector<float> GetResampledBufferL();
+    int GetCurrentFrameOffset();
+    const std::vector<float> GetResampledBufferR();
 
     float GetTotalSeconds();
     float GetTranscurredSeconds();

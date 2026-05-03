@@ -52,7 +52,7 @@ public:
 
 	void GetViewKeybinds();
 public:
-    void ShowImGuiDebugData();
+    void ShowImGuiDebugWindow();
 };
 
 #include "BeatEngine/Manager/ViewManager.inl"

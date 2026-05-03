@@ -11,8 +11,6 @@ private:
     SDL_Window* m_WindowImpl{ nullptr };
     SDL_WindowFlags m_Flags{};
 
-
-
     bool m_Fullscreen{ false };
 public:
     SDLWindow() = default;

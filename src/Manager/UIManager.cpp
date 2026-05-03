@@ -24,8 +24,8 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
 	
 	if (global) {
         if (m_GlobalLayers.contains(layerName)) {
-            Logger::AddError(typeid(UIManager), "Layer named \"{}\" already exists", layerName);
-            return nullptr;
+            Logger::AddWarning(typeid(UIManager), "Layer named \"{}\" already exists, returning existing one", layerName);
+            layer = m_GlobalLayers.at(layerName);
         }
         else 
 		    m_GlobalLayers[layerName] = layer;
@@ -36,12 +36,13 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
             m_Layers[m_Context->ActiveView].try_emplace(layerName, layer);
         }
         else {
-            if (m_Layers.at(m_Context->ActiveView).contains(layerName)) {
-                Logger::AddError(typeid(UIManager), "Layer named \"{}\" already exists", layerName);
-                return nullptr;
+            if (!m_Layers.at(m_Context->ActiveView).contains(layerName)) {
+                m_Layers.at(m_Context->ActiveView)[layerName] = layer;
             }
-            else 
-                m_Layers.at(m_Context->ActiveView).at(layerName) = layer;
+            else {
+                Logger::AddWarning(typeid(UIManager), "Layer named \"{}\" already exists, returning existing one", layerName);
+                layer = m_Layers.at(m_Context->ActiveView)[layerName];
+            }
         }
     }
 
@@ -65,7 +66,7 @@ void UIManager::RemoveAllLayers() {
 	m_GlobalLayers.clear();
 }
 
-void UIManager::OnDraw(GraphicsManager* window) {
+void UIManager::OnDraw() {
 	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
 		// window->Render(*layer);
         
@@ -84,6 +85,6 @@ void UIManager::Update(float dt) {
 	}
 }
 
-void UIManager::DrawImGuiDebug() {
+void UIManager::ShowImGuiDebugWindow() {
 
 }

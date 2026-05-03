@@ -21,6 +21,8 @@ class Game {
 private:
 	Clock m_Clock{};
 
+    float LastDelta{};
+
 	ViewLayerStack m_GlobalLayers{};
     
     GameContext m_Context{};

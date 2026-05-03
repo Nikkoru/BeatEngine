@@ -47,6 +47,7 @@
     "${PROJECT_SOURCE_DIR}/src/Camera/ShakeParams.cpp"
 
 	"${PROJECT_SOURCE_DIR}/src/Enum/LogType.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Enum/AssetType.cpp"
 
 	"${PROJECT_SOURCE_DIR}/src/UI/UILayer.cpp"
 	"${PROJECT_SOURCE_DIR}/src/UI/UIElement.cpp"
@@ -57,6 +58,7 @@
 	"${PROJECT_SOURCE_DIR}/src/UI/Elements/ProgressBar.cpp"
 
 	"${PROJECT_SOURCE_DIR}/src/Settings/GameSettings.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Settings/GameDebugSettings.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/System/Clock.cpp"
     "${PROJECT_SOURCE_DIR}/src/System/Time.cpp"

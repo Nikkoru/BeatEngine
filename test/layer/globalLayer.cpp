@@ -12,7 +12,6 @@
 
 #include <BeatEngine/UI/Elements/Button.h>
 
-// #include <cmath>
 #include <format>
 // #include <imgui.h>
 #include <memory>
@@ -120,7 +119,7 @@ void GlobalTestLayerUI::OnEvent(std::optional<Base::Event> event) {
  //    }
 }
 
-void GlobalTestLayerUI::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
+void GlobalTestLayerUI::OnDraw() {
  //    auto font = m_Font->GetSFMLFont();
 	//
 	// auto fpsText = sf::Text(*font, m_FPSText, 15);
@@ -143,8 +142,7 @@ void GlobalTestLayerUI::draw(/*sf::RenderTarget& target, sf::RenderStates states
 	// target.draw(fpsText);
 	// target.draw(deltaText);
 	// target.draw(*m_HUD);
- //    if (m_DrawDebug)
- //        DrawImGuiDebug();
+    DrawImGuiDebug();
 }
 
 void GlobalTestLayerUI::ToggleImGuiDrawing() {
@@ -167,8 +165,8 @@ void GlobalTestLayerUI::UpdatePositions() {
     toggleFullscreenBtn->SetPosition({(windowSize.X - 5) - toggleFullscreenBtn->GetSize().X, 135 });}
 
 void GlobalTestLayerUI::DrawImGuiDebug() const {
-    auto text = std::static_pointer_cast<GameSettings>(m_State->GetSettingsMgr().GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
-
+    // auto text = std::static_pointer_cast<GameSettings>(m_State->GetSettingsMgr().GetSettings(typeid(GameSettings)))->WindowFullScreen ? "In Fullscreen" : "In Window";
+    //
     // ImGui::Begin("wa");
     // ImGui::Text("wa");
     // if (ImGui::Button(text)) {
@@ -179,10 +177,5 @@ void GlobalTestLayerUI::DrawImGuiDebug() const {
     // }
     // ImGui::End();
 
-
-    m_State->GetSettingsMgr().DrawImGuiDebug();
-    m_State->GetUIMgr().DrawImGuiDebug();
-    m_State->GetAssetMgr().DrawImGuiDebug();
-    // m_AudioMgr->DrawImGuiDebug();
-    m_State->GetSystemMgr().DrawImGuiDebug();
+    m_State->GetViewMgr().ShowImGuiDebugWindow();
 }

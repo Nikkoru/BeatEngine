@@ -1,3 +1,4 @@
+#include <filesystem>
 #define BEATENGINE_TEST
 
 #include "BeatEngine/Logger.h"
@@ -12,7 +13,35 @@
 #include "system/system.h"
 #include "layer/globalLayer.h"
 
-int main() {
+int main(int argc, char** argv) {
+    std::vector<std::filesystem::path> paths;
+    
+    if (argc >= 2) {
+        if (!std::filesystem::exists(argv[1])) {
+            Logger::AddCritical("\"{}\" must be a valid path that contains .mp3 files", argv[1]);
+            return 1;
+        }
+
+        for (const auto& entry : fs::directory_iterator(argv[1])) {
+            if (entry.path().extension() == ".mp3") { 
+                paths.emplace_back(entry.path());
+            }
+        }
+    }
+    else {
+        paths = {
+            "assets/music/audio.mp3", 
+            "assets/music/eurobeat.mp3", 
+            "assets/music/kiby-aqua.mp3", 
+            "assets/music/kiby-star.mp3", 
+            "assets/music/remix7.mp3", 
+            "assets/music/reverse-mountain.mp3", 
+            "assets/music/test-music.mp3", 
+            "assets/music/audio.mp3",
+            "assets/music/abstraction.mp3"
+        };
+    }
+
 	Game game;
 
 	game.RegisterView<TestView>();
@@ -27,6 +56,8 @@ int main() {
 
 	// game.SetWindowTitle("Now you can change the title!");
     game.SetWindowSize({ 1280, 720 });
+    
+
 
 	game.LoadGlobalAssets({
 		{
@@ -41,6 +72,10 @@ int main() {
 				"assets/sounds/test-sound.mp3"
 			}
 		},
+        {
+            AssetType::AudioStream,
+            paths
+        },
         // {
         //     AssetType::FragmentShader,
         //     {

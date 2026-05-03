@@ -30,8 +30,7 @@ public:
 
 	void OnEvent(std::optional<Base::Event> event);
 	void OnUpdate(float dt);
-
-	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;
+	void OnDraw();
 };
 
 #include "BeatEngine/View/ViewLayerStack.inl"

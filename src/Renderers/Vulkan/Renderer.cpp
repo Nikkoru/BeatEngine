@@ -31,16 +31,6 @@
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
 
-void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle, std::string name) {
-    VkDebugUtilsObjectNameInfoEXT objNameInfo{
-        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
-        .objectType = type,
-        .objectHandle = objectHandle,
-        .pObjectName = name.c_str()
-    };
-
-    VK_CHECK(vkSetDebugUtilsObjectNameEXT(device, &objNameInfo));
-}
 
 bool VK_CHECK_SWAPCHAIN(VkResult result) {
     if (result < VK_SUCCESS) {
@@ -78,7 +68,7 @@ void VulkanRenderer::pInitVulkan() {
     m_Instance = vkb::CreateInstance("BeatEngine Game", VK_API_VERSION_1_3, extensions, layers);
     volkLoadInstance(m_Instance);
 
-    m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance);
+    m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance, 0, &m_DeviceProperties);
     m_GraphicsQueueFamily = vkb::GetQueueFamily(m_PhysicalDevice);
     m_Device = vkb::CreateDevice(m_PhysicalDevice, m_GraphicsQueueFamily);
     volkLoadDevice(m_Device);
@@ -191,11 +181,11 @@ void VulkanRenderer::pInitCommands() {
 
 
 
-    m_Uninitializers.AddCallback([this]() {
-        AddVulkanLog("Destroying Command interface");
-        //
-        // vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
-    });
+    // m_Uninitializers.AddCallback([this]() {
+    //     AddVulkanLog("Destroying Command interface");
+    //     //
+    //     vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
+    // });
 }
 
 void VulkanRenderer::pInitSyncStructures() {
@@ -203,6 +193,8 @@ void VulkanRenderer::pInitSyncStructures() {
     VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
     VkFenceCreateInfo fenceInfo {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+                .pNext = nullptr,
+
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
     for (auto i = 0; i < FRAME_OVERLAP; i++) {
@@ -221,7 +213,7 @@ void VulkanRenderer::pInitSyncStructures() {
     m_Uninitializers.AddCallback([this]() {
         AddVulkanLog("Destroying Sync Structures");
 
-        for (auto i = 0; i < FRAME_OVERLAP; i++) {
+        for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
             vkDestroyFence(m_Device, m_Frames[i].RenderFence, nullptr);
             vkDestroySemaphore(m_Device, m_Frames[i].PresentSemaphore, nullptr);
             vkDestroySemaphore(m_Device, m_Frames[i].RenderSemaphore, nullptr);
@@ -275,6 +267,7 @@ void VulkanRenderer::pInitRenderPass() {
     };
 
     VK_CHECK(vkCreateRenderPass(m_Device, &renderPassInfo, nullptr, &m_RenderPass));
+    AddNameToVKObject(m_Device, VK_OBJECT_TYPE_RENDER_PASS, (uint64_t)m_RenderPass, "VkRenderPass");
 
     m_Uninitializers.AddCallback([this]() {
         AddVulkanLog("Destroying Render Pass");
@@ -350,6 +343,7 @@ void VulkanRenderer::pInitFramebuffers() {
     AddVulkanLog("Initializing framebuffers");
     VkFramebufferCreateInfo framebufferInfo{
         .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+        .pNext = nullptr,
         .renderPass = m_RenderPass,
         .attachmentCount = 1,
         .pAttachments = &m_DrawImage.ImageView,
@@ -418,7 +412,6 @@ void VulkanRenderer::pInitImGui() {
         },
         // .UseDynamicRendering = true,
         .Allocator = VK_NULL_HANDLE,
-        .CheckVkResultFn = VK_CHECK
     };
     ImGui_ImplVulkan_Init(&info);
 
@@ -506,6 +499,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData
 ) {
+    (void)pUserData;
+
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "{}", pCallbackData->pMessage);
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "    Type = {}", GetDebugTypeStr(type));
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "    Severity = {}{}\033[0m", GetDebugSeverityColorStr(severity), GetDebugSeverityStr(severity));
@@ -525,6 +520,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
 void VulkanRenderer::CreateDebugCallback() {
     VkDebugUtilsMessengerCreateInfoEXT messengerInfo{
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
+        .pNext = nullptr,
         .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
                            VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
                            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
@@ -559,13 +555,14 @@ void VulkanRenderer::Render() {
         ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
     
-    auto frameIndex = (m_FrameNumber % FRAME_OVERLAP);
-    
     VK_CHECK(vkWaitForFences(m_Device, 1, &GetCurrentFrame().RenderFence, true, 1'000'000'000));
     VK_CHECK(vkResetFences(m_Device, 1, &GetCurrentFrame().RenderFence));
 
-    if (VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1'000'000'000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex)))
+    if (VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1'000'000'000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex))) {
         UpdateSwapchain();
+        return;
+    }
+    else m_UpdateSwapchain = false;
    
     VK_CHECK(vkResetCommandBuffer(GetCurrentFrame().ActiveCmdBuffer, 0));
     VkCommandBufferBeginInfo cmdInfo {
@@ -577,6 +574,7 @@ void VulkanRenderer::Render() {
     
     VkRenderingInfo renderingInfo{
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+        .pNext = nullptr,
         .renderArea{ .extent{
                 .width = static_cast<uint32_t>(GetWindow()->GetSize().X),
                 .height = static_cast<uint32_t>(GetWindow()->GetSize().Y),
@@ -585,24 +583,18 @@ void VulkanRenderer::Render() {
         .colorAttachmentCount = 0,
     };
 
-    // static Clock clock{};
-    // clock.Start();
-    // auto time = clock.Get();
-    // auto sec = time.AsSeconds();
-    // VkClearValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
-    // 
-    VkRenderPassBeginInfo renderPassInfo {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = m_RenderPass,
-        .framebuffer = m_DrawImage.Framebuffer,
-        .renderArea{
-            .extent{
-                .width = static_cast<uint32_t>(GetWindow()->GetSize().X),
-                .height = static_cast<uint32_t>(GetWindow()->GetSize().Y),
-            }
-        },
-        .clearValueCount = 0
-    };
+    // VkRenderPassBeginInfo renderPassInfo {
+    //     .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+    //     .renderPass = m_RenderPass,
+    //     .framebuffer = m_DrawImage.Framebuffer,
+    //     .renderArea{
+    //         .extent{
+    //             .width = static_cast<uint32_t>(GetWindow()->GetSize().X),
+    //             .height = static_cast<uint32_t>(GetWindow()->GetSize().Y),
+    //         }
+    //     },
+    //     .clearValueCount = 0
+    // };
 
     if (m_PipelineMgr.BindIfAny(GetCurrentFrame().ActiveCmdBuffer)) {
         VkExtent2D extent{
@@ -613,33 +605,43 @@ void VulkanRenderer::Render() {
         auto renderInfo = vki::GetRenderingInfo(extent, &colorAttachment, nullptr);
         vkCmdBeginRendering(GetCurrentFrame().ActiveCmdBuffer, &renderInfo);
     }
-    else {
-        vkCmdBeginRenderPass(GetCurrentFrame().ActiveCmdBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    }
-
-    // vkCmdDraw(GetCurrentFrame().ActiveCmdBuffer, 3, 1, 0, 0);
 }
 
 void VulkanRenderer::RenderImGui() {
     ImGui::Render();
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), GetCurrentFrame().ActiveCmdBuffer);
+    ImGui::EndFrame();
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        ImGui::UpdatePlatformWindows();
 }
 
 void VulkanRenderer::Display() {
-    RenderImGui();
+    if (m_UpdateSwapchain)
+        return;
 
-    auto frameIndex = (m_FrameNumber % FRAME_OVERLAP);
-    
+    VkExtent2D extent{
+        .width = m_Window->GetSize().X,
+        .height = m_Window->GetSize().Y
+    };
+
     if (m_PipelineMgr.Has())
         vkCmdEndRendering(GetCurrentFrame().ActiveCmdBuffer);
-    else
-        vkCmdEndRenderPass(GetCurrentFrame().ActiveCmdBuffer);
 
-    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    
+    vku::CopyImageToImage(GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, m_SwapchainImages[m_ActiveImageIndex], extent, extent);
+
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+
+    RenderImGui();
+    
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
     VK_CHECK(vkEndCommandBuffer(GetCurrentFrame().ActiveCmdBuffer));
 
     auto cmdInfo = vki::GetCommandBufferSubmitInfo(GetCurrentFrame().ActiveCmdBuffer);
-    auto waitInfo = vki::GetSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT, GetCurrentFrame().PresentSemaphore);
+    auto waitInfo = vki::GetSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_COLOR_ATTACHMENT_OUTPUT_BIT_KHR, GetCurrentFrame().PresentSemaphore);
     auto signalInfo = vki::GetSemaphoreSubmitInfo(VK_PIPELINE_STAGE_2_ALL_GRAPHICS_BIT, GetCurrentFrame().RenderSemaphore);
     
     auto submitInfo = vki::GetSubmitInfo(&cmdInfo, &signalInfo, &waitInfo);
@@ -654,12 +656,15 @@ void VulkanRenderer::Display() {
         .pSwapchains = &m_Swapchain,
         .pImageIndices = &m_ActiveImageIndex
     };
+
     VK_CHECK(vkQueuePresentKHR(m_GraphicsQueue, &presentInfo));
 
     m_FrameNumber++;
 }
 
 void VulkanRenderer::Clear() {
+    if (m_UpdateSwapchain)
+        return;
     static Clock clock{};
     clock.Start();
     auto time = clock.Get();
@@ -673,30 +678,10 @@ void VulkanRenderer::Clear() {
         .baseArrayLayer = 0,
         .layerCount = 1
     };
-    //
-    VkImageMemoryBarrier2 presentToClearBarrier{
-        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
-        .srcStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-        .srcAccessMask = VK_ACCESS_MEMORY_READ_BIT,
-        .dstStageMask = VK_PIPELINE_STAGE_TRANSFER_BIT,
-        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT,
-        .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
-        .image = m_SwapchainImages[m_ActiveImageIndex],
-        .subresourceRange = imageRange
-    };
 
-    VkDependencyInfo barrierDependency{
-        .sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
-        .imageMemoryBarrierCount = 1,
-        .pImageMemoryBarriers = &presentToClearBarrier
-    };
-    //
-    vkCmdPipelineBarrier2(GetCurrentFrame().ActiveCmdBuffer, &barrierDependency);
-    //
-    vkCmdClearColorImage(GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, &clearColor, 1, &imageRange);
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+
+    vkCmdClearColorImage(GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_GENERAL, &clearColor, 1, &imageRange);
 }
 
 void VulkanRenderer::Update() {
@@ -750,6 +735,21 @@ std::shared_ptr<Shader> VulkanRenderer::CreateShader(std::filesystem::path path,
         return nullptr;
 
     return shader;
+}
+
+void VulkanRenderer::ShowImGuiRenderTabContent() {
+    ImGui::Text("Vulkan Renderer");
+    ImGui::Text("Frame N°%i", m_FrameNumber);
+    if (ImGui::BeginTabBar("vulkanTabBar")) {
+        if (ImGui::BeginTabItem("Device")) {
+            ImGui::Text("Active Device: %s", m_DeviceProperties.deviceName);
+            ImGui::Text("API Version: %u", m_DeviceProperties.apiVersion);
+            ImGui::Text("Driver Version: %u", m_DeviceProperties.driverVersion);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+
 }
 
 std::optional<Base::Event> VulkanRenderer::PollEvent() const {

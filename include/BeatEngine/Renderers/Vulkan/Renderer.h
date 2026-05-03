@@ -27,6 +27,7 @@ private:
     VkInstance m_Instance{ VK_NULL_HANDLE };
     VkDebugUtilsMessengerEXT m_DebugMessenger{ VK_NULL_HANDLE };
     VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
+    VkPhysicalDeviceProperties m_DeviceProperties{};
     VkDevice m_Device{ VK_NULL_HANDLE };
     VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
     VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
@@ -51,6 +52,7 @@ private:
     VkDescriptorSetLayout m_ImageDescriptorLayout{ VK_NULL_HANDLE };
 private:
     bool m_StopRendering{ false };
+    bool m_UpdateSwapchain{ false };
     bool m_CreateDebugMessenger{ true };
     int m_FrameNumber{};
     VmaAllocator m_Allocator{ VK_NULL_HANDLE };
@@ -83,6 +85,8 @@ public:
 
     std::shared_ptr<Texture> CreateTexture(std::filesystem::path path) override;
     std::shared_ptr<Shader> CreateShader(std::filesystem::path path, Shader::Type type) override;
+
+    void ShowImGuiRenderTabContent() override;
 
     std::optional<Base::Event> PollEvent() const override;
 public:

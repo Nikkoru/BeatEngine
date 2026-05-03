@@ -11,14 +11,24 @@
 #include <volk.h>
 #include <format>
 
-void VK_CHECK(VkResult result) {
+void VK_CHECK_SOURCE(VkResult result, const std::source_location location) {
     if (result) {
-        auto msg = std::format("Vulkan error: {}", string_VkResult(result));
+        auto msg = std::format("Vulkan error: {} From: {}:{}:{}", string_VkResult(result), location.function_name(), location.line(), location.column());
         Logger::AddCritical("", msg);
         THROW_RUNTIME_ERROR(msg);
     }
 }
 
+void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle, std::string name) {
+    VkDebugUtilsObjectNameInfoEXT objNameInfo{
+        .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .objectType = type,
+        .objectHandle = objectHandle,
+        .pObjectName = name.c_str()
+    };
+
+    VK_CHECK(vkSetDebugUtilsObjectNameEXT(device, &objNameInfo));
+}
 
 VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::vector<const char*> pInstExt, std::vector<const char*> pInstLayers) {
     VkInstance instance{ VK_NULL_HANDLE };
@@ -27,7 +37,7 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
 
     auto instanceExtension = SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount);
     
-    for (auto i = 0; i < instanceExtensionCount; i++)
+    for (uint32_t i = 0; i < instanceExtensionCount; i++)
         pInstExt.emplace_back(instanceExtension[i]);
 
     VkApplicationInfo appInfo{ 
@@ -51,12 +61,13 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
     return instance;
 }
 
-VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceIndex) {
+VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceIndex, VkPhysicalDeviceProperties* prop) {
     VkPhysicalDevice device{ VK_NULL_HANDLE };
 
     uint32_t devCount{};
 
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, nullptr));
+    Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Available devices: {}", devCount);
     std::vector<VkPhysicalDevice> devices(devCount);
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, devices.data()));
     
@@ -68,6 +79,8 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceI
 
     vkGetPhysicalDeviceProperties2(devices[deviceIndex], &devProperties);
     Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Selected device: {}", devProperties.properties.deviceName);
+    if (prop)
+        *prop = std::move(devProperties.properties);
 
     device = devices[deviceIndex];
 
@@ -98,6 +111,12 @@ std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swa
     VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
     images.resize(imageCount);
     VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, images.data()));
+    
+    auto i = 0;
+    for (const auto& image : images) {
+        AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE, uint64_t(image), std::format("VkImage_Swapchain{}", i));
+        i++;
+    }
 
     return images;
 }
@@ -105,7 +124,7 @@ std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swa
 std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage> images, VkFormat format) {
     std::vector<VkImageView> imageViews(images.size());
 
-    for (auto i = 0; i < images.size(); i++) {
+    for (size_t i = 0; i < images.size(); i++) {
         VkImageViewCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
             .flags = 0,
@@ -119,6 +138,7 @@ std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vecto
             }
         };
         VK_CHECK(vkCreateImageView(device, &info, nullptr, &imageViews[i]));
+        AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)imageViews[i], std::format("VkImageView_Swapchain{}", i));
     }
     return imageViews;
 }
@@ -241,6 +261,47 @@ void vku::TransitionImage(PipelineManager mgr, VkCommandBuffer cmd, VkImage imag
     depInfo.pImageMemoryBarriers = &imageBarrier;
 
     vkCmdPipelineBarrier2(cmd, &depInfo);
+}
+
+void vku::CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize) {
+    VkImageBlit2 blitRegion{ 
+        .sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2, 
+        .pNext = nullptr,
+        .srcSubresource{
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        },
+        .dstSubresource{
+            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .mipLevel = 0,
+            .baseArrayLayer = 0,
+            .layerCount = 1
+        }
+    };
+
+	blitRegion.srcOffsets[1].x = srcSize.width;
+	blitRegion.srcOffsets[1].y = srcSize.height;
+	blitRegion.srcOffsets[1].z = 1;
+
+	blitRegion.dstOffsets[1].x = dstSize.width;
+	blitRegion.dstOffsets[1].y = dstSize.height;
+	blitRegion.dstOffsets[1].z = 1;
+
+	VkBlitImageInfo2 blitInfo{ 
+        .sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2, 
+        .pNext = nullptr,
+        .srcImage = source,
+        .srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+        .dstImage = destination,
+        .dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        .regionCount = 1,
+        .pRegions = &blitRegion,
+        .filter = VK_FILTER_LINEAR
+    };
+
+	vkCmdBlitImage2(cmd, &blitInfo);
 }
 
 VkImageCreateInfo vki::GetImageCreateInfo(VkFormat format, VkImageUsageFlags usageFlags, VkExtent3D extent) {

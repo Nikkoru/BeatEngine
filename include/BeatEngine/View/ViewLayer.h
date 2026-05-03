@@ -20,7 +20,7 @@ namespace Base {
 
 class Game;
 class ViewLayerStack;
-class ViewLayer /*: public sf::Drawable*/ {
+class ViewLayer {
 private:
 	friend class ViewLayerStack;
 private:
@@ -50,6 +50,7 @@ public:
 	virtual void OnAttach() {} 
 	virtual void OnDetach() {}
 	virtual void OnEvent(std::optional<Base::Event> event) = 0;
+    virtual void OnDraw() = 0;
 
 	inline Vector2f GetSize() const { return m_Size; }
 	inline float GetCameraZoom() const { return m_Camera.GetZoom(); };

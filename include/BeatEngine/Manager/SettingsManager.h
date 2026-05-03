@@ -45,7 +45,7 @@ public:
 
 	void SetDefaults();
 public:
-    void DrawImGuiDebug();
+    void ShowImGuiDebugWindow();
 private:
 	char* GetTextData(fs::path path);
 };

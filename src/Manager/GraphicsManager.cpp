@@ -3,6 +3,8 @@
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/Vector2.h"
+#include "imgui.h"
+#include <future>
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -28,7 +30,11 @@ void GraphicsManager::Init() {
 #else
     assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or Game::SetRenderer<T>()")
 #endif
-    m_Renderer->Init(m_WindowTitle, m_WindowSize);
+    
+    if (m_WindowFullscreen)
+        m_Renderer->Init(m_WindowTitle, { static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) });
+    else
+        m_Renderer->Init(m_WindowTitle, m_WindowSize);
 }
 
 void GraphicsManager::Update() {
@@ -37,6 +43,35 @@ void GraphicsManager::Update() {
 
 void GraphicsManager::Close() {
     m_Renderer->Uninit();
+}
+
+void GraphicsManager::ShowImGuiDebugWindow() {
+    ImGui::Begin("GraphicsManager Debug");
+    if (ImGui::BeginTabBar("SelectionTabBar")) {
+        if (ImGui::BeginTabItem("Renderer")) {
+            ImGui::BeginChild("RendererChild", ImVec2(ImGui::GetContentRegionAvail().x, ImGui::GetContentRegionAvail().y), ImGuiChildFlags_AlwaysUseWindowPadding);
+            m_Renderer->ShowImGuiRenderTabContent();
+            ImGui::EndChild();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Window")) {
+            auto window = GetWindow();
+            ImGui::Text("Window Title: %s", window->GetTitle().c_str());
+            ImGui::Text("Window Size: (X: %u, Y: %u)", window->GetSize().X, window->GetSize().Y);
+            ImGui::Text("Window Position: (X: %u, Y: %u)", window->GetPosition().X, window->GetPosition().Y);
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
+    ImGui::End();
+}
+
+void GraphicsManager::SetWindowFullscreen(bool fullscreen) {
+    m_WindowFullscreen = fullscreen;
+
+    if (m_Renderer != nullptr && m_Renderer->GetWindow() != nullptr) {
+        GetWindow()->SetFullscreen(fullscreen);
+    }
 }
 
 void GraphicsManager::SetWindowTitle(std::string windowTitle) {

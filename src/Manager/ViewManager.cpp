@@ -1,6 +1,8 @@
 #include "BeatEngine/Manager/ViewManager.h"
 
+#include <cstdint>
 #include <memory>
+#include <typeindex>
 
 #include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
@@ -13,25 +15,27 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/GameState.h"
+#include "imgui.h"
 
 ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
     if (context != nullptr)
         context->ActiveView = MainView;
-	SignalManager::GetInstance()->RegisterCallback<ViewPushSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
+
+    SignalManager::GetInstance()->RegisterCallback<ViewPushSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto sigView = std::static_pointer_cast<ViewPushSignal>(sig);
 		Push(sigView->ViewID);
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewPopSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
+	SignalManager::GetInstance()->RegisterCallback<ViewPopSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
 		Pop();
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewSuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
+	SignalManager::GetInstance()->RegisterCallback<ViewSuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
 		ViewStack.top()->OnSuspend();
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewUnsuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> sig) {
+	SignalManager::GetInstance()->RegisterCallback<ViewUnsuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
 		ViewStack.top()->OnResume();
 	});
     
-    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->Subscribe<GameExitingEvent>([](const std::shared_ptr<Base::Event> _) {
     }); 
 }
 
@@ -51,7 +55,7 @@ void ViewManager::Push(std::type_index viewID) {
 		if (ViewFabrics.contains(viewID)) {
             if (!ViewStack.empty())
                 ViewStack.top()->OnSuspend();
-			ViewStack.push(std::move(ViewFabrics[viewID](m_Context, m_State)));
+			ViewStack.push(ViewFabrics[viewID](m_Context, m_State));
 			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
@@ -135,4 +139,35 @@ bool ViewManager::HasActiveViews() {
 
 void ViewManager::GetViewKeybinds() {
 	// placeholder #TOIMPLEMENT
+}
+
+void ViewManager::ShowImGuiDebugWindow() {
+    ImGui::Begin("ViewManager Debug");
+    ImGui::Text("Registered Views: %zu", ViewFabrics.size());
+    ImGui::Text("Size of stack: %zu", ViewStack.size());
+    ImGui::Text("Active View: %s", MainView.name());
+    
+    uint8_t index{};
+    static uint8_t selectedIndex{};
+    static std::type_index selectedView = MainView;
+    if (ImGui::BeginCombo("Views", selectedView.name())) {
+        for (const auto& [view, _] : ViewFabrics) {
+            const auto selected = (index == selectedIndex);
+            if (ImGui::Selectable(view.name(), selected)) {
+                selectedIndex = index;
+                selectedView = view;
+            }
+            index++;
+        }
+        ImGui::EndCombo();
+    }
+
+    if (ImGui::Button("Push")) {
+        Push(selectedView);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Pop"))
+        Pop();
+
+    ImGui::End();
 }

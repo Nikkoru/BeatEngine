@@ -15,6 +15,5 @@ public:
 public:
     void OnUpdate(float dt) override {}
     void OnEvent(std::optional<Base::Event> event) override {}
-
-    void draw(/*sf::RenderTarget&, sf::RenderStates*/) const /*override*/ {}
+    void OnDraw() override {}
 };

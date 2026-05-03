@@ -22,6 +22,7 @@ private:
 
     std::string m_WindowTitle{};
     Vector2u m_WindowSize{};
+    bool m_WindowFullscreen{ false };
 public:
     GraphicsManager() = default;
     GraphicsManager(GameContext* context, GameState* state)
@@ -37,6 +38,9 @@ public:
     void Update();
     void Close();
 
+    void ShowImGuiDebugWindow();
+
+    void SetWindowFullscreen(bool fullscreen);
     void SetWindowTitle(std::string windowTitle);
     void SetWindowSize(Vector2u size);
     void SetFramerateLimit(unsigned int fps);

@@ -13,19 +13,15 @@
 #include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Logger.h"
 
-#include "BeatEngine/Asset/Shader.h"
-#include "BeatEngine/Asset/Texture.h"
-#include "BeatEngine/Asset/Sound.h"
-#include "BeatEngine/Asset/Font.h"
-#include "BeatEngine/Asset/AudioStream.h"
-
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Manager/ViewManager.h"
+
 #include "BeatEngine/Settings/GameSettings.h"
+#include "BeatEngine/Settings/GameDebugSettings.h"
 
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/ViewSignals.h"
@@ -119,7 +115,7 @@ void Game::Uninitialize() {
     m_State.GetGraphicsMgr().Close();
     m_State.GetSystemMgr().StopSystems();
     // m_AssetMgr->Uninit();
-    // m_AudioMgr->Uninit();
+    m_State.GetAudioMgr().Uninit();
     // m_SettingsMgr->Uninit();
     m_Running = false;
 }
@@ -173,37 +169,99 @@ void Game::RemoveFlags(GameFlags flags) {
 }
 
 void Game::DrawImGuiDebug() {
-    ImGui::Begin("BeatEngine Game Debug Window");
-    bool imguiToggle = m_Context.GFlags & GameFlags_ImGui;
-    bool imguiDockingToggle = m_Context.GFlags & GameFlags_ImGuiDocking;
-    bool runningToggle = m_Context.GFlags & GameFlags_Running;
-    bool preloadToggle = m_Context.GFlags & GameFlags_Preload;
-    bool fullscreenToggle = m_Context.GFlags & GameFlags_Fullscreen;
-    bool cursorChangedToggle = m_Context.GFlags & GameFlags_CursorChanged;
-    bool disableKeysToggle = m_Context.GFlags & GameFlags_DisableKeyPressEvents;
-    bool drawDebugToggle = m_Context.GFlags & GameFlags_DrawDebugInfo;
+    static bool editFlags = false;
 
-    bool viewDisableKeyToggle = m_Context.VFlags & ViewFlags_DisableKeys;
 
-    bool envDebugToggle = m_Context.EFlags & EnvFlags_Debug;
-    bool envTestToggle = m_Context.EFlags & EnvFlags_TestBuild;
+    ImGui::Begin("BeatEngine Game Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
 
-    ImGui::Text("GameFlags: %#.8x", m_Context.GFlags);
-    ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
-    ImGui::Checkbox("GameFlags_ImGuiDocking", &imguiDockingToggle);
-    ImGui::Checkbox("GameFlags_Running", &runningToggle);
-    ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
-    ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
-    ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
-    ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
-    ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
-    ImGui::NewLine();
-    ImGui::Text("ViewFlags: %#.8x", m_Context.VFlags);
-    ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
-    ImGui::NewLine();
-    ImGui::Text("EnvFlags: %#.8x", m_Context.EFlags);
-    ImGui::Checkbox("EnvFlags_Debug", &envDebugToggle);
-    ImGui::Checkbox("EnvFlags_TestBuild", &envTestToggle);
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("Environment")) {
+            bool dockingStatus = (m_Context.GFlags & GameFlags_DebugDock);
+            if (ImGui::MenuItem("Enable Docking", NULL, dockingStatus)) {
+                !dockingStatus ? m_Context.GFlags |= GameFlags_DebugDock :
+                            m_Context.GFlags &= ~GameFlags_DebugDock;
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMenuBar();
+    }
+
+    if (ImGui::BeginTabBar("GameActionBar")) {
+        if (ImGui::BeginTabItem("Flags")) {
+            bool imguiToggle = m_Context.GFlags & GameFlags_ImGui;
+            bool imguiDockingToggle = m_Context.GFlags & GameFlags_ImGuiDocking;
+            bool runningToggle = m_Context.GFlags & GameFlags_Running;
+            bool preloadToggle = m_Context.GFlags & GameFlags_Preload;
+            bool fullscreenToggle = m_Context.GFlags & GameFlags_Fullscreen;
+            bool cursorChangedToggle = m_Context.GFlags & GameFlags_CursorChanged;
+            bool disableKeysToggle = m_Context.GFlags & GameFlags_DisableKeyPressEvents;
+            bool drawDebugToggle = m_Context.GFlags & GameFlags_DrawDebugInfo;
+            bool drawDockToggle = m_Context.GFlags & GameFlags_DebugDock;
+
+            bool viewDisableKeyToggle = m_Context.VFlags & ViewFlags_DisableKeys;
+
+            bool envDebugToggle = m_Context.EFlags & EnvFlags_Debug;
+            bool envTestToggle = m_Context.EFlags & EnvFlags_TestBuild;
+            
+            ImGui::Text("GameFlags: %#.8x", m_Context.GFlags);
+            if (!editFlags)
+                ImGui::BeginDisabled();
+            ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
+            ImGui::Checkbox("GameFlags_ImGuiDocking", &imguiDockingToggle);
+            ImGui::Checkbox("GameFlags_Running", &runningToggle);
+            ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
+            ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
+            ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
+            ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
+            ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
+            ImGui::Checkbox("GameFlags_DebugDock", &drawDockToggle);
+            if (!editFlags)
+                ImGui::EndDisabled();
+            ImGui::NewLine();
+            ImGui::Text("ViewFlags: %#.8x", m_Context.VFlags);
+            if (!editFlags)
+                ImGui::BeginDisabled();
+            ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
+            if (!editFlags)
+                ImGui::EndDisabled();
+            ImGui::NewLine();
+            ImGui::Text("EnvFlags: %#.8x", m_Context.EFlags);
+            if (!editFlags)
+                ImGui::BeginDisabled();
+            ImGui::Checkbox("EnvFlags_Debug", &envDebugToggle);
+            ImGui::Checkbox("EnvFlags_TestBuild", &envTestToggle);
+            if (!editFlags)
+                ImGui::EndDisabled();
+
+            if (!imguiToggle && m_Context.GFlags & GameFlags_ImGui)
+                m_Context.GFlags &= GameFlags_ImGui;
+            else if (imguiToggle && !(m_Context.GFlags &GameFlags_ImGui))
+                m_Context.GFlags |= ~GameFlags_ImGui;
+
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Actions")) {
+            if (ImGui::Button("Exit"))
+                SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+            ImGui::Checkbox("Allow editing flags", &editFlags);
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Status")) {
+            ImGui::Text("Delta: %.3f (%.1f ms)", LastDelta, LastDelta * 1000);
+            ImGui::Text("FPS: %.2f", 1 / LastDelta);
+
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Context")) {
+            auto size = m_Context.WindowSize;
+            ImGui::Text("WindowSize: (X: %u Y: %u)", size.X, size.Y);
+            ImGui::Text("ActiveView: %s", m_Context.ActiveView.name());
+
+            ImGui::EndTabItem();
+        }
+        ImGui::EndTabBar();
+    }
     ImGui::End();
 }
 
@@ -235,17 +293,44 @@ void Game::Display() {
 void Game::Draw() {
     m_State.GetGraphicsMgr().Render();
 
+    if (m_Context.GFlags & GameFlags_DebugDock && 
+        m_Context.GFlags & GameFlags_ImGui &&
+        m_Context.GFlags & GameFlags_ImGuiDocking &&
+        m_Context.GFlags & GameFlags_DrawDebugInfo) {
+        auto io = ImGui::GetIO();
+        auto viewport = ImGui::GetMainViewport();
+
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+		ImGui::SetNextWindowSize(viewport->WorkSize);
+		ImGui::SetNextWindowViewport(viewport->ID);
+
+        
+        ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoDocking;
+        ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoNavFocus | 
+            ImGuiWindowFlags_NoBackground;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(.0f, .0f));
+        ImGui::Begin("##DockWindow", nullptr, windowFlags);
+        ImGui::PopStyleVar();
+        auto dockspaceId = ImGui::GetID("DebugDockspace");
+        ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockFlags);
+        ImGui::End();
+    }
+
 	if (!m_State.GetViewMgr().OnDraw())
 		Uninitialize();
-//
-// 	m_Window->draw(m_GlobalLayers);
-//
-//     m_UIMgr->OnDraw(m_Window);
-//
+
+	m_GlobalLayers.OnDraw();
+    m_State.GetUIMgr().OnDraw();
 }
 
 void Game::Update() {
-    // m_Context->WindowSize = m_Window->getSize();
+    m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
     //
     // if (m_Context->GFlags & GameFlags_CursorChanged) {
     //     m_Window->setMouseCursor(m_Cursor);
@@ -255,11 +340,8 @@ void Game::Update() {
 	auto sfDelta = m_Clock.GetAndReset();
 	auto deltaTime = sfDelta.AsSeconds();
 
-	if (m_Context.GFlags & GameFlags_ImGui)
-		// ImGui::SFML::Update(*m_Window, sfDelta);
-
 	if (!this->m_State.GetViewMgr().OnUpdate(deltaTime)) {
-		// this->m_Window->close();
+        Uninitialize();
 		return;
 	}
 
@@ -268,6 +350,8 @@ void Game::Update() {
     this->m_State.GetSystemMgr().Update(deltaTime);
 	m_GlobalLayers.OnUpdate(deltaTime);
     m_State.GetUIMgr().Update(deltaTime);
+
+    LastDelta = deltaTime;
 }
 
 void Game::ApplyBaseSettings() {
@@ -286,6 +370,11 @@ void Game::InitSettings() {
     
 	m_State.GetSettingsMgr().RegisterSettingsData<GameSettings>();
     m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
+
+#ifdef BEATENGINE_DEBUG
+    m_State.GetSettingsMgr().RegisterSettingsData<GameDebugSettings>();
+    m_State.GetSettingsMgr().ReadConfig("debug.ini");
+#endif
 }
 
 void Game::InitUI() {
@@ -295,10 +384,14 @@ void Game::InitUI() {
 void Game::InitAudio() {
 	Logger::AddDebug(typeid(Game), "Initializing audio...");
     Logger::AddWarning(typeid(Game), "AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized. You can still use it if BEATENGINE_TEST is defined.");
+
+    m_State.GetAudioMgr().Init();
 }
 
 void Game::InitViews() {
 	Logger::AddDebug(typeid(Game), "Initializing views...");
+
+    m_State.GetViewMgr().Init();
 }
 
 void Game::InitSystems() {
@@ -314,41 +407,17 @@ void Game::InitAssets() {
 void Game::InitWindow() {
 	Logger::AddDebug(typeid(Game), "Initializing window...");
 
-    m_State.GetGraphicsMgr().Init();
-
 	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(GameSettings));
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
-    
-    // if (gameSettings->WindowFullScreen)
-	   //  this->m_Window = new sf::RenderWindow(
-	   //      sf::VideoMode{}, 
-    //         "BeatEngine Game",
-    //         sf::Style::Default,
-    //         sf::State::Fullscreen 
-    //     );
-    // else {
-	   //  this->m_Window = new sf::RenderWindow(
-	   //      sf::VideoMode(gameSettings->WindowSize), 
-    //         "BeatEngine Game",
-    //         sf::Style::Default,
-    //         sf::State::Windowed
-    //     );
-    // }
-    //
-    if (gameSettings->WindowFullScreen)
+
+    m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
+    m_State.GetGraphicsMgr().Init();
+
+    if (gameSettings->WindowFullScreen) {
         m_Context.GFlags |= GameFlags_Fullscreen;
+    }
 
-	// this->m_View = sf::View(sf::FloatRect({ 0, 0 }, { static_cast<float>(gameSettings->WindowSize.x), static_cast<float>(gameSettings->WindowSize.y) }));
-	// this->m_Window->setFramerateLimit(gameSettings->FpsLimit);
- //    this->m_Window->setVerticalSyncEnabled(gameSettings->VSync);
-	// this->m_Window->setView(m_View);
- //    this->m_Window->setMouseCursor(m_Cursor);
-	//
- //    this->m_Context->WindowSize = m_Window->getSize();
-
-// 	if (!ImGui::SFML::Init(*m_Window)) {
-//         m_Window->close();
-//     }
+    m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
 }
 
 void Game::InitKeybinds() {

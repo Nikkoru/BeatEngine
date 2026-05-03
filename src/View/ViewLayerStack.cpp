@@ -27,8 +27,8 @@ void ViewLayerStack::OnUpdate(float dt) {
 	}
 }
 
-void ViewLayerStack::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
-	// for (const auto& [type, layer] : m_Layers) {
-	// 	layer->draw(target, states);
-	// }
+void ViewLayerStack::OnDraw() {
+	for (const auto& [type, layer] : m_Layers) {
+		layer->OnDraw();
+	}
 }
