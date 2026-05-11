@@ -2,13 +2,12 @@
 
 #include <string>
 #include <typeindex>
-#include <iostream>
 
 namespace Base {
 	class Settings {
 	protected:
-		std::string m_SettingsTag;
 		std::type_index m_ID;
+		std::string m_SettingsTag;
 	public:
 		Settings(std::type_index ID, std::string tag) : m_ID(ID), m_SettingsTag(tag) {}
 

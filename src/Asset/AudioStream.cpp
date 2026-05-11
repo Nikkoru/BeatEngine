@@ -121,7 +121,7 @@ void AudioStream::AsyncFillBuffers() {
 }
 
 AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds, uint64_t totalFrames)
-    : m_Name(name), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalSeconds(totalSeconds), m_MetadataReference(fileRef), m_TotalFrames(totalFrames) {
+    : m_Name(name), m_MetadataReference(fileRef), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalSeconds(totalSeconds), m_TotalFrames(totalFrames) {
 
     m_SrcRatio = static_cast<double>(m_TargetSampleRate)  / static_cast<double>(m_DefaultSampleRate);
     m_OutputFrameCount = static_cast<uint64_t>(m_SrcRatio * m_DataBufferFrameCount);
@@ -208,6 +208,10 @@ void AudioStream::SetVolume(float vol) {
 
 void AudioStream::SetLoop(bool loop) {
     m_Loop = loop;
+}
+
+void AudioStream::SetDataBufferFrameCount(uint64_t bufferSize) {
+    m_DataBufferFrameCount = bufferSize;
 }
 
 
@@ -327,6 +331,10 @@ float AudioStream::GetTotalSeconds() {
 
 float AudioStream::GetTranscurredSeconds() {
     return m_TranscurredSeconds;
+}
+
+uint64_t AudioStream::GetDataBufferFrameCount() const {
+    return m_DataBufferFrameCount;
 }
 
 bool AudioStream::Erase() const {

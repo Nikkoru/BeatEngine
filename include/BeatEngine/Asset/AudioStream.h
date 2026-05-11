@@ -1,11 +1,13 @@
 #pragma once
 
-#include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Base/Asset.h"
 
 #include <miniaudio.h>
-#include <portaudio.h>
+#ifdef _WIN32
 #include <taglib/fileref.h>
+#else
+#include <taglib/fileref.h>
+#endif
 #include <samplerate.h>
 #include <taglib/tag.h>
 #include <vector>
@@ -29,10 +31,9 @@ public:
 };
 
 class AudioStream : public Base::Asset {
-protected:
-    PaStream* m_Stream{ nullptr };
-    friend class AudioManager;
 private:
+    friend class AudioManager;
+
 	std::string m_Name = "";
 
     TagLib::FileRef m_MetadataReference;
@@ -87,6 +88,8 @@ public:
 	void SetVolume(float vol);
 	void SetLoop(bool loop);
 
+    void SetDataBufferFrameCount(uint64_t bufferSize);
+
 	void Play();
 	void Pause();
 	void Stop();
@@ -113,6 +116,8 @@ public:
 
     float GetTotalSeconds();
     float GetTranscurredSeconds();
+
+    uint64_t GetDataBufferFrameCount() const;
 
 	bool Erase() const;
 };

@@ -25,11 +25,11 @@ bool UID::operator!=(const UID& other) {
 }
 
 bool UID::operator==(const int& other) {
-	return m_UID == other;
+	return m_UID == static_cast<uint32_t>(other);
 }
 
 bool UID::operator!=(const int& other) {
-	return m_UID != other;
+	return m_UID != static_cast<uint32_t>(other);
 }
 
 UID::operator uint32_t() {

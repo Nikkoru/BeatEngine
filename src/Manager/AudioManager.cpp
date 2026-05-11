@@ -301,8 +301,8 @@ void AudioManager::Uninit() {
 void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
     EventManager::GetInstance()->Send(std::make_shared<EventSoundStarted>(sound->GetName()));
 
-	size_t write = m_SoundWriteIndex.load();
-	size_t nextWrite = (write + 1) % MAX_PENDING_SOUNDS;
+	int write = m_SoundWriteIndex.load();
+	int nextWrite = (write + 1) % MAX_PENDING_SOUNDS;
 
 	if (nextWrite != m_SoundReadIndex.load()) {
 		m_PendingSounds[write] = std::move(sound);
@@ -325,8 +325,10 @@ void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
     
     stream->m_Fill.store(false);
 
-	size_t write = m_StreamWriteIndex.load();
-	size_t nextWrite = (write + 1) % MAX_PENDING_STREAMS;
+    // stream->SetDataBufferFrameCount(4096);
+
+	int write = m_StreamWriteIndex.load();
+	int nextWrite = (write + 1) % MAX_PENDING_STREAMS;
 
 	if (nextWrite != m_StreamReadIndex.load()) {
 		m_PendingStreams[write] = stream;

@@ -74,6 +74,25 @@ if (USE_OPENGL_RENDERER)
     )
 
 elseif (USE_VULKAN_RENDERER)
+    if (CROSS_BUILDING)
+        FetchContent_Declare(VULKAN_HEADERS
+            GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Headers.git
+            GIT_SHALLOW ON
+            EXCLUDE_FROM_ALL
+            SYSTEM)
+        FetchContent_MakeAvailable(VULKAN_HEADERS)
+        FetchContent_Declare(VULKAN_LOADER
+            GIT_REPOSITORY https://github.com/KhronosGroup/Vulkan-Loader.git
+            GIT_SHALLOW ON
+            EXCLUDE_FROM_ALL
+            SYSTEM)
+        FetchContent_Declare(volk
+        GIT_REPOSITORY https://github.com/zeux/volk.git
+        GIT_SHALLOW ON
+        EXCLUDE_FROM_ALL
+        SYSTEM)
+        FetchContent_MakeAvailable(volk)
+    endif()
     # Fetch VMA
     option(VMA_BUILD_SAMPLES "Build samples" ON)
     FetchContent_Declare(VMA
@@ -138,6 +157,8 @@ FetchContent_Declare(samplerate
 FetchContent_MakeAvailable(samplerate)
 
 set(BUILD_TESTING OFF)
+set(BUILD_SHARED_LIBS ON)
+set(ENABLE_COMPATIBLE_LIBSNDFILE_NAME ON)
 FetchContent_Declare(libsndfile
     GIT_REPOSITORY https://github.com/libsndfile/libsndfile
     GIT_SHALLOW ON

@@ -94,17 +94,32 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
 
+    if(NOT CROSS_BUILDING)
+        find_package(Vulkan REQUIRED volk)
+        target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
-    find_package(Vulkan REQUIRED volk)
+        target_link_libraries(${PROJECT_NAME}
+            PUBLIC 
+                Vulkan::Vulkan
+                Vulkan::volk
+        )
+    else()
+        target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_HEADERS_SOURCE_DIR}/include")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_LOADER_SOURCE_DIR}/loader")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
+        target_link_libraries(${PROJECT_NAME}
+            PUBLIC
+                VULKAN_HEADERS
+                VULKAN_LOADER
+                volk
+        )
+    endif()
     target_include_directories(${PROJECT_NAME} PRIVATE "${VMA_SOURCE_DIR}/include")
-    target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
-    target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
     target_link_libraries(${PROJECT_NAME}
-        PUBLIC 
-            Vulkan::Vulkan
-            Vulkan::volk
+        PUBLIC
             VulkanMemoryAllocator
     )
     if(WIN32)
@@ -118,7 +133,7 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
 
     message(STATUS "Using Vulkan APIs")
 elseif(NOT USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER)
-    message(STATUS "Not using Graphics APIs. Remember to implement your own or set it programmatically")
+    message(INFO "Not using Graphics APIs. Remember to implement your own or set it programmatically")
 else()
     message(FATAL_ERROR "Conflict between the renderer API backends. Check what API renderer you want to use and enable it, then disable all the other ones to proceed, or disable all.")
 endif()

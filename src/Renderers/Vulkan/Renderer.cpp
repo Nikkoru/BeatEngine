@@ -33,17 +33,14 @@
 
 
 bool VK_CHECK_SWAPCHAIN(VkResult result) {
-    if (result < VK_SUCCESS) {
-		if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-            Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Swapchain out of date. Requesting update");
-			return true;
-		}
-		auto msg = std::format("Vulkan error: {}", string_VkResult(result));
-        Logger::AddCritical("", msg);
-        THROW_RUNTIME_ERROR(msg);
-	}
-
-    return false;
+    if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+        Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Swapchain out of date. Requesting update");
+        return true;
+    }
+    else {
+        VK_CHECK(result);
+        return false;
+    }
 }
 
 template<typename... Args>
@@ -670,7 +667,7 @@ void VulkanRenderer::Clear() {
     auto time = clock.Get();
     auto sec = time.AsSeconds();
 
-    VkClearColorValue clearColor{ static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f };
+    VkClearColorValue clearColor{ {static_cast<float>(sin(sec)), static_cast<float>(cos(sec)), static_cast<float>(tan(sec)), 1.0f} };
     VkImageSubresourceRange imageRange{
         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
         .baseMipLevel = 0,
@@ -688,7 +685,8 @@ void VulkanRenderer::Update() {
 }
 
 void VulkanRenderer::SetGlobalShader(std::shared_ptr<Shader> shader) {
-
+    (void)shader;
+    // TODO: implement the load of shaders using pipelines
 }
 
 void VulkanRenderer::UpdateSwapchain() {
@@ -706,6 +704,7 @@ void VulkanRenderer::UpdateSwapchain() {
 
     VkImageViewCreateInfo viewInfo{ 
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO, 
+        .pNext = nullptr,
         .image = m_DrawImage.Image, 
         .viewType = VK_IMAGE_VIEW_TYPE_2D, 
         .format = VK_FORMAT_B8G8R8A8_UNORM, 
@@ -722,7 +721,9 @@ void VulkanRenderer::UpdateSwapchain() {
 }
 
 std::shared_ptr<Texture> VulkanRenderer::CreateTexture(std::filesystem::path path) {
+    (void)path;
     return nullptr;
+    // TODO: implement the creation of texture and save data in higher class Texture as Shader
 }
 
 std::shared_ptr<Shader> VulkanRenderer::CreateShader(std::filesystem::path path, Shader::Type type) {

@@ -62,8 +62,6 @@ void Game::Run() {
 		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
             if (event->Is<GameExitingEvent>())
                 Uninitialize();
-			// if (m_Context->GFlags & GameFlags_ImGui)
-			// 	ImGui::SFML::ProcessEvent(*m_Window, *event);
             if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 		    	m_GlobalLayers.OnEvent(event);
             }
@@ -251,6 +249,11 @@ void Game::DrawImGuiDebug() {
             ImGui::Text("Delta: %.3f (%.1f ms)", LastDelta, LastDelta * 1000);
             ImGui::Text("FPS: %.2f", 1 / LastDelta);
 
+            ImGui::Separator();
+
+            ImGui::Text("Build date: %s", __DATE__);
+            ImGui::Text("Build time: %s", __TIME__);
+
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Context")) {
@@ -383,7 +386,6 @@ void Game::InitUI() {
 
 void Game::InitAudio() {
 	Logger::AddDebug(typeid(Game), "Initializing audio...");
-    Logger::AddWarning(typeid(Game), "AudioManager is in a broken state. It is not recomended to use it. Any call for this manager please comment it out as AudioManager is not initialized. You can still use it if BEATENGINE_TEST is defined.");
 
     m_State.GetAudioMgr().Init();
 }
@@ -427,7 +429,7 @@ void Game::InitKeybinds() {
 void Game::SubscribeToGameEvent() {
 	Logger::AddDebug(typeid(Game), "Subscribing to game events...");
 
-    EventManager::GetInstance()->Subscribe<GameSettingsChangedEvent>([this](std::shared_ptr<Base::Event> event) {
+    EventManager::GetInstance()->Subscribe<GameSettingsChangedEvent>([this](std::shared_ptr<Base::Event> _) {
         
         auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
         
@@ -479,13 +481,9 @@ void Game::SubscribeToGameSignals() {
 		signal->Layer = nullptr;
 	});
 
-    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> _) {
         EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-        // m_Cursor = sf::Cursor::createFromSystem(sf::Cursor::Type::Arrow).value();
-        // m_Window->setMouseCursor(m_Cursor);
         Uninitialize();
-        m_Running = false;
-        // exit(0);
     });
 
     // SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -522,7 +520,7 @@ void Game::SubscribeToGameSignals() {
         this->m_Context.VFlags &= ~gameSig->Flags;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> _) {
             if (m_Context.GFlags & GameFlags_DrawDebugInfo)
                 m_Context.GFlags &= ~GameFlags_DrawDebugInfo;
             else

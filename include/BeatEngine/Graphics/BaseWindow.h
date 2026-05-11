@@ -23,15 +23,15 @@ public:
 
     virtual std::optional<Base::Event> PollEvent() = 0;
 
-    virtual void SetSize(const Vector2u size) {};
-    virtual void SetMinimumSize(const Vector2u size) {};
-    virtual void SetMaximumSize(const Vector2u size) {};
-    virtual void SetTitle(const std::string title) {};
-    virtual void SetPosition(const Vector2i pos) {};
-    virtual void SetFullscreen(bool fullscreen) {};
-    virtual void SetVSyncMode(VSyncMode vsync) {};
-    virtual void SetCursorGrabbed(bool grabbed) {};
-    virtual void SetCursorVisible(bool visible) {};
+    virtual void SetSize(const Vector2u size) { (void)size; };
+    virtual void SetMinimumSize(const Vector2u size) { (void)size; };
+    virtual void SetMaximumSize(const Vector2u size) { (void)size; };
+    virtual void SetTitle(const std::string title) { (void)title; };
+    virtual void SetPosition(const Vector2i pos) { (void)pos; };
+    virtual void SetFullscreen(bool fullscreen) { (void)fullscreen; };
+    virtual void SetVSyncMode(VSyncMode vsync) { (void)vsync; };
+    virtual void SetCursorGrabbed(bool grabbed) { (void)grabbed; };
+    virtual void SetCursorVisible(bool visible) { (void)visible; };
 
     virtual Vector2u GetSize() const { return {}; }
     virtual Vector2u GetMinimumSize() const { return {}; }

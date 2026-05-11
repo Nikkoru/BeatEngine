@@ -4,9 +4,8 @@
 #include <filesystem>
 #include <memory>
 #include <miniaudio.h>
-#include <numeric>
 #include <sndfile.h>
-#include <taglib/taglib.h>
+#include <taglib/tag.h>
 #include <typeindex>
 
 #include "BeatEngine/Asset/Shader.h"
@@ -17,7 +16,6 @@
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Enum/AssetType.h"
-#include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
 #include "BeatEngine/GameContext.h"
@@ -201,7 +199,7 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			auto sndFile = sf_open(fullpath.c_str(), SFM_READ, &sfInfo);
 			if (sndFile) {
 				totalFrames = sfInfo.frames;
-                seconds = totalFrames / sfInfo.samplerate;
+                seconds = static_cast<float>(totalFrames) / sfInfo.samplerate;
 			}
 			else {
                 Logger::AddError(typeid(AssetManager), "Failed to retreive frame count data of \"{}\"", name);

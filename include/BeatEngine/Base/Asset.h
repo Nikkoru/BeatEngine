@@ -14,11 +14,11 @@ namespace Base {
 	private:
 		template <typename> friend class AssetHandle;
 
+		std::weak_ptr<T> m_Ptr{};
 		UID m_AssetID{ 0 };
-		std::weak_ptr<T> m_Ptr;
 	public:
-		AssetHandle() = default;
-		AssetHandle(std::weak_ptr<T> ptr) : m_Ptr(ptr), m_AssetID() {}
+		AssetHandle() = default;		
+        AssetHandle(std::weak_ptr<T> ptr) : m_Ptr(ptr), m_AssetID() {}
 		AssetHandle(std::shared_ptr<T> ptr) : m_Ptr(ptr), m_AssetID() {}
 
 		AssetHandle(const AssetHandle<T>& other) : m_Ptr(other.m_Ptr), m_AssetID(other.m_AssetID) {}

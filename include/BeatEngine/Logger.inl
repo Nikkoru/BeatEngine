@@ -19,14 +19,16 @@ void Logger::AddLog(std::string logType, std::string caller, std::string_view fm
     std::string formattedLog{};
     std::string savedLog{};
 
+    std::format_args fmt_elms = std::make_format_args();
+
     auto unescapedLogType = logType; 
-    auto unescapedLogTypeIt = std::remove_if(unescapedLogType.begin(), unescapedLogType.end(), [](unsigned char c) {
+
+    std::remove_if(unescapedLogType.begin(), unescapedLogType.end(), [](unsigned char c) {
         return std::iscntrl(c);
     });
-    unescapedLogType.erase(unescapedLogTypeIt, unescapedLogType.end());
-    
+        
     if constexpr (sizeof...(elms) > 0) {
-        std::format_args fmt_elms = std::make_format_args(elms...);
+        fmt_elms = std::make_format_args(elms...);
         preFormattedLog = std::vformat(fmt, fmt_elms);
     }
     else
@@ -48,7 +50,7 @@ void Logger::AddLog(std::string logType, std::string caller, std::string_view fm
         savedLog = std::format("{} [{}] {}", nowStr, unescapedLogType, preFormattedLog);
     }
 
-    std::cout << formattedLog << std::endl;
+    std::cout << formattedLog << '\n';
 
 	GetInstance()->m_Logs.push_back({ now.AsMicroseconds(), { LogTypeUtils::StringToType(logType), savedLog } });
 }

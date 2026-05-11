@@ -23,7 +23,7 @@ void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u win
 
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Initializing SDL Window");
 
-    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
 
     if (windowTitle == "")
         windowTitle = "BeatEngine Game";

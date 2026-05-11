@@ -2,14 +2,14 @@
     "version": 3,
     "configurePresets": [
         {
-            "name": "windows-base",
+            "name": "windows-base-gcc",
             "hidden": true,
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/out/build/${presetName}",
             "installDir": "${sourceDir}/out/install/${presetName}",
             "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe"
+                "CMAKE_C_COMPILER": "gcc.exe",
+                "CMAKE_CXX_COMPILER": "g++.exe"
             },
             "condition": {
                 "type": "equals",
@@ -18,9 +18,9 @@
             }
         },
         {
-            "name": "x64-debug",
-            "displayName": "x64 Debug",
-            "inherits": "windows-base",
+            "name": "x64-debug-gcc",
+            "displayName": "x64 Debug GCC",
+            "inherits": "windows-base-gcc",
             "architecture": {
                 "value": "x64",
                 "strategy": "external"
@@ -30,17 +30,17 @@
             }
         },
         {
-            "name": "x64-release",
-            "displayName": "x64 Release",
-            "inherits": "x64-debug",
+            "name": "x64-release-gcc",
+            "displayName": "x64 Release GCC",
+            "inherits": "x64-debug-gcc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
         },
         {
-            "name": "x86-debug",
-            "displayName": "x86 Debug",
-            "inherits": "windows-base",
+            "name": "x86-debug-gcc",
+            "displayName": "x86 Debug GCC",
+            "inherits": "windows-base-gcc",
             "architecture": {
                 "value": "x86",
                 "strategy": "external"
@@ -50,9 +50,58 @@
             }
         },
         {
-            "name": "x86-release",
-            "displayName": "x86 Release",
-            "inherits": "x86-debug",
+            "name": "x86-release-gcc",
+            "displayName": "x86 Release GCC",
+            "inherits": "x86-debug-gcc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "windows-base-msvc",
+            "hidden": true,
+            "inherits": "windows-base-gcc",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        },
+        {
+            "name": "x64-debug-msvc",
+            "displayName": "x64 Debug MSVC",
+            "inherits": "windows-base-msvc",
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x64-release-msvc",
+            "displayName": "x64 Release MSVC",
+            "inherits": "x64-debug-msvc",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "x86-debug-msvc",
+            "displayName": "x86 Debug MSVC",
+            "inherits": "windows-base-msvc",
+            "architecture": {
+                "value": "x86",
+                "strategy": "external"
+            },
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "x86-release-msvc",
+            "displayName": "x86 Release MSVC",
+            "inherits": "x86-debug-msvc",
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Release"
             }
@@ -88,6 +137,29 @@
             }
         },
         {
+            "name": "linux-cross-windows-x64-release",
+            "displayName": "Windows x64 Release",
+            "inherits": "linux-release",
+            "toolchainFile": "toolchains/mingw-w64-toolchain.cmake",
+            "cacheVariables": {
+                "VULKAN_SDK": {
+                    "type": "PATH",
+                    "value": "$env{HOME}/VulkanSDK-win"
+                },
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS": "-o ${sourceDirName}.exe -static"
+            }
+        },
+        {
+            "name": "linux-cross-windows-x64-debug",
+            "displayName": "Windows x64 Debug",
+            "inherits": "linux-cross-windows-x64-release",
+            "toolchainFile": "toolchains/mingw-w64-toolchain.cmake",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
             "name": "macos-debug",
             "displayName": "macOS Debug",
             "generator": "Ninja",
@@ -112,6 +184,54 @@
         {
             "name": "linux-debug",
             "configurePreset": "linux-debug"
+        },
+        {
+            "name": "linux-release",
+            "configurePreset": "linux-release"
+        },
+        {
+            "name": "linux-cross-windows-x64-debug",
+            "configurePreset": "linux-cross-windows-x64-debug"
+        },
+        {
+            "name": "linux-cross-windows-x64-release",
+            "configurePreset": "linux-cross-windows-x64-release"
+        },
+        {
+            "name": "macos-debug",
+            "configurePreset": "macos-debug"
+        },
+        {
+            "name": "x64-debug-gcc",
+            "configurePreset": "x64-debug-gcc"
+        },
+        {
+            "name": "x64-debug-msvc",
+            "configurePreset": "x64-debug-msvc"
+        },
+        {
+            "name": "x64-release-gcc",
+            "configurePreset": "x64-release-gcc"
+        },
+        {
+            "name": "x64-release-msvc",
+            "configurePreset": "x64-release-msvc"
+        },
+                {
+            "name": "x86-debug-gcc",
+            "configurePreset": "x86-debug-gcc"
+        },
+        {
+            "name": "x86-debug-msvc",
+            "configurePreset": "x86-debug-msvc"
+        },
+        {
+            "name": "x86-release-gcc",
+            "configurePreset": "x86-release-gcc"
+        },
+        {
+            "name": "x86-release-msvc",
+            "configurePreset": "x86-release-msvc"
         }
     ]
 }

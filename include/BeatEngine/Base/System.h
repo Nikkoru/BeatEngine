@@ -9,7 +9,7 @@ namespace Base {
 	public:
 		virtual void Start() {}
 		virtual void Stop() {}
-		virtual void Update(float dt) {};
+		virtual void Update(float dt) { (void)dt; };
 	public:
 		System() = default;
 		virtual ~System() = default;
