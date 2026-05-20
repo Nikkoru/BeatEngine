@@ -44,6 +44,8 @@ public:
 
     void OnRender() override;
     void OnDisplay() override;
+
+    void ImGuiWindowContent() override;
 public:
     void SetFlags(SDL_WindowFlags flags);
     void AddFlags(SDL_WindowFlags flags);

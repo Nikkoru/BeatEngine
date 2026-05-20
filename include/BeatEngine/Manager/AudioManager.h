@@ -14,7 +14,11 @@ class GameState;
 class AudioManager {
 private:
 	PaStream* m_AudioStream{ nullptr };
+    PaDeviceIndex m_ActiveDevice{};
+    const PaDeviceInfo* m_DeviceInfo{ nullptr };
+    const PaHostApiInfo* m_ApiInfo{ nullptr };
     PaStreamParameters m_StreamParameters{};
+
 	uint64_t m_SampleRate{ 48000 };
 
 	std::vector<std::shared_ptr<Sound>> m_Sounds;
@@ -103,4 +107,6 @@ public:
 	bool AllSoundsDone() const;
 
     void ShowImGuiDebugWindow();
+private:
+    void CreateStream();
 };

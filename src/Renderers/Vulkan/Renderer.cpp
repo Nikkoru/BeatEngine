@@ -12,7 +12,6 @@
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/System/Time.h"
-#include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/GameContext.h"
 
 #include <SDL3/SDL_video.h>

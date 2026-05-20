@@ -23,9 +23,11 @@ void Logger::AddLog(std::string logType, std::string caller, std::string_view fm
 
     auto unescapedLogType = logType; 
 
-    std::remove_if(unescapedLogType.begin(), unescapedLogType.end(), [](unsigned char c) {
-        return std::iscntrl(c);
-    });
+    {
+        auto _ = std::remove_if(unescapedLogType.begin(), unescapedLogType.end(), [](unsigned char c) {
+            return std::iscntrl(c);
+        });
+    }
         
     if constexpr (sizeof...(elms) > 0) {
         fmt_elms = std::make_format_args(elms...);

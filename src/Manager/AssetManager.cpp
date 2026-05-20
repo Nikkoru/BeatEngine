@@ -115,8 +115,6 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 			ma_result result;
 			ma_decoder decoder;
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 48000);
-
-			
 			
 			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
 
@@ -485,7 +483,7 @@ void AssetManager::ShowImGuiDebugWindow() {
     }
     ImGui::SameLine();
     if (ImGui::Button("Clear ALL Assets")) {
-
+        ImGui::OpenPopup("Sure?");
     }
     auto center = ImGui::GetMainViewport()->GetCenter();
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));

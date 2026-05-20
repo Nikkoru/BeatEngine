@@ -50,12 +50,12 @@ private:
     DescriptorAllocator m_GlobalDescriptorAllocator;
     VkDescriptorSet m_ImageDescriptor{ VK_NULL_HANDLE };
     VkDescriptorSetLayout m_ImageDescriptorLayout{ VK_NULL_HANDLE };
+    VmaAllocator m_Allocator{ VK_NULL_HANDLE };
 private:
     bool m_StopRendering{ false };
     bool m_UpdateSwapchain{ false };
     bool m_CreateDebugMessenger{ true };
-    int m_FrameNumber{};
-    VmaAllocator m_Allocator{ VK_NULL_HANDLE };
+    uint64_t m_FrameNumber{};
 private:
     inline FrameData& GetCurrentFrame() { return m_Frames[m_FrameNumber % FRAME_OVERLAP]; }
 private:

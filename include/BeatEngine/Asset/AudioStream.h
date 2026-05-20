@@ -3,11 +3,7 @@
 #include "BeatEngine/Base/Asset.h"
 
 #include <miniaudio.h>
-#ifdef _WIN32
 #include <taglib/fileref.h>
-#else
-#include <taglib/fileref.h>
-#endif
 #include <samplerate.h>
 #include <taglib/tag.h>
 #include <vector>
@@ -50,6 +46,7 @@ private:
 	uint64_t m_OutputFrameCount = 0;
 
 	std::vector<float> m_ResampledBuffer[2];
+    std::vector<float> m_TotalFrameData{};
 	std::vector<float> m_BufferToResample;
 
 	std::jthread m_BufferThread;
@@ -70,7 +67,7 @@ private:
 	uint64_t m_BufferedFrameCount[2] = { 0, 0 };
 
 	float m_Volume = 1.0f;
-	float m_Pan = 0.0f;
+	float m_Pan = 0.5f;
 
 	bool m_Playing = false;
 	bool m_Erase = false;
@@ -113,6 +110,9 @@ public:
     const std::vector<float> GetResampledBufferL();
     int GetCurrentFrameOffset();
     const std::vector<float> GetResampledBufferR();
+
+    const std::vector<float>& GetAllFrames();
+    void FreeTotalFrameData();
 
     float GetTotalSeconds();
     float GetTranscurredSeconds();

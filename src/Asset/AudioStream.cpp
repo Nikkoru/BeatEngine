@@ -10,17 +10,10 @@
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <thread>
+#include <vector>
 
 void AudioStream::FillBuffers() {
     using namespace std::chrono_literals;
-
-    static Clock timeToClock;
-    static Clock usageClock;
-    static float seconds{};
-    static float delta{};
-    static std::vector<float> aprox;
-    timeToClock.Start();
-    usageClock.Start();
 
     while (m_Fill.load()) {
         int bufferToFill = -1;
@@ -65,7 +58,7 @@ void AudioStream::FillBuffers() {
         m_SrcData.src_ratio = m_SrcRatio;
         m_SrcData.end_of_input = m_LastBufferRound ? 1 : 0;
 
-        int err = src_process(m_SrcState, &m_SrcData);
+int err = src_process(m_SrcState, &m_SrcData);
         if (err) {
             std::string msg = "Sample rate conversion failed: " + std::string(src_strerror(err));
             Logger::AddCritical(typeid(AudioStream), msg);
@@ -88,27 +81,7 @@ void AudioStream::FillBuffers() {
 
             m_IsBufferReady[bufferToFill].store(true);
         }
-
-        delta = timeToClock.GetAndReset().AsSeconds();
-        if (seconds += delta; seconds >= 1) {
-            float pro{}; 
-
-            for (const auto& time : aprox) {
-                pro += time;
-            }
-
-            Logger::AddLog(LogType::DebugTarget, "", "time aproximated for filling: {:.3f}s ({} fills per second)", pro / aprox.size(), aprox.size());
-            aprox.clear();
-
-            seconds = 0;
-        }
-        else {
-            aprox.emplace_back(delta);
-        }
-	}
-
-    auto time = usageClock.GetAndStop();
-    Logger::AddLog(LogType::DebugTarget, "", "stop filling, running for {:.3f}s", time.AsSeconds());
+    }
 }
 
 void AudioStream::AsyncFillBuffers() {
@@ -216,6 +189,8 @@ void AudioStream::SetDataBufferFrameCount(uint64_t bufferSize) {
 
 
 void AudioStream::Play() {
+    // NOTE: for some reason in XOrg the stream playback saturates the bass and also makes the pan value useless
+
     m_LastBufferRound = false;
 
     if (!m_Fill.load()) {
@@ -274,7 +249,7 @@ void AudioStream::AddSeconds(float seconds) {
 }
 
 void AudioStream::CalcTranscurredSeconds() {
-    m_TranscurredSeconds = (static_cast<float>(m_TotalReadFrames) / static_cast<float>(m_TargetSampleRate)) / 1000;
+    m_TranscurredSeconds = (static_cast<float>(m_TotalReadFrames) / static_cast<float>(m_TargetSampleRate));
 }
 
 void AudioStream::ResetSeconds() {
@@ -323,6 +298,57 @@ int AudioStream::GetCurrentFrameOffset() {
 
 const std::vector<float> AudioStream::GetResampledBufferR() {
     return m_ResampledBuffer[1];
+}
+
+const std::vector<float>& AudioStream::GetAllFrames() {
+    std::vector<float> rawFrames;
+
+    if (m_TotalFrameData.empty()) {
+        ma_uint64 totalFrames;
+        ma_uint64 framesRead;
+
+        m_Playing = false;
+        ma_decoder_seek_to_pcm_frame(&m_Decoder, 0);
+        ma_decoder_get_length_in_pcm_frames(&m_Decoder, &totalFrames);
+        Logger::AddDebug("", "totalFrames {}", totalFrames);
+        rawFrames.resize(totalFrames * 2);
+        ma_decoder_read_pcm_frames(&m_Decoder, rawFrames.data(), totalFrames, &framesRead);
+        Logger::AddDebug("", "totalReadFrames {}", framesRead);
+        ma_decoder_seek_to_pcm_frame(&m_Decoder, m_TotalReadFrames);
+        rawFrames.shrink_to_fit();
+        m_TotalFrameData.resize(rawFrames.size());
+
+        if (rawFrames.data() == nullptr)
+            THROW_RUNTIME_ERROR("rawFrames is nullptr");
+
+        if (m_TotalFrameData.data() == nullptr)
+            THROW_RUNTIME_ERROR("m_TotalFrameData is nullptr");
+
+        auto srcCopy = m_SrcData;
+
+        m_SrcData.data_in = rawFrames.data();
+        m_SrcData.data_out = m_TotalFrameData.data();
+        m_SrcData.input_frames = totalFrames;
+        m_SrcData.output_frames = 0;
+        m_SrcData.src_ratio = m_SrcRatio;
+        m_SrcData.end_of_input = 0;
+
+        int err = src_process(m_SrcState, &m_SrcData);
+        if (err) {
+            std::string msg = "Sample rate conversion failed: " + std::string(src_strerror(err));
+            Logger::AddCritical(typeid(AudioStream), msg);
+            THROW_RUNTIME_ERROR(msg);
+        }
+
+        m_SrcData = srcCopy;
+        m_Playing = true;
+    }
+
+    return m_TotalFrameData;
+}
+
+void AudioStream::FreeTotalFrameData() {
+    m_TotalFrameData.clear();
 }
 
 float AudioStream::GetTotalSeconds() {

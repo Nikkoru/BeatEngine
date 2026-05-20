@@ -1,5 +1,4 @@
 #include <filesystem>
-#define BEATENGINE_TEST
 
 #include "BeatEngine/Logger.h"
 #include "view/gameView.h"
@@ -54,7 +53,7 @@ int main(int argc, char** argv) {
 
     // game.SetRenderer<OpenGLRenderer>();
 
-	// game.SetWindowTitle("Now you can change the title!");
+	game.SetWindowTitle("Now you can change the title!");
     game.SetWindowSize({ 1280, 720 });
     
 

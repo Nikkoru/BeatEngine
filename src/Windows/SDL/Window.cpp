@@ -183,6 +183,13 @@ void SDLWindow::OnDisplay() {
 
 }
 
+void SDLWindow::ImGuiWindowContent() {
+    ImGui::Text("SDL Window");
+    ImGui::Text("Window Title: %s", GetTitle().c_str());
+    ImGui::Text("Window Size: (X: %u, Y: %u)", GetSize().X, GetSize().Y);
+    ImGui::Text("Window Position: (X: %u, Y: %u)", GetPosition().X, GetPosition().Y);
+}
+
 void SDLWindow::SetFlags(SDL_WindowFlags flags) {
     m_Flags = flags;
 }

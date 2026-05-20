@@ -1,10 +1,7 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Asset/Shader.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "imgui.h"
-#include <future>
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -55,10 +52,7 @@ void GraphicsManager::ShowImGuiDebugWindow() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Window")) {
-            auto window = GetWindow();
-            ImGui::Text("Window Title: %s", window->GetTitle().c_str());
-            ImGui::Text("Window Size: (X: %u, Y: %u)", window->GetSize().X, window->GetSize().Y);
-            ImGui::Text("Window Position: (X: %u, Y: %u)", window->GetPosition().X, window->GetPosition().Y);
+            m_Renderer->GetWindow()->ImGuiWindowContent();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
@@ -89,7 +83,8 @@ void GraphicsManager::SetWindowSize(Vector2u size) {
 }
 
 void GraphicsManager::SetFramerateLimit(unsigned int fps) {
-    
+    (void)fps;
+    // TODO: need a way to limit the renderer fps, probably hold the fps limit data to the window 
 }
 
 void GraphicsManager::Render() {

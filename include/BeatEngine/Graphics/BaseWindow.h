@@ -44,4 +44,6 @@ public:
 
     virtual void OnRender() {};
     virtual void OnDisplay() {};
+
+    virtual void ImGuiWindowContent() {};
 };
