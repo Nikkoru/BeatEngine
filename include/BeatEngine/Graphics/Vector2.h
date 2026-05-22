@@ -1,5 +1,7 @@
 #pragma once
 
+// #include <imgui.h>
+
 template<typename T>
 class Vector2 {
 public:
@@ -8,6 +10,7 @@ public:
 public:
     constexpr Vector2() = default;
     constexpr Vector2(T x, T y);
+    // constexpr Vector2(ImVec2 vec);
 
     constexpr Vector2<T> operator*=(Vector2<T> right);
     constexpr Vector2<T> operator*=(T right);
@@ -17,6 +20,8 @@ public:
     constexpr Vector2<T> operator-=(Vector2<T> right);
     constexpr bool operator==(Vector2<T> right);
     constexpr bool operator!=(Vector2<T> right);
+
+    // constexpr Vector2<T> operator=(ImVec2 vec);
 };
 
 using Vector2i = Vector2<int>;

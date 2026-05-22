@@ -12,7 +12,7 @@ public:
     constexpr Time(const std::chrono::duration<Rep, Period>& duration);
 
     constexpr float AsSeconds() const;
-    constexpr int32_t AsMilliseconds() const;
+    constexpr float AsMilliseconds() const;
     constexpr int64_t AsMicroseconds() const;
     constexpr std::chrono::time_point<std::chrono::system_clock> AsTimePoint() const;
     constexpr time_t AsTimeT() const;

@@ -27,7 +27,7 @@ void SettingsManager::ReadConfig(fs::path path) {
     if (path.empty())
         return;
 
-	Logger::AddInfo(typeid(SettingsManager), "Reading config file \"{}\"", path.stem().string());
+	Logger::AddDebug(typeid(SettingsManager), "Reading config file \"{}\"", path.stem().string());
 	const char* iniData = GetTextData(path);
 	if (iniData != NULL) {
 		size_t iniSize = strlen(iniData);
@@ -59,7 +59,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 		free(buf);
 	}
 	else {
-		Logger::AddWarning(typeid(SettingsManager), "File doesn't exists, creating file");
+		Logger::AddWarning(typeid(SettingsManager), "File doesn't exist, creating file");
 		std::ofstream f(path);
 		f.close();
 	}
@@ -70,7 +70,7 @@ void SettingsManager::WriteConfig(fs::path path) {
     if (path.empty())
         return;
 
-	Logger::AddInfo(typeid(SettingsManager), "Writing config");
+	Logger::AddInfo(typeid(SettingsManager), "Writing config to \"{}\"", path.stem().string());
 
 	std::ofstream file(path);
 
@@ -137,7 +137,7 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::ShowImGuiDebugWindow() {
-    ImGui::Begin("BeatEngine SettingsManager Debug Window");
+    ImGui::Begin("SettingsManager Debug");
     static char path[50];
     ImGui::Text("Settings : %zu", m_Settings.size());
     ImGui::InputText("Path to write/read from", path, 50);
@@ -165,6 +165,7 @@ char* SettingsManager::GetTextData(fs::path path) {
 		memcpy(bufChar, buf.data(), fileSize);
 	}
 	else {
+        Logger::AddError(typeid(SettingsManager), "Failed to retrieve text data from \"{}\"", path.stem().string());
 		delete[] bufChar;
 		return nullptr;
 	}

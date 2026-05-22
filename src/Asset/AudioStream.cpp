@@ -1,9 +1,10 @@
 #include "BeatEngine/Asset/AudioStream.h"
 
 #include "BeatEngine/Util/Exception.h"
+#include "BeatEngine/Util/Math.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Logger.h"
 
-#include "BeatEngine/Util/Math.h"
 #include <cmath>
 #include <cstdint>
 #include <extras/nodes/ma_vocoder_node/ma_vocoder_node.h>
@@ -13,6 +14,7 @@
 #include <vector>
 
 void AudioStream::FillBuffers() {
+    Profiler::StartProfile({ typeid(AudioStream), "FillBuffers" }, { 0.1f, 1.0f, 1.0f, 1.0f });
     using namespace std::chrono_literals;
 
     while (m_Fill.load()) {
@@ -58,7 +60,7 @@ void AudioStream::FillBuffers() {
         m_SrcData.src_ratio = m_SrcRatio;
         m_SrcData.end_of_input = m_LastBufferRound ? 1 : 0;
 
-int err = src_process(m_SrcState, &m_SrcData);
+        int err = src_process(m_SrcState, &m_SrcData);
         if (err) {
             std::string msg = "Sample rate conversion failed: " + std::string(src_strerror(err));
             Logger::AddCritical(typeid(AudioStream), msg);
@@ -82,6 +84,7 @@ int err = src_process(m_SrcState, &m_SrcData);
             m_IsBufferReady[bufferToFill].store(true);
         }
     }
+    Profiler::EndProfile({ typeid(AudioStream), "FillBuffers" });
 }
 
 void AudioStream::AsyncFillBuffers() {
@@ -232,6 +235,7 @@ void AudioStream::Stop() {
     ResetSeconds();
 
     Logger::AddDebug("", "Stream \"{}\" stoped!", m_Name);
+    Profiler::DeleteProfileEntry({ typeid(AudioStream), "FillBuffers" });
 }
 
 void AudioStream::Resume() {

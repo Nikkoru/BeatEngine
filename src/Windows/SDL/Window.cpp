@@ -8,6 +8,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
 #include <backends/imgui_impl_sdl3.h>
@@ -171,12 +172,14 @@ std::optional<Base::Event> SDLWindow::PollEvent() {
 }
 
 void SDLWindow::OnRender() {
+    Profiler::StartProfile({ typeid(SDLWindow), "OnRender" }, IM_COL32(0, 50, 255, 255));
     if (m_Context->GFlags & GameFlags_ImGui) {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 
         ImGui::ShowDemoWindow();
     }
+    Profiler::EndProfile({ typeid(SDLWindow), "OnRender" });
 }
 
 void SDLWindow::OnDisplay() {

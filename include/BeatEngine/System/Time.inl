@@ -4,8 +4,8 @@ constexpr float Time::AsSeconds() const {
     return std::chrono::duration<float>(m_Duration).count();
 }
 
-constexpr int32_t Time::AsMilliseconds() const {
-    return std::chrono::duration_cast<std::chrono::duration<std::int32_t, std::milli>>(m_Duration).count();
+constexpr float Time::AsMilliseconds() const {
+    return std::chrono::duration_cast<std::chrono::duration<float, std::milli>>(m_Duration).count();
 }
 
 constexpr int64_t Time::AsMicroseconds() const {

@@ -1,16 +1,20 @@
 #include "BeatEngine/Game.h"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdlib>
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <limits>
 #include <memory>
 
+#include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/AssetType.h"
 #include "BeatEngine/Enum/EnvFlags.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Enum/ViewFlags.h"
+#include "BeatEngine/ImGui/MultiPlot.h"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Manager/EventManager.h"
@@ -28,6 +32,9 @@
 
 #include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/System/Time.h"
+
+#include "BeatEngine/Util/CountedArray.h"
+#include "BeatEngine/Util/Profiler.h"
 
 Game::Game() {
     m_State.CreateManagers(&m_Context);
@@ -168,6 +175,7 @@ void Game::RemoveFlags(GameFlags flags) {
 
 void Game::DrawImGuiDebug() {
     static bool editFlags = false;
+    static bool profWindow = false;
 
 
     ImGui::Begin("BeatEngine Game Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
@@ -179,6 +187,11 @@ void Game::DrawImGuiDebug() {
                 !dockingStatus ? m_Context.GFlags |= GameFlags_DebugDock :
                             m_Context.GFlags &= ~GameFlags_DebugDock;
             }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Behaviour")) {
+            if (ImGui::MenuItem("Profiler Window", NULL, profWindow))
+                profWindow = !profWindow;
             ImGui::EndMenu();
         }
 
@@ -246,13 +259,53 @@ void Game::DrawImGuiDebug() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Status")) {
-            ImGui::Text("Delta: %.3f (%.1f ms)", LastDelta, LastDelta * 1000);
-            ImGui::Text("FPS: %.2f", 1 / LastDelta);
+            static CountedArray<float, 50> deltas;
+            if (deltas.Full()) {
+                auto data = deltas.Data();
+                std::move(data + 1, data + 50, data);
+                data[50 - 1] = LastDelta;
+            }
+            else deltas.Add(LastDelta);
+            
+            float avgDelta{};
+            float minDelta{ std::numeric_limits<float>::max() };
+            float maxDelta{ std::numeric_limits<float>::min() };
+            for (const auto& delta : deltas) {
+                avgDelta += delta;
+                if (delta < minDelta)
+                    minDelta = delta;
+                if (delta > maxDelta)
+                    maxDelta = delta;
+            }
+            avgDelta /= deltas.UsedSize();
+
+            ImGui::Text("Raw Delta: %.3f (%.1f ms)", LastDelta, LastDelta * 1000);
+            ImGui::SameLine();
+            ImGui::Text("Raw FPS: %.2f", 1 / LastDelta);
+            ImGui::Text("Avg Delta: %.3f (%.1f ms)", avgDelta, avgDelta * 1000);
+            ImGui::SameLine();
+            ImGui::Text("Avg FPS: %.2f", 1 / avgDelta);
+            ImGui::Text("Min Delta: %.3f (%.1f ms)", minDelta, minDelta * 1000);
+            ImGui::SameLine();
+            ImGui::Text("Max FPS: %.2f", 1 / minDelta);
+            ImGui::Text("Max Delta: %.3f (%.1f ms)", maxDelta, maxDelta * 1000);
+            ImGui::SameLine();
+            ImGui::Text("Min FPS: %.2f", 1 / maxDelta);
 
             ImGui::Separator();
 
             ImGui::Text("Build date: %s", __DATE__);
             ImGui::Text("Build time: %s", __TIME__);
+
+            ImGui::EndTabItem();
+        }
+        if (profWindow) {
+            ImGui::Begin("Profiler", &profWindow);
+            Profiler::DrawHistogram(ImGui::GetContentRegionAvail());
+            ImGui::End();
+        }
+        else if (ImGui::BeginTabItem("Profiler")) {
+            Profiler::DrawHistogram(ImGui::GetContentRegionAvail());
 
             ImGui::EndTabItem();
         }
@@ -285,15 +338,19 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
 }
 
 void Game::Display() {
+    Profiler::StartProfile({ typeid(Game), "Display" }, { 1.0f, .0f, .0f, 1.0f });
     if (m_Context.GFlags & GameFlags_ImGui && m_Context.GFlags & GameFlags_DrawDebugInfo) {
         DrawImGuiDebug();
     }
 
     m_State.GetGraphicsMgr().Clear();
 	m_State.GetGraphicsMgr().Display();
+
+    Profiler::EndProfile({ typeid(Game), "Display" });
 }
 
 void Game::Draw() {
+    Profiler::StartProfile({ typeid(Game), "Draw" }, { .0f, .0f, 1.0f, 1.0f });
     m_State.GetGraphicsMgr().Render();
 
     if (m_Context.GFlags & GameFlags_DebugDock && 
@@ -323,6 +380,7 @@ void Game::Draw() {
         auto dockspaceId = ImGui::GetID("DebugDockspace");
         ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockFlags);
         ImGui::End();
+
     }
 
 	if (!m_State.GetViewMgr().OnDraw())
@@ -330,9 +388,12 @@ void Game::Draw() {
 
 	m_GlobalLayers.OnDraw();
     m_State.GetUIMgr().OnDraw();
+
+    Profiler::EndProfile({ typeid(Game), "Draw" });
 }
 
 void Game::Update() {
+    Profiler::StartProfile({ typeid(Game), "Update" }, { .0f, 1.0f, .0f, 1.0f });
     m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
     //
     // if (m_Context->GFlags & GameFlags_CursorChanged) {
@@ -355,6 +416,8 @@ void Game::Update() {
     m_State.GetUIMgr().Update(deltaTime);
 
     LastDelta = deltaTime;
+
+    Profiler::EndProfile({ typeid(Game), "Update" });
 }
 
 void Game::ApplyBaseSettings() {

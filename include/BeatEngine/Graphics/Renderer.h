@@ -11,6 +11,7 @@ class Renderer {
 protected:
     std::shared_ptr<BaseWindow> m_Window;
     GameContext* m_Context;
+    bool m_Profile{ false };
 public:
     Renderer() : Renderer(nullptr) {};
     Renderer(GameContext* context) : m_Context(context) {}

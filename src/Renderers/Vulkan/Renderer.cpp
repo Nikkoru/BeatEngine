@@ -7,12 +7,14 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Shader.h"
 #include "BeatEngine/Renderers/Vulkan/DescriptorBuilder.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Renderers/Vulkan/FrameData.h"
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/System/Time.h"
 #include "BeatEngine/GameContext.h"
+#include "imgui_internal.h"
 
 #include <SDL3/SDL_video.h>
 #include <imgui.h>
@@ -387,6 +389,7 @@ void VulkanRenderer::pInitImGui() {
     
     if (m_Context->GFlags & GameFlags_ImGuiDocking)
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    GImGui->ItemUnclipByLog = true; 
 
     ImGui_ImplSDL3_InitForVulkan(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl());
     
@@ -554,6 +557,8 @@ void VulkanRenderer::Render() {
     VK_CHECK(vkWaitForFences(m_Device, 1, &GetCurrentFrame().RenderFence, true, 1'000'000'000));
     VK_CHECK(vkResetFences(m_Device, 1, &GetCurrentFrame().RenderFence));
 
+    Profiler::StartProfile({ typeid(VulkanRenderer), "Render" }, IM_COL32(255, 0, 35, 255));
+
     if (VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1'000'000'000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex))) {
         UpdateSwapchain();
         return;
@@ -601,6 +606,8 @@ void VulkanRenderer::Render() {
         auto renderInfo = vki::GetRenderingInfo(extent, &colorAttachment, nullptr);
         vkCmdBeginRendering(GetCurrentFrame().ActiveCmdBuffer, &renderInfo);
     }
+
+    Profiler::EndProfile({ typeid(VulkanRenderer), "Render" });
 }
 
 void VulkanRenderer::RenderImGui() {

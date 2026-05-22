@@ -10,6 +10,7 @@
 #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
 #include <algorithm>
@@ -100,6 +101,7 @@ int AudioManager::SoundCallback(
     (void)inputBuffer;
     (void)timeInfo;
     (void)statusFlags;
+    Profiler::StartProfile({ typeid(AudioStream), "SoundCallback" }, IM_COL32(255, 0, 255, 255));
 
     // PERF: audio stream still is pretty expensive
 
@@ -203,6 +205,7 @@ int AudioManager::SoundCallback(
 	for (size_t i = 0; i < framesPerBuffer * 2; i++)
 		out[i] = static_cast<int16_t>(std::clamp<float>(mixBuffer[i], -1.0, 1.0) * _this->m_SampleRate);
 
+    Profiler::EndProfile({ typeid(AudioStream), "SoundCallback" });
 	return paContinue;
 }
 

@@ -15,6 +15,7 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/GameState.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
 ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
@@ -102,6 +103,7 @@ bool ViewManager::OnEvent(std::optional<Base::Event> event) {
 }
 
 bool ViewManager::OnDraw() {
+    Profiler::StartProfile({ typeid(ViewManager), "OnDraw" }, IM_COL32(255, 255, 0, 255));
 	if (!ViewStack.empty()) {
 		ViewStack.top()->OnDraw();
 		return true;
@@ -110,9 +112,11 @@ bool ViewManager::OnDraw() {
 		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
 		return false;
 	}
+    Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
 }
 
 bool ViewManager::OnUpdate(float dt) {
+    Profiler::StartProfile({ typeid(ViewManager), "OnUpdate" }, IM_COL32(255, 150, 0, 255));
 	if (!ViewStack.empty()) {
 		ViewStack.top()->OnUpdate(dt);
 		return true;
@@ -121,6 +125,7 @@ bool ViewManager::OnUpdate(float dt) {
 		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
 		return false;
 	}
+    Profiler::EndProfile({ typeid(ViewManager), "OnUpdate" });
 }
 
 bool ViewManager::OnExit() {

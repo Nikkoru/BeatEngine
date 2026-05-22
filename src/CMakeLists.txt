@@ -40,6 +40,7 @@
 	"${PROJECT_SOURCE_DIR}/src/Util/Exception.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/UIHelper.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/ChronoHelper.cpp"
+	"${PROJECT_SOURCE_DIR}/src/Util/Profiler.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/UID.cpp"
     "${PROJECT_SOURCE_DIR}/src/Util/Helper.cpp"
 
@@ -68,6 +69,8 @@
 
     "${PROJECT_SOURCE_DIR}/src/GameState.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Game.cpp"
+
+    "${PROJECT_SOURCE_DIR}/src/ImGui/MultiPlot.cpp"
 )
 
 set(SOURCES ${SOURCES} PARENT_SCOPE)

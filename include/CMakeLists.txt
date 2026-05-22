@@ -29,6 +29,8 @@ list(APPEND HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base/SignalResponse.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Base.h"
 
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/ImGui/MultiPlot.h"
+
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/BaseWindow.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/VSyncMode.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Graphics/Renderer.h"
@@ -82,6 +84,9 @@ list(APPEND HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Font.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/ChronoHelper.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Profiler.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/CountedArray.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/CountedArray.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/UID.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Math.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Util/Exception.h"

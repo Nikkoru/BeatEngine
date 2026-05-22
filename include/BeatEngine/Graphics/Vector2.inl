@@ -4,6 +4,10 @@ template<typename T>
 constexpr Vector2<T>::Vector2(T x, T y) : X(x), Y(y) {
 }
 
+// template<typename T>
+// constexpr Vector2<T>::Vector2(ImVec2 vec) : X(vec.x), Y(vec.y) {
+// }
+
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator*=(Vector2<T> right) {
     this->X *= right.X;
@@ -55,6 +59,13 @@ template<typename T>
 constexpr bool Vector2<T>::operator!=(Vector2<T> right) {
     return this->X != right.X || this->X != right.Y;
 }
+
+// template<typename T>
+// constexpr Vector2<T> Vector2<T>::operator=(ImVec2 vec) {
+//     this->X = vec.x;
+//     this->Y = vec.y;
+//     return *this;
+// }
 
 template<typename T>
 constexpr Vector2<T> operator-(Vector2<T> left, Vector2<T> right) {
