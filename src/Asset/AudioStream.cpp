@@ -1,13 +1,17 @@
 #include "BeatEngine/Asset/AudioStream.h"
 
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Util/Math.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Logger.h"
+#include "imgui.h"
 
 #include <cmath>
 #include <cstdint>
 #include <extras/nodes/ma_vocoder_node/ma_vocoder_node.h>
+#include <memory>
 #include <taglib/fileref.h>
 #include <taglib/tag.h>
 #include <thread>
@@ -369,4 +373,12 @@ uint64_t AudioStream::GetDataBufferFrameCount() const {
 
 bool AudioStream::Erase() const {
     return m_Erase;
+}
+
+void AudioStream::ShowImGuiDetails(bool* open) {
+    ImGui::Begin(m_Name.c_str(), open);
+    if (ImGui::Button("Play")) {
+        SignalManager::GetInstance()->Send(std::make_shared<PlayAudioStreamSignal>(m_Name));
+    }
+    ImGui::End();
 }

@@ -13,8 +13,8 @@ std::shared_ptr<SignalManager> SignalManager::GetInstance() {
 void SignalManager::Send(std::shared_ptr<Base::Signal> sig) {
 	if (!m_SignalCallbacks.empty())
 		if (m_SignalCallbacks.contains(sig->ID))
-			for (auto& [index, vector] : m_SignalCallbacks.at(sig->ID))
-				for (auto& callback : vector)
+			for (const auto& [index, vector] : m_SignalCallbacks.at(sig->ID))
+				for (const auto& callback : vector)
 					callback(sig);
 		else
 			Logger::AddWarning(typeid(SignalManager), "No callbacks registered for signal");

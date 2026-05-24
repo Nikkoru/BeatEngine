@@ -4,6 +4,7 @@
 #include "BeatEngine/Asset/Sound.h"
 #include "BeatEngine/Asset/AudioStream.h"
 
+#include <memory>
 #include <string>
 
 class PlaySoundSignal : public Base::Signal {
@@ -17,9 +18,11 @@ public:
 class PlayAudioStreamSignal : public Base::Signal {
 public:
 	Base::AssetHandle<AudioStream> AudioStreamHandle;
+    std::string AudioStreamName;
 public:
-	PlayAudioStreamSignal(std::shared_ptr<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound) {}
-	PlayAudioStreamSignal(Base::AssetHandle<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound) {}
+	PlayAudioStreamSignal(std::shared_ptr<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound), AudioStreamName(sound->GetName()) {}
+	PlayAudioStreamSignal(Base::AssetHandle<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound), AudioStreamName() {}
+	PlayAudioStreamSignal(std::string name) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(), AudioStreamName(name) {}
 };
 
 class PauseAudioStreamSignal : public Base::Signal {

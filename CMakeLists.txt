@@ -161,6 +161,7 @@ target_link_libraries(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/include")
+target_include_directories(${PROJECT_NAME} PRIVATE "${taglib_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")

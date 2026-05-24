@@ -1,5 +1,7 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
+#include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -23,6 +25,7 @@
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Util/Exception.h"
+#include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
 AssetManager::AssetManager(GameContext* context, GameState* state)
@@ -65,7 +68,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 			if (!m_ViewAssets.at(viewID).contains(name)) {
                 auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
 
-				handle = Base::AssetHandle<Texture>(texture);
+				handle = Base::AssetHandle<Texture>(texture, typeid(Texture));
 				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
 			}
 			else {
@@ -144,7 +147,7 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 
 			auto sound = std::make_shared<Sound>(name, data, frameCount, m_AudioSampleRate);
 
-			handle = Base::AssetHandle<Sound>(sound);
+			handle = Base::AssetHandle<Sound>(sound, typeid(Sound));
 
 			if (global)
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(sound) };
@@ -215,9 +218,9 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 
 			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, ref, seconds, static_cast<uint64_t>(totalFrames));
 
-			handle = Base::AssetHandle<AudioStream>(stream);
+			handle = Base::AssetHandle<AudioStream>(stream, typeid(AudioStream));
             if (global)
-                m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
+                m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream), typeid(AudioStream) };
             else
                 m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
 		}
@@ -246,7 +249,7 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 
 				auto font = std::make_shared<Font>();
 
-				handle = Base::AssetHandle<Font>(font);
+				handle = Base::AssetHandle<Font>(font, typeid(Font));
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
 			}
 			else {
@@ -306,15 +309,15 @@ Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader:
             m_ViewAssets[viewID];
         if (!m_ViewAssets.at(viewID).contains(name)) {
             auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
-            handle = Base::AssetHandle<Shader>(shader);
-
-            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader) };
+            handle = Base::AssetHandle<Shader>(shader, typeid(Shader));
+            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
         }
         else {
             Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
             handle = Base::AssetHandle<Shader>::Cast(m_ViewAssets.at(viewID)[name].Handle);
         }
     }
+    Logger::AddDebug(typeid(AssetManager), "Loaded Shader \"{}\"", name);
 
     return handle;
 }
@@ -324,6 +327,7 @@ bool AssetManager::Preload(AssetType type, const fs::path& path, std::type_index
     case AssetType::Texture:
     case AssetType::FragmentShader:
     case AssetType::VertexShader:
+    case AssetType::ComputeShader:
     case AssetType::Font:
         if (!m_AssetsToLoad.contains(type))
             m_AssetsToLoad[type];
@@ -380,10 +384,7 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 	if (global)
 		return m_GlobalAssets.contains(name);
 	else {
-		if (m_ViewAssets.contains(viewID))
-			return m_ViewAssets.at(viewID).contains(name);
-		else
-			return false;
+        return m_ViewAssets.contains(viewID) && m_ViewAssets.at(viewID).contains(name);
 	}
 }
 
@@ -391,8 +392,8 @@ void AssetManager::ShowImGuiDebugWindow() {
     ImGui::Begin("AssetManager Debug");
     ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
     ImGui::Text("View Assets: %zu", m_ViewAssets.size());
-    if (ImGui::Button("See Assets")) {
-        m_ShowAssetList = true;
+    if (ImGui::Button("Asset Browser")) {
+        m_ShowAssetBrowser = true;
     }
     
     static char buf[100];
@@ -439,7 +440,7 @@ void AssetManager::ShowImGuiDebugWindow() {
                 LoadShader(buf, Shader::Type::Fragment);
                 break;
             case AssetType::ComputeShader:
-                Logger::AddInfo("Still i don't implement compute shaders");
+                LoadShader(buf, Shader::Type::Compute);
                 break;
             case AssetType::None:
                 break;
@@ -468,7 +469,7 @@ void AssetManager::ShowImGuiDebugWindow() {
                 LoadShader(buf, Shader::Type::Fragment, activeView);
                 break;
             case AssetType::ComputeShader:
-                Logger::AddInfo("Still i don't implement compute shaders");
+                LoadShader(buf, Shader::Type::Compute, activeView);
                 break;
             case AssetType::None:
                 break;
@@ -530,8 +531,238 @@ void AssetManager::ShowImGuiDebugWindow() {
     }
     ImGui::End();
 
-    if (m_ShowAssetList) {
-        ImGui::Begin("Asset List", &m_ShowAssetList);
-        ImGui::End();
+    if (m_ShowAssetBrowser) {
+        ShowAssetBrowser();
     }
+}
+
+void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids, std::vector<Slot>& totalAssets) {
+    for (const auto& req : io->Requests) {
+        if (req.Type == ImGuiSelectionRequestType_SetAll) {
+            ids.clear();
+            if (req.Selected)
+                for (int i = 0; i < io->ItemsCount; i++) {
+                    auto handle = totalAssets[i].Handle;
+                    ids.emplace_back(handle.GetID());
+                }
+        }
+        else if (req.Type == ImGuiSelectionRequestType_SetRange) {
+            const int selectionChanges = req.RangeLastItem - req.RangeFirstItem + 1;
+            
+            if (selectionChanges == 1 || (selectionChanges < ids.size() / 100)) {
+                for (int i = req.RangeFirstItem; i <= req.RangeLastItem; i++) {
+                    auto id = totalAssets[i].Handle.GetID();
+                    if (req.Selected)
+                        ids.emplace_back(id);
+                    else {
+                        if (auto it = std::find(ids.begin(), ids.end(), id); it != ids.end()) {
+                            ids.erase(it);
+                        }
+                    }
+                }
+            }
+            else {
+                int selectionOrder = ((req.RangeDirection < 0) ? selectionChanges - 1 : 0);
+
+                for (int i = (int)req.RangeFirstItem; i <= (int)req.RangeLastItem; i++) {
+                    auto id = totalAssets[i + selectionOrder].Handle.GetID();
+                    if (req.Selected)
+                        ids.emplace_back(id);
+                    else {
+                        if (auto it = std::find(ids.begin(), ids.end(), id); it != ids.end())
+                            ids.erase(it);
+                    }
+                }
+            }
+        }
+    }
+}
+
+void AssetManager::ShowAssetBrowser() {
+    Profiler::StartProfile({ typeid(AssetManager), "ShowAssetBrowser" }, IM_COL32(150, 0, 100, 255));
+    std::vector<Slot> totalAssets;
+    std::vector<std::string> assetNames;
+    static std::vector<UID> selectedIds;
+    static std::vector<int> assetDetail;
+
+    for (const auto& [name, slot] : m_GlobalAssets) {
+        totalAssets.emplace_back(slot);
+        assetNames.emplace_back(name);
+    }
+
+    for (const auto& [_, map] : m_ViewAssets)
+        for (const auto& [name, slot] : map) {
+            totalAssets.emplace_back(slot);
+            assetNames.emplace_back(name);
+        }
+
+    assetDetail.resize(totalAssets.size());
+
+    static UID deleteAsset{ 0 };
+    ImGui::Begin("Asset List", &m_ShowAssetBrowser, ImGuiWindowFlags_MenuBar);
+    if (ImGui::BeginMenuBar()) {
+        if (ImGui::BeginMenu("File")) {
+            if (ImGui::MenuItem("Delete")) {
+            
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Layout")) {
+            ImGui::EndMenu();
+        }
+        ImGui::EndMenuBar();
+    }
+ 
+    if (ImGui::BeginChild("Assets", { .0f, -ImGui::GetTextLineHeightWithSpacing() }, ImGuiChildFlags_Borders, ImGuiWindowFlags_NoMove)) {
+        auto size = ImVec2{ 50, 50 };
+        auto spacing = 5;
+
+        auto drawList = ImGui::GetWindowDrawList();
+        float availWidth = ImGui::GetContentRegionAvail().x;
+
+        auto startPos = ImGui::GetCursorScreenPos();
+
+        auto columnCount = std::max(static_cast<int>(availWidth / (size.x + spacing)), 1);
+        spacing = std::floor(availWidth - size.x * columnCount) / columnCount;
+        int totalLines = (totalAssets.size() + columnCount - 1) / columnCount;
+
+        auto itemStep = ImVec2{ size.x + spacing, size.y + spacing };
+
+        auto multiFlags = ImGuiMultiSelectFlags_ClearOnEscape | ImGuiMultiSelectFlags_ClearOnClickVoid;
+        multiFlags |= ImGuiMultiSelectFlags_NavWrapX;
+        multiFlags |= ImGuiMultiSelectFlags_BoxSelect2d;
+
+        auto multiIO = ImGui::BeginMultiSelect(multiFlags, selectedIds.size(), totalAssets.size());
+        ApplySelections(multiIO, selectedIds, totalAssets);
+
+        const bool wantDelete = (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_Repeat));
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
+
+        const ImU32 iconBgColor = ImGui::GetColorU32(IM_COL32(35, 35, 35, 220));
+
+        ImGuiListClipper clipper;
+        clipper.Begin(totalLines, itemStep.y);
+
+        while(clipper.Step()) {
+            for (int lineIndex = clipper.DisplayStart; lineIndex < clipper.DisplayEnd; lineIndex++) {
+                const int minItemIndex = lineIndex * columnCount;
+                const int maxItemIndex = std::min((lineIndex + 1) * columnCount, static_cast<int>(totalAssets.size()));
+                for (int itemIndex = minItemIndex; itemIndex < maxItemIndex; itemIndex++) {
+                    auto& showDetails = assetDetail[itemIndex];
+                    auto assetData = totalAssets[itemIndex].Handle;
+                    auto assetType = totalAssets[itemIndex].Type;
+                    auto assetName = assetNames[itemIndex];
+                    const bool displayLabel = (size.x >= ImGui::CalcTextSize(assetName.c_str()).x);
+                    ImGui::PushID(assetData.GetID());
+
+                    auto pos = ImVec2{startPos.x + (itemIndex % columnCount) * itemStep.x, startPos.y + lineIndex * itemStep.y };
+                    ImGui::SetCursorScreenPos(pos);
+
+                    ImGui::SetNextItemSelectionUserData(itemIndex);
+                    bool selected{ false };
+                    bool visible = ImGui::IsRectVisible(size);
+
+                    for (auto& id : selectedIds) {
+                        if (id == assetData.GetID()) {
+                            selected = true;
+                            break;
+                        }
+                    }
+                    ImGui::Selectable("", selected, ImGuiSelectableFlags_AllowDoubleClick, size);
+                    if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && selected) {
+                        showDetails = 1;
+                    }
+
+                    if (ImGui::IsItemToggledSelection())
+                        selected = !selected;
+
+                    if (visible) {
+                        ImU32 labelCol = ImGui::GetColorU32(selected ? ImGuiCol_Text : ImGuiCol_TextDisabled);
+                        auto boxMin = ImVec2{ pos.x - 1, pos.y - 1 };
+                        auto boxMax = ImVec2{ boxMin.x + size.x + 2, boxMin.y + size.y + 2 };
+
+                        drawList->AddRectFilled(boxMin, boxMax, iconBgColor);
+
+
+                        std::string typeLabel;
+
+                        if (assetType == typeid(AudioStream))
+                            typeLabel = "A.S.";
+                        else if (assetType == typeid(Sound))
+                            typeLabel = "Sound";
+                        else if (assetType == typeid(Font))
+                            typeLabel = "Font";
+                        else if (assetType == typeid(Texture))
+                            typeLabel = "Texture";
+                        else if (assetType == typeid(Shader)) {
+                            auto asset = Base::AssetHandle<Shader>::Cast(assetData).Get();
+                            auto type = asset->GetType();
+                            char shaderType;
+                            switch (type) {
+                                case Shader::Type::Compute:
+                                    shaderType = 'C';
+                                    break;
+                                case Shader::Type::Fragment:
+                                    shaderType = 'F';
+                                    break;
+                                case Shader::Type::Vertex:
+                                    shaderType = 'V';
+                                    break;
+                            }
+                            typeLabel = std::format("Shader {}", shaderType);
+                        }
+                        else {
+                            typeLabel = "Unknown";
+                        }
+
+                        drawList->AddText({ boxMax.x - ImGui::CalcTextSize(typeLabel.c_str()).x, boxMin.y }, labelCol, typeLabel.c_str());
+
+                        if (displayLabel) {
+                            drawList->AddText(ImVec2(boxMin.x, boxMax.y - ImGui::GetFontSize()), labelCol, assetName.c_str());
+                        }
+                        else {
+                            auto trunName = assetName.substr(0, 4);
+                            drawList->AddText(ImVec2(boxMin.x, boxMax.y - ImGui::GetFontSize()), labelCol, std::format("{}...", trunName).c_str());
+                        }
+
+                        if (showDetails == 1) {
+                            auto col = ImGui::ColorConvertU32ToFloat4(labelCol);
+                            drawList->AddRectFilled({ boxMin.x + 8, boxMin.y + 8 }, { boxMin.x + 4, boxMin.y + 4 }, ImGui::ColorConvertFloat4ToU32({ .0f, .0f, 1.0f, col.w }));
+                        }
+                    }
+                    
+                    ImGui::PopID();
+                }
+            }
+        }
+        clipper.End();
+        ImGui::PopStyleVar();
+
+        if (ImGui::BeginPopupContextWindow()) {
+            ImGui::Text("Selection: %zu assets", selectedIds.size());
+            ImGui::EndPopup();
+        }
+
+        multiIO = ImGui::EndMultiSelect();
+
+        ApplySelections(multiIO, selectedIds, totalAssets);
+    }
+    ImGui::EndChild();
+
+    ImGui::Text("Selected: %zu/%zu items", selectedIds.size(), totalAssets.size());
+    
+    auto i = 0;
+    for (auto& slot : totalAssets) {
+        if (assetDetail[i] == 1) {
+            bool open = true;
+            slot.Asset->ShowImGuiDetails(&open);
+            if (!open)
+                assetDetail[i] = 0;
+        }
+        i++;
+    }
+    
+    ImGui::End();
+    Profiler::EndProfile({ typeid(AssetManager), "ShowAssetBrowser" });
 }

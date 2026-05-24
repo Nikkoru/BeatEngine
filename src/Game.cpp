@@ -8,13 +8,11 @@
 #include <limits>
 #include <memory>
 
-#include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/AssetType.h"
 #include "BeatEngine/Enum/EnvFlags.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Enum/ViewFlags.h"
-#include "BeatEngine/ImGui/MultiPlot.h"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/Manager/EventManager.h"

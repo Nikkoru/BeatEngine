@@ -78,6 +78,17 @@ private:
     void AsyncFillBuffers();
 public:
 	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds = -1, uint64_t totalFrames = -1);
+	AudioStream(AudioStream& other) : 
+        m_Name(other.m_Name), 
+        m_MetadataReference(other.m_MetadataReference), 
+        m_Metadata(other.m_Metadata), 
+        m_Decoder(other.m_Decoder), 
+        m_SrcState(other.m_SrcState), 
+        m_SrcData(other.m_SrcData),
+        m_TargetSampleRate(other.m_TargetSampleRate),
+        m_TotalSeconds(other.m_TotalSeconds),
+        m_TotalFrames(other.m_TotalFrames)
+    {}
 	~AudioStream() override;
 
 	std::array<float, 2> GetNextFrame();
@@ -120,4 +131,6 @@ public:
     uint64_t GetDataBufferFrameCount() const;
 
 	bool Erase() const;
+
+    void ShowImGuiDetails(bool* open) override;
 };

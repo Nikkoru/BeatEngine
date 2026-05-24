@@ -11,6 +11,7 @@ public:
     enum class Type {
         Vertex,
         Fragment,
+        Compute,
     };
     struct TypeUtils {
         static std::map<Type, std::string> TypeStrings;
@@ -25,4 +26,6 @@ public:
 public:
     virtual bool GetFileContents(const std::filesystem::path path) = 0;
     void SetType(Type type);
+
+    Type GetType();
 };

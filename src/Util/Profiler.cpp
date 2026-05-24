@@ -48,6 +48,9 @@ void PlotMultiHistogramsHighlights(const char *label, int num_hists, const char 
 }
 
 void Profiler::StartProfile(FunctionData data, ImColor color) {
+    if (!GetInstance()->m_Profile) {
+        return;
+    }
     if (!GetInstance()->m_Deltas.contains(data)) {
         GetInstance()->m_Deltas[data];
         GetInstance()->m_Deltas.at(data).Deltas.SetAll(-1);
@@ -58,6 +61,12 @@ void Profiler::StartProfile(FunctionData data, ImColor color) {
 }
 
 void Profiler::EndProfile(FunctionData data) {
+    if (!GetInstance()->m_Profile) {
+        GetInstance()->m_Deltas.at(data).DeltaClock.Stop();
+        GetInstance()->m_Deltas.at(data).DeltaClock.Start();
+        return;
+    }
+
     auto delta = GetInstance()->m_Deltas.at(data).DeltaClock.GetAndStop().AsMilliseconds();
 
     if (delta > GetInstance()->m_Deltas.at(data).MaxDelta)
@@ -133,8 +142,24 @@ void Profiler::DrawHistogram(ImVec2 size) {
     );
     ImGui::Text("Max delta: %f", maxDelta);
     ImGui::SameLine();
+    if (ImGui::SmallButton("Reset Max Delta"))
+        ResetAllMaxDelta();
+    ImGui::SameLine();
+    ImGui::SameLine();
     if (ImGui::SmallButton("Show All"))
         ShowAll();
+    ImGui::SameLine();
+    if (ImGui::SmallButton("Hide All"))
+        HideAll();
+    ImGui::SameLine();
+    if (GetInstance()->m_Profile) {
+        if (ImGui::SmallButton("Pause"))
+            Pause();
+    }
+    else
+        if (ImGui::SmallButton("Resume"))
+            Resume();
+
 
     bool hovered = false;
     for (size_t index = 0; index < GetInstance()->m_Deltas.size(); index++) {
@@ -147,50 +172,111 @@ void Profiler::DrawHistogram(ImVec2 size) {
             average += delta; 
         average /= it->second.Deltas.UsedSize();
 
-        ImGui::Checkbox(std::format("##Show_{}", it->first.second).c_str(), &it->second.Show);
-        ImGui::SameLine();
+        // ImGui::Checkbox(std::format("##Show_{}", it->first.second).c_str(), &it->second.Show);
+        // ImGui::SameLine();
+        
+        // ImGui::BeginDisabled();
+        auto style = ImGui::GetStyle();
 
-        ImGui::BeginDisabled(!it->second.Show);
-        ImGui::ColorButton(std::format("##ProfilerColorButton{}", index).c_str(), colors[index], ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip);
+        auto color = colors[index]; 
+        if (!it->second.Show) {
+            color.Value.x *= 0.3;
+            color.Value.y *= 0.3;
+            color.Value.z *= 0.3;
+        }
+        ImGui::ColorButton(std::format("##ProfilerColorButton{}", index).c_str(), color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoTooltip);
+
         if (ImGui::IsItemHovered() && it->second.Show) {
-            Profiler::Highlight(it->first);
+            Highlight(it->first);
             hovered = true;
         }
         else if (!hovered)
-            Profiler::StopHighlight();
+            StopHighlight();
+        if (ImGui::IsItemClicked()) {
+            if (!ImGui::GetIO().KeyCtrl) {
+                if (it->second.Show)
+                    Hide(it->first);
+                else
+                    Show(it->first);
+            }
+            else {
+                if (it->second.Show) {
+                    HideAll();
+                    Show(it->first);
+                }
+                else {
+                    ShowAll();
+                    Hide(it->first);
+                }
+            }
+        }
 
         ImGui::SameLine();
 
-        ImGui::TextColored({.3f, .3f, .3f, 1.0f}, "%s |", it->first.first.name());
+        ImGui::TextColored(it->second.Show ? ImColor{.3f, .3f, .3f, 1.0f} : ImColor{.3f, .3f, .3f, style.DisabledAlpha}, "%s |", it->first.first.name());
         if (ImGui::IsItemHovered() && it->second.Show) {
-            Profiler::Highlight(it->first.first);
+            Highlight(it->first.first);
             hovered = true;
         }
         else if (!hovered)
-            Profiler::StopHighlight();
+            StopHighlight();
+        if (ImGui::IsItemClicked()) {
+            if (!ImGui::GetIO().KeyCtrl) {
+                if (it->second.Show)
+                    Hide(it->first.first);
+                else
+                    Show(it->first.first);
+            }
+            else {
+                if (it->second.Show) {
+                    HideAll();
+                    Show(it->first.first);
+                }
+                else {
+                    ShowAll();
+                    Hide(it->first.first);
+                }
+            }
+        }
 
         ImGui::SameLine();
 
-        ImGui::Text("%s: Avg: %fms", names[index], average);
+        if (!it->second.Show) {
+            auto color = ImGui::GetStyleColorVec4(ImGuiCol_Text); 
+            color.w = style.DisabledAlpha;
+            ImGui::PushStyleColor(ImGuiCol_Text, color);
+        }
+        ImGui::Text("%s: Avg: %fms Max: %fms", names[index], average, it->second.MaxDelta);
+        if (!it->second.Show)
+            ImGui::PopStyleColor();
+
         if (ImGui::IsItemHovered() && it->second.Show) {
-            Profiler::Highlight(it->first);
+            Highlight(it->first);
             hovered = true;
         }
         else if (!hovered)
-            Profiler::StopHighlight();
-
-        ImGui::SameLine();
-
-        ImGui::Text("Max: %fms", it->second.MaxDelta);
-        if (ImGui::IsItemHovered() && it->second.Show) {
-            Profiler::Highlight(it->first);
-            hovered = true;
+            StopHighlight();
+        if (ImGui::IsItemClicked()) {
+            if (!ImGui::GetIO().KeyCtrl) {
+                if (it->second.Show)
+                    Hide(it->first);
+                else
+                    Show(it->first);
+            }
+            else {
+                if (it->second.Show) {
+                    HideAll();
+                    Show(it->first);
+                }
+                else {
+                    ShowAll();
+                    Hide(it->first);
+                }
+            }
         }
-        else if (!hovered)
-            Profiler::StopHighlight();
-        ImGui::EndDisabled();
     }
 }
+
 
 void Profiler::Filter(std::type_index object){
     for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
@@ -236,12 +322,99 @@ void Profiler::Highlight(FunctionData funcData){
 }
 
 
+void Profiler::Show(std::type_index object) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.first == object)
+            pdata.Show = true;
+    }
+}
+
+void Profiler::Show(std::string funcName) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.second == funcName)
+            pdata.Show = true;
+    }
+}
+
+void Profiler::Show(FunctionData funcData) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata == funcData)
+            pdata.Show = true;
+    }
+}
+
+
+void Profiler::Hide(std::type_index object) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.first == object)
+            pdata.Show = false;
+    }
+}
+
+void Profiler::Hide(std::string funcName) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.second == funcName)
+            pdata.Show = false;
+    }
+}
+
+void Profiler::Hide(FunctionData funcData) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata == funcData)
+            pdata.Show = false;
+    }
+}
+
+
 void Profiler::ShowAll(){
     for (auto& [fdata, pdata] : GetInstance()->m_Deltas)
         pdata.Show = true;
 }
 
+void Profiler::HideAll(){
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas)
+        pdata.Show = false;
+}
+
+
 void Profiler::StopHighlight(){
     for (auto& [fdata, pdata] : GetInstance()->m_Deltas)
         pdata.Highlight = false;
+}
+
+
+void Profiler::ResetMaxDelta(std::type_index object) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.first == object)
+            pdata.MaxDelta = .0f; 
+    }
+}
+
+void Profiler::ResetMaxDelta(std::string funcName) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata.second == funcName)
+            pdata.MaxDelta = .0f; 
+    }
+}
+
+void Profiler::ResetMaxDelta(FunctionData funcData) {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        if (fdata == funcData)
+            pdata.MaxDelta = .0f; 
+    }
+}
+
+
+void Profiler::ResetAllMaxDelta() {
+    for (auto& [fdata, pdata] : GetInstance()->m_Deltas) {
+        pdata.MaxDelta = .0f; 
+    }
+}
+
+void Profiler::Pause() {
+    GetInstance()->m_Profile = false; 
+}
+
+void Profiler::Resume() {
+    GetInstance()->m_Profile = true; 
 }

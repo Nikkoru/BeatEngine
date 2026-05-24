@@ -211,19 +211,31 @@ int AudioManager::SoundCallback(
 
 AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(context), m_State(state) {
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
+        if (this == nullptr)
+            return;
+
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
 		if (audioSignal->AudioStreamHandle) {
 			auto audioStream = audioSignal->AudioStreamHandle.Get();
-			for (auto& stream : m_Streams) {
+			for (const auto& stream : m_Streams) {
 				if (stream->GetName() == audioStream->GetName())
 					StopStream(stream);
 			}
 
 			PlayStream(audioStream);
 		}
-		else {
-			Logger::AddWarning(typeid(AudioManager), "Tried to play an empty AudioStream!");
+		else if (!audioSignal->AudioStreamName.empty()) {
+            if (m_State->GetAssetMgr().Has(audioSignal->AudioStreamName)) {
+                auto audioStream = m_State->GetAssetMgr().Get<AudioStream>(audioSignal->AudioStreamName).Get(); 
+                for (const auto& stream : m_Streams) {
+                    if (audioStream->GetName() == stream->GetName())
+                        StopStream(stream);
+                }
+                PlayStream(audioStream);
+            }
 		}
+        else
+			Logger::AddWarning(typeid(AudioManager), "Tried to play an empty AudioStream!");
 
 	});
 	SignalManager::GetInstance()->RegisterCallback<StopAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {

@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <unordered_map>
 #include <cstdint>
+#include <vector>
 
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Asset.h"
@@ -15,13 +16,15 @@ namespace fs = std::filesystem;
 
 class GameContext;
 class GameState;
+class ImGuiMultiSelectIO;
 class AssetManager {
 	struct Slot {
 		Base::AssetHandle<void> Handle;
 		std::shared_ptr<Base::Asset> Asset;
+        std::type_index Type{ typeid(nullptr) };
 
 		Slot() = default;
-		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset) : Handle(handle), Asset(asset) {}
+		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset, std::type_index type = typeid(nullptr)) : Handle(handle), Asset(asset), Type(type) {}
 	};
 public:
     AssetManager() : AssetManager(nullptr, nullptr) {}
@@ -36,7 +39,7 @@ private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
 private:
 	uint64_t m_AudioSampleRate = 48000;
-    bool m_ShowAssetList{ false };
+    bool m_ShowAssetBrowser{ false };
 private:
     GameContext* m_Context{ nullptr };
     GameState* m_State{ nullptr };
@@ -53,6 +56,9 @@ public:
     bool Preload(AssetType type, const fs::path& path, const std::type_index viewID = typeid(nullptr));
 
     void ShowImGuiDebugWindow();
+    void ShowAssetBrowser();
+private:
+    void ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids, std::vector<Slot>& totalAssets); 
 };
 
 #include "BeatEngine/Manager/AssetManager.inl"

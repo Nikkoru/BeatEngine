@@ -43,7 +43,7 @@ bool VulkanShader::Compile(VkDevice device) {
         .sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
         .pNext = nullptr,
         .codeSize = data->Size,
-        .pCode = data->Buffer.data()
+        .pCode = data->Buffer.data(),
     };
 
     auto status = vkCreateShaderModule(device, &createInfo, nullptr, &m_ShaderModule);
