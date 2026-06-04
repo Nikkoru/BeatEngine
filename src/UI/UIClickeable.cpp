@@ -1,9 +1,9 @@
 #include "BeatEngine/UI/UIClickeable.h"
 
-#include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Signals/GameSignals.h"
-#include "BeatEngine/Util/UIHelper.h"
-#include <memory>
+// #include "BeatEngine/Manager/SignalManager.h"
+// #include "BeatEngine/Signals/GameSignals.h"
+// #include "BeatEngine/Util/UIHelper.h"
+// #include <memory>
 
 void UIClickeable::SetOnRClick(std::function<void()> func) {
 	this->OnRClick = func;
@@ -42,6 +42,7 @@ void UIClickeable::EventHandler(std::optional<Base::Event> event) {
 }
 
 void UIClickeable::OnMouseMove(Vector2i position) {
+    (void)position;
 // 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
 //
 // 	if (currentlyHovered && !m_Hovered) {

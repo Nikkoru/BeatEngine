@@ -19,10 +19,14 @@ void EventManager::Send(const std::shared_ptr<Base::Event> event) {
 				for (Callback& callback : m_ViewSubscribers.at(m_MainView).at(eventID))
 					callback(event);
         }
-		else
+		else {
 			Logger::AddWarning(typeid(EventManager), "No subscribers for main view");
-	else
+            return;
+        }
+	else {
 		Logger::AddWarning(typeid(EventManager), "No view subscribers registered");
+        return;
+    }
 
 	if (!m_Subscribers.empty())
 		if (m_Subscribers.contains(eventID))

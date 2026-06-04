@@ -9,6 +9,12 @@
 void PipelineManager::Init(VkDescriptorSetLayout imageLayoutDescriptor, VkDescriptorSet imageDescriptor) {
    m_ImageLayoutDescriptor = imageLayoutDescriptor;
    m_ImageDescriptor = imageDescriptor;
+
+   VkPipelineInputAssemblyStateCreateInfo inputAssemblyState = vki::GetPipelineInputAssemblyStateInfo(
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,
+        0,
+        VK_FALSE
+   );
 }
 
 void PipelineManager::DestroyAll(VkDevice device) {
@@ -41,7 +47,7 @@ void PipelineManager::LoadShader(VkDevice device, std::shared_ptr<Shader> shader
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .pNext = nullptr,
         .stage = stageFlags,
-        .module = vulkanShader->GetModule(),
+        // .module = vulkanShader->GetModule(),
         .pName = "main"
     };
     VkComputePipelineCreateInfo pipelineInfo{

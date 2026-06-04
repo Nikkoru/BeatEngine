@@ -4,11 +4,11 @@
 #include <memory>
 #include <string>
 
-#include "BeatEngine/Asset/Font.h"
+// #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/AudioStream.h"
 
 // #include "BeatEngine/Base/Event.h"
-#include "BeatEngine/Asset/Shader.h"
+// #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Manager/EventManager.h"
@@ -27,19 +27,6 @@
 
 TestView::TestView(GameContext* context, GameState* state) 
 	: Base::View(typeid(TestView), context, state) {
-    auto windowSize = b_mContext->WindowSize;
-    
-    m_HUD = state->GetUIMgr().AddLayer("mainViewUI");
-
-    auto button = m_HUD->SetRootElement<UI::Button>();
-    auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
-
-	// auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
-	// m_Font = fontHandle.Get();
-
-	// button->SetFont(*m_Font);
-    button->SetPosition({ 5, 100 });
-	button->SetSize({ 80, 30 });
 
 	// auto playBtn = button->AddChild<UI::Button>("playBtn", *m_Font, "Play");
 	// playBtn->SetSize({ 80, 30 });
@@ -89,7 +76,25 @@ TestView::TestView(GameContext* context, GameState* state)
 	// pauseBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<PauseAudioStreamSignal>("test-music")); });
  //    gameBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<ViewPushSignal>(typeid(GameView))); });
 	//
-    EventManager::GetInstance()->SubscribeView<EventAudioStreamStoped>(typeid(TestView), [this, button](std::shared_ptr<Base::Event> event) {
+
+}
+
+void TestView::Init() {
+    // auto windowSize = b_mContext->WindowSize;
+    
+    m_HUD = b_mState->GetUIMgr().AddLayer("mainViewUI");
+
+    auto button = m_HUD->SetRootElement<UI::Button>();
+    auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
+
+	// auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
+	// m_Font = fontHandle.Get();
+
+	// button->SetFont(*m_Font);
+    button->SetPosition({ 5, 100 });
+	button->SetSize({ 80, 30 });
+
+    EventManager::GetInstance()->SubscribeView<EventAudioStreamStoped>(typeid(TestView), [button](std::shared_ptr<Base::Event> event) {
         auto audioEvent = std::static_pointer_cast<EventAudioStreamStoped>(event);
 
         if (audioEvent->Name == "test-music" && button->HasChild("musicProg")) {
@@ -161,7 +166,7 @@ void TestView::OnDraw() {
 	// window->draw(percentage);
 	// window->draw(count);
     //
-    // b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
+    b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
     b_mState->GetGraphicsMgr().ShowImGuiDebugWindow();
     b_mState->GetSettingsMgr().ShowImGuiDebugWindow();
     b_mState->GetAssetMgr().ShowImGuiDebugWindow();
@@ -170,6 +175,7 @@ void TestView::OnDraw() {
 }
 
 void TestView::OnEvent(std::optional<Base::Event> event) {
+    (void)event;
 	// m_HUD->OnSFMLEvent(event);
 	//
  //    if (auto data = event->getIf<sf::Event::KeyPressed>()) {

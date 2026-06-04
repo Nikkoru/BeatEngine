@@ -22,11 +22,11 @@ namespace Base {
 		UID m_AssetID{ 0 };
 	public:
 		AssetHandle() = default;		
-        AssetHandle(std::weak_ptr<T> ptr, std::type_index type = typeid(nullptr)) : m_Ptr(ptr), m_AssetID(), m_Type(type) {}
-		AssetHandle(std::shared_ptr<T> ptr, std::type_index type = typeid(nullptr)) : m_Ptr(ptr), m_AssetID(), m_Type(type) {}
+        AssetHandle(std::weak_ptr<T> ptr, std::type_index type = typeid(nullptr)) : m_Ptr(ptr), m_Type(type), m_AssetID() {}
+		AssetHandle(std::shared_ptr<T> ptr, std::type_index type = typeid(nullptr)) : m_Ptr(ptr), m_Type(type), m_AssetID() {}
 
-		AssetHandle(const AssetHandle<T>& other) : m_Ptr(other.m_Ptr), m_AssetID(other.m_AssetID), m_Type(other.m_Type) {}
-		AssetHandle(const AssetHandle<T>&& other) noexcept : m_Ptr(std::move(other.m_Ptr)), m_AssetID(std::move(other.m_AssetID)), m_Type(std::move(other.m_Type)) {}
+		AssetHandle(const AssetHandle<T>& other) : m_Ptr(other.m_Ptr), m_Type(other.m_Type), m_AssetID(other.m_AssetID) {}
+		AssetHandle(const AssetHandle<T>&& other) noexcept : m_Ptr(std::move(other.m_Ptr)), m_Type(std::move(other.m_Type)), m_AssetID(std::move(other.m_AssetID)) {}
 
 		inline UID GetID() const {
 			return m_AssetID;

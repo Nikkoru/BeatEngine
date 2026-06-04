@@ -22,6 +22,8 @@ public:
 private:
 
 public:
+    void Init() override;
+
 	void OnUpdate(float dt) override;
 	void OnAttach() override;
 	void OnDetach() override;

@@ -1,7 +1,8 @@
+set(MAKE_TEST_BUILD ON PARENT_SCOPE)
+
 cmake_minimum_required(VERSION 3.10)
 
 project("BeatEngineTest")
-# set(MAKE_TEST_BUILD ON PARENT_SCOPE)
 
 add_executable(BeatEngineTest 
 	"main.cpp"

@@ -9,10 +9,9 @@ inline std::shared_ptr<TLayer> ViewLayerStack::AttachLayer() {
 	auto& id = typeid(TLayer);
 	if (!m_Layers.contains(id)) {
         layer = std::make_shared<TLayer>();
-		m_Layers.try_emplace(id, layer);
-		m_LayerCount++;
-	    layer->SetLayerIndex(m_LayerCount);
 	}
+
+    AttachLayer(layer);
 
     return layer;
 }

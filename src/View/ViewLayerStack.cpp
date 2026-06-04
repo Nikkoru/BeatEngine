@@ -1,9 +1,11 @@
 #include "BeatEngine/View/ViewLayerStack.h"
 
-#include <ranges>
-
 
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
+    m_LayerCount++;
+    layer->SetLayerIndex(m_LayerCount);
+
+    layer->Init();
 	m_Layers.try_emplace(layer->m_ID, layer);
 }
 

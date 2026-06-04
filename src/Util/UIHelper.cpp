@@ -23,10 +23,10 @@
 // 	return ((point.x >= recPos.x) && (point.x < (recPos.x + recSize.x)) && (point.y >= recPos.y) && (point.y < (recPos.y + recSize.y)));
 // }
 
-const float UIHelper::Pertentage2PixelsX(const float perc, const Vector2f size) {
+float UIHelper::Pertentage2PixelsX(const float perc, const Vector2f size) {
 	return std::floor(static_cast<float>((size.X) * perc));
 }
 
-const float UIHelper::Pertentage2PixelsY(const float perc, const Vector2f size) {
+float UIHelper::Pertentage2PixelsY(const float perc, const Vector2f size) {
 	return std::floor(static_cast<float>((size.Y) * perc));
 }

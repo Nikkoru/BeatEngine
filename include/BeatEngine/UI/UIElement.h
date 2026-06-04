@@ -6,8 +6,8 @@
 #include <memory>
 #include <functional>
 
-#include "BeatEngine/Base/Asset.h"
-#include "BeatEngine/Asset/Font.h"
+// #include "BeatEngine/Base/Asset.h"
+// #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/Vector2.h"
@@ -77,7 +77,7 @@ public:
 	void RemoveChild(const std::string& name);
 
 	void OnEvent(std::optional<Base::Event> event);
-	virtual void EventHandler(std::optional<Base::Event> event) {}
+	virtual void EventHandler(std::optional<Base::Event> event) { (void)event; }
 
 	virtual void OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const = 0;
 	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;

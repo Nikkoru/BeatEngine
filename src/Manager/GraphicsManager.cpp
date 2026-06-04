@@ -14,6 +14,8 @@
 #include <string>
 
 void GraphicsManager::MakeRenderer(std::shared_ptr<Renderer> renderer) {
+    if (!renderer->m_Context)
+        renderer->m_Context = m_Context;
     m_Renderer = renderer;
 }
 

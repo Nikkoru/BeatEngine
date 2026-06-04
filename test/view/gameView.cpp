@@ -2,7 +2,8 @@
 #include "../layer/GameLayer.h"
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
-#include <memory>
+
+
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
 
@@ -13,16 +14,20 @@ Base::View(typeid(GameView), context, state) {
     layer->SetGameState(state);
 }
 
+void GameView::Init() {
+
+}
+
 void GameView::OnDraw() {
 
 }
-void GameView::OnEvent(const std::optional<Base::Event> event) {
+void GameView::OnEvent(const std::optional<Base::Event>) {
     // if (auto data = event->getIf<sf::Event::KeyPressed>()) {
     //     if (data->scancode == sf::Keyboard::Scan::Escape)
     //         SignalManager::GetInstance()->Send(std::make_shared<ViewPopSignal>());
     // }
 }
-void GameView::OnUpdate(float dt) {
+void GameView::OnUpdate(float) {
 
 }
 void GameView::OnExit() {

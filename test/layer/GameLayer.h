@@ -13,7 +13,9 @@ public:
 
     GameLayer(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
 public:
-    void OnUpdate(float dt) override {}
-    void OnEvent(std::optional<Base::Event> event) override {}
+    void Init() override {}
+
+    void OnUpdate(float dt) override { (void)dt; }
+    void OnEvent(std::optional<Base::Event> event) override { (void)event; }
     void OnDraw() override {}
 };

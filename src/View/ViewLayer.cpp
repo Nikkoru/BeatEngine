@@ -14,7 +14,7 @@ void ViewLayer::SetCameraPosition(Vector2f pos) {
     this->m_Camera.SetPosition(pos);
 }
 
-void ViewLayer::SetCameraRotation(float rotation) {
+void ViewLayer::SetCameraRotation(float) {
     return;
 }
 
@@ -26,10 +26,10 @@ void ViewLayer::ShakeCamera(ShakeParams params) {
     this->m_Camera.SetShakeParams(params); 
 }
 
-Vector2f ViewLayer::GetScreenToWorld(Vector2f pos) const {
+Vector2f ViewLayer::GetScreenToWorld(Vector2f) const {
     return {};
 }
-Vector2f ViewLayer::GetWorldToScreen(Vector2f pos) const {
+Vector2f ViewLayer::GetWorldToScreen(Vector2f) const {
     return {};
 }
 void ViewLayer::StartCamera() {

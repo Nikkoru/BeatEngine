@@ -20,10 +20,13 @@ GlobalTestLayerUI::GlobalTestLayerUI() : GlobalTestLayerUI(nullptr, nullptr) {
 }
 
 GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : ViewLayer(typeid(GlobalTestLayerUI), context, state) {
-	m_HUD = state->GetUIMgr().AddLayer("GlobalTestLayerUI", true);
+}
+
+void GlobalTestLayerUI::Init() {
+    m_HUD = m_State->GetUIMgr().AddLayer("GlobalTestLayerUI", true);
 
 	// m_Font = assetMgr->Get<Font>("main-font").Get();
-    auto windowSize = m_Context->WindowSize;
+    // auto windowSize = m_Context->WindowSize;
 
 	auto root = m_HUD->SetRootElement<UI::Button>();
     
@@ -36,7 +39,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : V
 	root->SetSize({80, 30});
     root->SetText("120 FPS");
 
-    root->SetOnLClick([this, settings]() {
+    root->SetOnLClick([settings]() {
         settings->FpsLimit = 120;
 
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
@@ -57,7 +60,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : V
     else
         toggleVSyncBtn->SetText("VSync Off");
 
-    toggleVSyncBtn->SetOnLClick([toggleVSyncBtn, settings, this]() {
+    toggleVSyncBtn->SetOnLClick([toggleVSyncBtn, settings]() {
         
         settings->VSync = !settings->VSync;
         if (settings->VSync) 
@@ -74,7 +77,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : V
         toggleFullscreenBtn->SetText("In fullscreen");
     else
         toggleFullscreenBtn->SetText("In window");
-    toggleFullscreenBtn->SetOnLClick([toggleFullscreenBtn, settings, this]() {
+    toggleFullscreenBtn->SetOnLClick([toggleFullscreenBtn, settings]() {
 
         settings->WindowFullScreen = !settings->WindowFullScreen;
 
@@ -104,6 +107,7 @@ void GlobalTestLayerUI::OnDetach() {
 }
 
 void GlobalTestLayerUI::OnEvent(std::optional<Base::Event> event) {
+    (void)event;
 	// m_HUD->OnSFMLEvent(event);
 	//
  //    if (auto data = event->getIf<sf::Event::KeyPressed>()) {

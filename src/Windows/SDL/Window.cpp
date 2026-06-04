@@ -16,23 +16,28 @@
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_video.h>
+#include <vulkan/vulkan_core.h>
 
 #include <memory>
 
 void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u windowSize) {
+    if (m_InitFlags == 0)
+        m_InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD;
     m_Context = context;
 
     Logger::AddLog("\e[30;46mSDL\033[0m", "", "Initializing SDL Window");
 
-    SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
+    SDL_Init(m_InitFlags);
 
     if (windowTitle == "")
-        windowTitle = "BeatEngine Game";
+        windowTitle = m_Context->ProgramName;
 
     if (windowSize == Vector2u{ static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) })
-        m_Flags |= SDL_WINDOW_FULLSCREEN; 
+        m_WindowFlags |= SDL_WINDOW_FULLSCREEN; 
 
-    m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_Flags);
+    PrepareForRenderer();
+
+    m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_WindowFlags);
     if (windowSize == Vector2u{}) {
         windowSize = GetSize();
     }
@@ -46,6 +51,12 @@ void SDLWindow::Uninit() {
     SDL_DestroyWindow(m_WindowImpl);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	SDL_Quit();
+}
+
+void SDLWindow::InitImGui() {
+    if (m_RendererName == "Vulkan") {
+        ImGui_ImplSDL3_InitForVulkan(m_WindowImpl);
+    }
 }
 
 void SDLWindow::UninitImGui() {
@@ -193,77 +204,128 @@ void SDLWindow::ImGuiWindowContent() {
     ImGui::Text("Window Position: (X: %u, Y: %u)", GetPosition().X, GetPosition().Y);
 }
 
-void SDLWindow::SetFlags(SDL_WindowFlags flags) {
-    m_Flags = flags;
+SDL_WindowFlags SDLWindow::GetWindowFlags() {
+    return m_WindowFlags;
 }
 
-void SDLWindow::AddFlags(SDL_WindowFlags flags) {
-    m_Flags |= flags;
+void SDLWindow::SetWindowFlags(SDL_WindowFlags flags) {
+    m_WindowFlags = flags;
 }
 
-void SDLWindow::RemoveFlags(SDL_WindowFlags flags) {
-    m_Flags &= ~flags;
+void SDLWindow::AddWindowFlags(SDL_WindowFlags flags) {
+    m_WindowFlags |= flags;
 }
 
-void SDLWindow::ClearFlags() {
-    m_Flags = 0;
+void SDLWindow::RemoveWindowFlags(SDL_WindowFlags flags) {
+    m_WindowFlags &= ~flags;
+}
+
+void SDLWindow::ClearWindowFlags() {
+    m_WindowFlags = 0;
+}
+
+void SDLWindow::SetInitFlags(SDL_InitFlags flags) {
+    m_InitFlags = flags;
+}
+
+void SDLWindow::AddInitFlags(SDL_InitFlags flags) {
+    m_InitFlags |= flags;
+}
+
+void SDLWindow::RemoveInitFlags(SDL_InitFlags flags) {
+    m_InitFlags &= ~flags;
+}
+
+void SDLWindow::ClearInitFlags() {
+    m_InitFlags = 0;
+}
+
+void SDLWindow::PrepareForRenderer() {
+    if (m_RendererName == "Vulkan") {
+        AddWindowFlags(SDL_WINDOW_VULKAN);
+    }
+    else if (m_RendererName == "OpenGL") {
+        AddWindowFlags(SDL_WINDOW_OPENGL);
+    }
+    else if (m_RendererName == "Metal") {
+        AddWindowFlags(SDL_WINDOW_METAL);
+    }
+
 }
 
 void SDLWindow::LogActiveFlags() {
-    Logger::AddLog("\e[30;46mSDL\033[0m", "", "Active flags:");
+    Logger::AddLog("\e[30;46mSDL\033[0m", "", "Active Window flags:");
     
-    if (m_Flags & SDL_WINDOW_FULLSCREEN)
+    if (m_WindowFlags & SDL_WINDOW_FULLSCREEN)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_FULLSCREEN");
-    if (m_Flags & SDL_WINDOW_OPENGL)
+    if (m_WindowFlags & SDL_WINDOW_OPENGL)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_OPENGL");
-    if (m_Flags & SDL_WINDOW_OCCLUDED)
+    if (m_WindowFlags & SDL_WINDOW_OCCLUDED)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_OCCLUDED");
-    if (m_Flags & SDL_WINDOW_HIDDEN)
+    if (m_WindowFlags & SDL_WINDOW_HIDDEN)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_HIDDEN");
-    if (m_Flags & SDL_WINDOW_BORDERLESS)
+    if (m_WindowFlags & SDL_WINDOW_BORDERLESS)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_BORDERLESS");
-    if (m_Flags & SDL_WINDOW_RESIZABLE)
+    if (m_WindowFlags & SDL_WINDOW_RESIZABLE)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_RESIZABLE");
-    if (m_Flags & SDL_WINDOW_MINIMIZED)
+    if (m_WindowFlags & SDL_WINDOW_MINIMIZED)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MINIMIZED");
-    if (m_Flags & SDL_WINDOW_MAXIMIZED)
+    if (m_WindowFlags & SDL_WINDOW_MAXIMIZED)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MAXIMIZED");
-    if (m_Flags & SDL_WINDOW_MOUSE_GRABBED)
+    if (m_WindowFlags & SDL_WINDOW_MOUSE_GRABBED)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MOUSE_GRABBED");
-    if (m_Flags & SDL_WINDOW_INPUT_FOCUS)
+    if (m_WindowFlags & SDL_WINDOW_INPUT_FOCUS)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_INPUT_FOCUS");
-    if (m_Flags & SDL_WINDOW_MOUSE_FOCUS)
+    if (m_WindowFlags & SDL_WINDOW_MOUSE_FOCUS)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MOUSE_FOCUS");
-    if (m_Flags & SDL_WINDOW_EXTERNAL)
+    if (m_WindowFlags & SDL_WINDOW_EXTERNAL)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_EXTERNAL");
-    if (m_Flags & SDL_WINDOW_MODAL)
+    if (m_WindowFlags & SDL_WINDOW_MODAL)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MODAL");
-    if (m_Flags & SDL_WINDOW_HIGH_PIXEL_DENSITY)
+    if (m_WindowFlags & SDL_WINDOW_HIGH_PIXEL_DENSITY)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_HIGH_PIXEL_DENSITY");
-    if (m_Flags & SDL_WINDOW_MOUSE_CAPTURE)
+    if (m_WindowFlags & SDL_WINDOW_MOUSE_CAPTURE)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MOUSE_CAPTURE");
-    if (m_Flags & SDL_WINDOW_MOUSE_RELATIVE_MODE)
+    if (m_WindowFlags & SDL_WINDOW_MOUSE_RELATIVE_MODE)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_MOUSE_RELATIVE_MODE");
-    if (m_Flags & SDL_WINDOW_ALWAYS_ON_TOP)
+    if (m_WindowFlags & SDL_WINDOW_ALWAYS_ON_TOP)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_ALWAYS_ON_TOP");
-    if (m_Flags & SDL_WINDOW_UTILITY)
+    if (m_WindowFlags & SDL_WINDOW_UTILITY)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_UTILITY");
-    if (m_Flags & SDL_WINDOW_TOOLTIP)
+    if (m_WindowFlags & SDL_WINDOW_TOOLTIP)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_TOOLTIP");
-    if (m_Flags & SDL_WINDOW_POPUP_MENU)
+    if (m_WindowFlags & SDL_WINDOW_POPUP_MENU)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_POPUP_MENU");
-    if (m_Flags & SDL_WINDOW_KEYBOARD_GRABBED)
+    if (m_WindowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_KEYBOARD_GRABBED");
-    if (m_Flags & SDL_WINDOW_FILL_DOCUMENT)
+    if (m_WindowFlags & SDL_WINDOW_FILL_DOCUMENT)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_FILL_DOCUMENT");
-    if (m_Flags & SDL_WINDOW_VULKAN)
+    if (m_WindowFlags & SDL_WINDOW_VULKAN)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_VULKAN");
-    if (m_Flags & SDL_WINDOW_METAL)
+    if (m_WindowFlags & SDL_WINDOW_METAL)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_METAL");
-    if (m_Flags & SDL_WINDOW_TRANSPARENT)
+    if (m_WindowFlags & SDL_WINDOW_TRANSPARENT)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_TRANSPARENT");
-    if (m_Flags & SDL_WINDOW_NOT_FOCUSABLE)
+    if (m_WindowFlags & SDL_WINDOW_NOT_FOCUSABLE)
         Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_WINDOW_NOT_FOCUSABLE");
+
+    Logger::AddLog("\e[30;46mSDL\033[0m", "", "Active Init flags:");
+    if (m_InitFlags & SDL_INIT_AUDIO)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_AUDIO");
+    if (m_InitFlags & SDL_INIT_VIDEO)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_VIDEO");
+    if (m_InitFlags & SDL_INIT_JOYSTICK)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_JOYSTICK");
+    if (m_InitFlags & SDL_INIT_HAPTIC)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_HAPTIC");
+    if (m_InitFlags & SDL_INIT_GAMEPAD)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_GAMEPAD");
+    if (m_InitFlags & SDL_INIT_EVENTS)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_EVENTS");
+    if (m_InitFlags & SDL_INIT_SENSOR)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_SENSOR");
+    if (m_InitFlags & SDL_INIT_CAMERA)
+        Logger::AddLog("\e[30;46mSDL\033[0m", "", "    SDL_INIT_CAMERA");
 }
 
 SDL_Window* SDLWindow::GetWindowImpl() {

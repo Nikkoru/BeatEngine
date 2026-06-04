@@ -34,7 +34,10 @@
 #include "BeatEngine/Util/CountedArray.h"
 #include "BeatEngine/Util/Profiler.h"
 
-Game::Game() {
+Game::Game() : Game("BeatEngine Game") {
+}
+
+Game::Game(const std::string name): m_Context(name) {
     m_State.CreateManagers(&m_Context);
 #ifdef BEATENGINE_DEBUG
     // Logger::PrintDebug(true);
@@ -65,21 +68,27 @@ void Game::Run() {
 
 	while (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
-            if (event->Is<GameExitingEvent>())
-                Uninitialize();
+            if (event->Is<GameExitingEvent>()){
+                m_Running = false;
+                break;
+            }
             if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 		    	m_GlobalLayers.OnEvent(event);
             }
-            else
+            else {
+                m_Running = false;
                 break;
+            }
             if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 			    if (!m_State.GetViewMgr().OnEvent(event)) {
                     m_State.GetGraphicsMgr().Close();
+                m_Running = false;
 				    break;
 			    }
             }
             else {
                 m_State.GetGraphicsMgr().Close();
+                m_Running = false;
                 break;
             }
 		}
@@ -88,12 +97,14 @@ void Game::Run() {
 		    this->Draw();
 		    this->Display();
         }
-        else
+        else {
+            Uninit();
             break;
+        }
 	}
 }
 
-void Game::Initialize() {
+void Game::Init() {
     Logger::AddInfo(typeid(Game), "Initializing Game");
 
     InitSettings();
@@ -109,7 +120,7 @@ void Game::Initialize() {
 	SubscribeToGameSignals();
 }
 
-void Game::Uninitialize() {
+void Game::Uninit() {
     Logger::AddInfo(typeid(Game), "Game in shutdown");
 
     // m_State->KeybindsMgr->Uninit();
@@ -121,6 +132,10 @@ void Game::Uninitialize() {
     m_State.GetAudioMgr().Uninit();
     // m_SettingsMgr->Uninit();
     m_Running = false;
+}
+
+void Game::SetRenderer(std::shared_ptr<Renderer> renderer) {
+    m_State.GetGraphicsMgr().MakeRenderer(renderer);
 }
 
 void Game::UseImGui(bool show) {
@@ -311,6 +326,7 @@ void Game::DrawImGuiDebug() {
             auto size = m_Context.WindowSize;
             ImGui::Text("WindowSize: (X: %u Y: %u)", size.X, size.Y);
             ImGui::Text("ActiveView: %s", m_Context.ActiveView.name());
+            ImGui::Text("ProgramName: %s", m_Context.ProgramName.c_str());
 
             ImGui::EndTabItem();
         }
@@ -382,7 +398,7 @@ void Game::Draw() {
     }
 
 	if (!m_State.GetViewMgr().OnDraw())
-		Uninitialize();
+		Uninit();
 
 	m_GlobalLayers.OnDraw();
     m_State.GetUIMgr().OnDraw();
@@ -403,7 +419,7 @@ void Game::Update() {
 	auto deltaTime = sfDelta.AsSeconds();
 
 	if (!this->m_State.GetViewMgr().OnUpdate(deltaTime)) {
-        Uninitialize();
+        Uninit();
 		return;
 	}
 
@@ -490,7 +506,7 @@ void Game::InitKeybinds() {
 void Game::SubscribeToGameEvent() {
 	Logger::AddDebug(typeid(Game), "Subscribing to game events...");
 
-    EventManager::GetInstance()->Subscribe<GameSettingsChangedEvent>([this](std::shared_ptr<Base::Event> _) {
+    EventManager::GetInstance()->Subscribe<GameSettingsChangedEvent>([this](std::shared_ptr<Base::Event>) {
         
         auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
         
@@ -542,9 +558,9 @@ void Game::SubscribeToGameSignals() {
 		signal->Layer = nullptr;
 	});
 
-    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> _) {
+    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal>) {
         EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-        Uninitialize();
+        Uninit();
     });
 
     // SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -581,7 +597,7 @@ void Game::SubscribeToGameSignals() {
         this->m_Context.VFlags &= ~gameSig->Flags;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal> _) {
+    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal>) {
             if (m_Context.GFlags & GameFlags_DrawDebugInfo)
                 m_Context.GFlags &= ~GameFlags_DrawDebugInfo;
             else

@@ -1,13 +1,17 @@
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_video.h>
 #include <filesystem>
+#include <memory>
 
-#include "BeatEngine/Logger.h"
-#include "view/gameView.h"
+#include <BeatEngine/Logger.h>
+// #include <BeatEngine/Renderers/OpenGL/Renderer.h>
 #include <BeatEngine/Game.h>
 #include <BeatEngine/Enum/AssetType.h>
 #include <BeatEngine/Settings/GameSettings.h>
+#include <BeatEngine/Renderers/Vulkan/Renderer.h>
+#include <BeatEngine/Windows/SDL/Window.h>
 
-// #include <BeatEngine/Renderers/OpenGL.h>
-
+#include "view/gameView.h"
 #include "view/view.h"
 #include "system/system.h"
 #include "layer/globalLayer.h"
@@ -22,7 +26,7 @@ int main(int argc, char** argv) {
         }
 
         for (const auto& entry : fs::directory_iterator(argv[1])) {
-            if (entry.path().extension() == ".mp3") { 
+            if (entry.path().extension() == ".mp3" || entry.path().extension() == ".flac") { 
                 paths.emplace_back(entry.path());
             }
         }
@@ -51,12 +55,17 @@ int main(int argc, char** argv) {
     game.UseImGui(true);
     game.UseImGuiDocking(true);
 
-    // game.SetRenderer<OpenGLRenderer>();
+    auto renderer = std::make_shared<VulkanRenderer>();
+    auto window = std::make_shared<SDLWindow>();
+    window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
+    window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
+
+    renderer->SetWindow(window);
+
+    game.SetRenderer(renderer);
 
 	game.SetWindowTitle("Now you can change the title!");
     game.SetWindowSize({ 1280, 720 });
-    
-
 
 	game.LoadGlobalAssets({
 		{
@@ -90,12 +99,12 @@ int main(int argc, char** argv) {
         {
             AssetType::ComputeShader,
             {
-                "assets/shaders/gradient.comp"
+                "/home/niko/Projects/BeatEngine/assets/shaders/gradient.comp"
             }
         }
 	});
 
-    game.Initialize();
+    game.Init();
 	game.AddGlobalLayer<GlobalTestLayerUI>();
 
 	game.Run();

@@ -301,7 +301,7 @@ Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader:
             auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
             handle = Base::AssetHandle<Shader>(shader);
 
-            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader) };
+            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
         }
     }
     else {
@@ -310,7 +310,7 @@ Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader:
         if (!m_ViewAssets.at(viewID).contains(name)) {
             auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
             handle = Base::AssetHandle<Shader>(shader, typeid(Shader));
-            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
+            m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
         }
         else {
             Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -363,6 +363,11 @@ void AssetManager::Init() {
             break;
         case AssetType::VertexShader:
             if (LoadShader(asset, Shader::Type::Vertex)) {
+                totalAssetLoaded--;
+            }
+            break;
+        case AssetType::ComputeShader:
+            if (LoadShader(asset, Shader::Type::Compute)) {
                 totalAssetLoaded--;
             }
             break;
@@ -547,7 +552,7 @@ void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids
                 }
         }
         else if (req.Type == ImGuiSelectionRequestType_SetRange) {
-            const int selectionChanges = req.RangeLastItem - req.RangeFirstItem + 1;
+            const size_t selectionChanges = req.RangeLastItem - req.RangeFirstItem + 1;
             
             if (selectionChanges == 1 || (selectionChanges < ids.size() / 100)) {
                 for (int i = req.RangeFirstItem; i <= req.RangeLastItem; i++) {
@@ -635,7 +640,7 @@ void AssetManager::ShowAssetBrowser() {
         auto multiIO = ImGui::BeginMultiSelect(multiFlags, selectedIds.size(), totalAssets.size());
         ApplySelections(multiIO, selectedIds, totalAssets);
 
-        const bool wantDelete = (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_Repeat));
+        // const bool wantDelete = (ImGui::Shortcut(ImGuiKey_Delete, ImGuiInputFlags_Repeat));
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(2, 2));
 
@@ -710,7 +715,7 @@ void AssetManager::ShowAssetBrowser() {
                                     shaderType = 'V';
                                     break;
                             }
-                            typeLabel = std::format("Shader {}", shaderType);
+                            typeLabel = std::format("Shader{}", shaderType);
                         }
                         else {
                             typeLabel = "Unknown";

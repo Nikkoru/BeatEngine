@@ -1,15 +1,18 @@
 #pragma once
 
 #include "BeatEngine/Asset/Shader.h"
+#include <vector>
 #include <vulkan/vulkan_core.h>
 
 class PipelineManager {
 private:
     VkPipeline m_Pipeline{ VK_NULL_HANDLE };
     VkPipelineLayout m_PipelineLayout{ VK_NULL_HANDLE };
-private:
+
     VkDescriptorSetLayout m_ImageLayoutDescriptor{ VK_NULL_HANDLE };
     VkDescriptorSet m_ImageDescriptor{ VK_NULL_HANDLE };
+
+    std::map<Shader::Type, std::vector<VkShaderModule>> m_Shaders;
 public:
     PipelineManager() = default;
     ~PipelineManager() = default;

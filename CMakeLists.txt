@@ -95,14 +95,19 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
 
     if(NOT CROSS_BUILDING)
-        find_package(Vulkan REQUIRED volk)
+        find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
         target_link_libraries(${PROJECT_NAME}
-            PUBLIC 
+            PRIVATE 
                 Vulkan::Vulkan
                 Vulkan::volk
+                Vulkan::shaderc_combined
+                SPIRV
+                glslang
+                SPIRV-Tools-opt
+                SPIRV-Tools
         )
     else()
         target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_HEADERS_SOURCE_DIR}/include")

@@ -8,8 +8,8 @@ private:
     bool m_ShowRect = true;
 public:
     UIPanel() = default;
-    void OnDraw(/*RenderTarget& target, RenderStates states*/) const /*override*/;
-    void OnUpdate(float dt) override {}
+    void OnDraw(/*RenderTarget& target, RenderStates states*/) const override;
+    void OnUpdate(float dt) override { (void)dt; }
 
     void ShowRect(bool show);
 };

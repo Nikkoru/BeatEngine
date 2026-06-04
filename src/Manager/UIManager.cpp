@@ -50,7 +50,10 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
 }
 
 void UIManager::RemoveLayer(const std::string layerName, bool global) {
-	m_Layers[m_Context->ActiveView].erase(layerName);
+    if (global)
+        m_GlobalLayers.erase(layerName);
+    else
+        m_Layers[m_Context->ActiveView].erase(layerName);
 }
 
 void UIManager::RemoveViewLayers(const std::type_index viewID) {
@@ -67,13 +70,12 @@ void UIManager::RemoveAllLayers() {
 }
 
 void UIManager::OnDraw() {
-	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
-		// window->Render(*layer);
-        
-	}
-	for (const auto& [name, layer] : m_GlobalLayers) {
-		// window->Render(*layer);
-	}
+	// for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
+	// 	window->Render(*layer);
+	// }
+	// for (const auto& [name, layer] : m_GlobalLayers) {
+	// 	window->Render(*layer);
+	// }
 }
 
 void UIManager::Update(float dt) {

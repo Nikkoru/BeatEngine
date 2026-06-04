@@ -28,6 +28,7 @@ public:
 	TestView(GameContext* context, GameState* state);
 	~TestView() override = default;
 public:
+    void Init() override;
 	void OnDraw() override;
 	void OnEvent(std::optional<Base::Event> event) override;
 	void OnUpdate(float dt) override;

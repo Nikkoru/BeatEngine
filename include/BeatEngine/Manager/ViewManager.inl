@@ -7,8 +7,8 @@
 
 template<typename TView>
     requires(std::is_base_of_v<Base::View, TView>)
-void ViewManager::Push() {
-    Push(std::type_index(typeid(TView)));
+bool ViewManager::Push() {
+    return Push(std::type_index(typeid(TView)));
 }
 
 template<typename TView>

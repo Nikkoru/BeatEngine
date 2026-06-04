@@ -2,16 +2,16 @@
 // #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/UI/Alignment.h"
 
-UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Font(font), m_Text(text), m_FontSize(fontSize)/*, m_SFMLText(font, text, m_FontSize)*/ {
-	SetOnHover([this]() {
+UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize)/*, m_SFMLText(font, text, m_FontSize)*/ {
+	SetOnHover([]() {
 		// m_Color = m_HoverColor;
 		// m_TextColor = m_TextHoverColor;
 	});
-	SetOnUnHover([this]() {
+	SetOnUnHover([]() {
 		// m_Color = m_NormalColor;
 		// m_TextColor = m_TextNormalColor;
 	});
-	SetOnActive([this]() {
+	SetOnActive([]() {
 		// m_Color = m_ActiveColor;
 		// m_TextColor = m_TextActiveColor;
 	});
@@ -69,6 +69,7 @@ float UI::Button::GetFontSize() const {
 }
 
 void UI::Button::OnUpdate(float dt) {
+    (void)dt;
 
 	// m_SFMLText = sf::Text(m_Font, m_Text, m_FontSize);
     

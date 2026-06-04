@@ -1,15 +1,19 @@
 #pragma once
 
+#include <string>
+
+#include "SDL3/SDL_init.h"
+#include "SDL3/SDL_video.h"
+
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "SDL3/SDL_video.h"
-#include <string>
 
 class SDLWindow : public BaseWindow {
 private:
     SDL_Window* m_WindowImpl{ nullptr };
-    SDL_WindowFlags m_Flags{};
+    SDL_WindowFlags m_WindowFlags{};
+    SDL_InitFlags m_InitFlags{};
 
     bool m_Fullscreen{ false };
 public:
@@ -19,6 +23,7 @@ public:
     void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
     void Uninit() override;
 
+    void InitImGui() override;
     void UninitImGui() override;
 
     void SetSize(const Vector2u size) override;
@@ -47,12 +52,18 @@ public:
 
     void ImGuiWindowContent() override;
 public:
-    void SetFlags(SDL_WindowFlags flags);
-    void AddFlags(SDL_WindowFlags flags);
-    void RemoveFlags(SDL_WindowFlags flags);
+    void SetInitFlags(SDL_InitFlags flags);
+    void AddInitFlags(SDL_InitFlags flags);
+    void RemoveInitFlags(SDL_InitFlags flags);
+    void ClearInitFlags();
 
-    void ClearFlags();
+    SDL_WindowFlags GetWindowFlags();
+    void SetWindowFlags(SDL_WindowFlags flags);
+    void AddWindowFlags(SDL_WindowFlags flags);
+    void RemoveWindowFlags(SDL_WindowFlags flags);
+    void ClearWindowFlags();
 private:
+    void PrepareForRenderer();
     void LogActiveFlags();
 public:
     SDL_Window* GetWindowImpl();

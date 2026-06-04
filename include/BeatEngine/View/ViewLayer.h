@@ -46,6 +46,8 @@ public:
 
 	virtual ~ViewLayer() = default;
 
+    virtual void Init() = 0;
+
 	virtual void OnUpdate(float dt) = 0;
 	virtual void OnAttach() {} 
 	virtual void OnDetach() {}

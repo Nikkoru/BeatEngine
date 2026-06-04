@@ -15,6 +15,7 @@
 #include <memory>
 #include <vulkan/vulkan_core.h>
 #include <vk_mem_alloc.h>
+#include <shaderc/shaderc.hpp>
 
 class VulkanRenderer : public Renderer {
 public: 
@@ -24,33 +25,38 @@ public:
 private:
     UninitQueue m_Uninitializers;
 
+    // Vulkan::Core
     VkInstance m_Instance{ VK_NULL_HANDLE };
     VkDebugUtilsMessengerEXT m_DebugMessenger{ VK_NULL_HANDLE };
-    VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
     VkPhysicalDeviceProperties m_DeviceProperties{};
+    VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
     VkDevice m_Device{ VK_NULL_HANDLE };
     VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
+    VmaAllocator m_Allocator{ VK_NULL_HANDLE };
+
+    // Vulkan::Queue
     VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
     uint32_t m_GraphicsQueueFamily{};
 
+    // Vulkan::Pipeline
     PipelineManager m_PipelineMgr;
     VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
     std::vector<VkFramebuffer> m_Framebuffers;
 
+    // Vulkan::Swapchain
     VkSwapchainKHR m_Swapchain{ VK_NULL_HANDLE };
+    std::vector<VkImage> m_SwapchainImages;
+	std::vector<VkImageView> m_SwapchainImageViews;
+
     VkFormat m_SwapchainFormat{ VK_FORMAT_B8G8R8A8_UNORM };
-    
     AllocatedImage m_DrawImage;
     FrameData m_Frames[FRAME_OVERLAP];
 
     uint32_t m_ActiveImageIndex;
 
-    std::vector<VkImage> m_SwapchainImages;
-	std::vector<VkImageView> m_SwapchainImageViews;
     DescriptorAllocator m_GlobalDescriptorAllocator;
     VkDescriptorSet m_ImageDescriptor{ VK_NULL_HANDLE };
     VkDescriptorSetLayout m_ImageDescriptorLayout{ VK_NULL_HANDLE };
-    VmaAllocator m_Allocator{ VK_NULL_HANDLE };
 private:
     bool m_StopRendering{ false };
     bool m_UpdateSwapchain{ false };

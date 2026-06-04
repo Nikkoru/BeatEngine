@@ -1,5 +1,25 @@
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 
+#include <array>
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <filesystem>
+#include <memory>
+
+#include <imgui.h>
+#include <imgui_internal.h>
+#include <backends/imgui_impl_vulkan.h>
+#include <backends/imgui_impl_sdl3.h>
+
+#include <SDL3/SDL_video.h>
+#include <SDL3/SDL_vulkan.h>
+
+#include <vulkan/vulkan_core.h>
+#include <vulkan/vulkan.h>
+#include <vk_mem_alloc.h>
+#include <volk.h>
+
 #include "BeatEngine/Enum/EnvFlags.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Graphics/BaseWindow.h"
@@ -7,6 +27,7 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Shader.h"
 #include "BeatEngine/Renderers/Vulkan/DescriptorBuilder.h"
+#include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Renderers/Vulkan/FrameData.h"
@@ -14,24 +35,6 @@
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/System/Time.h"
 #include "BeatEngine/GameContext.h"
-#include "imgui_internal.h"
-
-#include <SDL3/SDL_video.h>
-#include <imgui.h>
-#include <backends/imgui_impl_vulkan.h>
-#include <backends/imgui_impl_sdl3.h>
-#include <array>
-#include <cassert>
-#include <cmath>
-#include <cstdint>
-#include <filesystem>
-#include <memory>
-#include <volk.h>
-#include <vk_mem_alloc.h>
-#include <SDL3/SDL_vulkan.h>
-#include <vulkan/vulkan_core.h>
-#include <vulkan/vulkan.h>
-
 
 bool VK_CHECK_SWAPCHAIN(VkResult result) {
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
@@ -63,7 +66,9 @@ void VulkanRenderer::pInitVulkan() {
         layers.emplace_back("VK_LAYER_KHRONOS_validation");
     }
 
-    m_Instance = vkb::CreateInstance("BeatEngine Game", VK_API_VERSION_1_3, extensions, layers);
+
+    m_Instance = vkb::CreateInstance(m_Context->ProgramName, VK_API_VERSION_1_3, extensions, layers);
+    
     volkLoadInstance(m_Instance);
 
     m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance, 0, &m_DeviceProperties);
@@ -92,7 +97,11 @@ void VulkanRenderer::pInitVulkan() {
     if (m_Context->EFlags & EnvFlags_Debug)
         CreateDebugCallback();
 
-    SDL_Vulkan_CreateSurface(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl(), m_Instance, nullptr, &m_Surface);
+    if (!SDL_Vulkan_CreateSurface(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl(), m_Instance, nullptr, &m_Surface)) {
+        std::string msg = "Failed to create surface for SDL Window";
+        Logger::AddCritical("", msg);
+        THROW_RUNTIME_ERROR(msg);
+    }
     
     m_Uninitializers.AddCallback([this](){ 
         AddVulkanLog("Destroying Vulkan handlers");
@@ -160,19 +169,22 @@ void VulkanRenderer::pInitSwapchain() {
 void VulkanRenderer::pInitCommands() {
     AddVulkanLog("Initializing Command interface");
     VkCommandPoolCreateInfo commandPoolInfo{
-        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO, 
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
         .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT, 
         .queueFamilyIndex = m_GraphicsQueueFamily
     };
 
-    for (auto i = 0; i < FRAME_OVERLAP; i++) {
+    for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
         VK_CHECK(vkCreateCommandPool(m_Device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool));
         AddNameToVKObject(m_Device, VK_OBJECT_TYPE_COMMAND_POOL, uint64_t(m_Frames[i].CommandPool), std::format("VkCommandPool_Frame{}", i));
 
         VkCommandBufferAllocateInfo cbAllocInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, 
+            .pNext = nullptr,
             .commandPool = m_Frames[i].CommandPool, 
-            .commandBufferCount = 1
+            .level{},
+            .commandBufferCount = 1,
         };
         VK_CHECK(vkAllocateCommandBuffers(m_Device, &cbAllocInfo, &m_Frames[i].ActiveCmdBuffer));
     }
@@ -195,7 +207,7 @@ void VulkanRenderer::pInitSyncStructures() {
 
         .flags = VK_FENCE_CREATE_SIGNALED_BIT
     };
-    for (auto i = 0; i < FRAME_OVERLAP; i++) {
+    for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
         auto semaphorePresentName = std::format("VkSemaphore_Present{}", i);
         auto semaphoreRenderName = std::format("VkSemaphore_Render{}", i);
         auto fenceName = std::format("VkFence_Render{}", i);
@@ -228,12 +240,20 @@ void VulkanRenderer::pInitRenderPass() {
     };
 
     VkSubpassDescription subpassDescriptions{
+        .flags{},
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+        .inputAttachmentCount = 0,
+        .pInputAttachments = nullptr,
         .colorAttachmentCount = 1,
         .pColorAttachments = &colorAttachmentReferences,
+        .pResolveAttachments = nullptr,
+        .pDepthStencilAttachment = nullptr,
+        .preserveAttachmentCount = 0,
+        .pPreserveAttachments = nullptr,
     };
 
     VkAttachmentDescription attachmentDescriptions{
+        .flags{},
         .format = m_SwapchainFormat,
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
@@ -274,7 +294,7 @@ void VulkanRenderer::pInitRenderPass() {
 };
 
 void VulkanRenderer::pInitPipeline() {
-    AddVulkanLog("Initializing pipeline");
+    AddVulkanLog("Initializing Pipeline");
 
     VkViewport vp{
         .width = static_cast<float>(GetWindow()->GetSize().X),
@@ -391,27 +411,46 @@ void VulkanRenderer::pInitImGui() {
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     GImGui->ItemUnclipByLog = true; 
 
-    ImGui_ImplSDL3_InitForVulkan(std::static_pointer_cast<SDLWindow>(m_Window)->GetWindowImpl());
-    
-    ImGui_ImplVulkan_InitInfo info{
-        .ApiVersion = VK_API_VERSION_1_3,
-        .Instance = m_Instance,
-        .PhysicalDevice = m_PhysicalDevice,
-        .Device = m_Device,
-        .QueueFamily = m_GraphicsQueueFamily,
-        .Queue = m_GraphicsQueue,
-        .DescriptorPool = imguiPool,
-        .MinImageCount = 3,
-        .ImageCount = 3,
-        .PipelineCache = VK_NULL_HANDLE,
-        .PipelineInfoMain = {
-            .RenderPass = m_RenderPass,
+    m_Window->InitImGui();
+     
+    ImGui_ImplVulkan_InitInfo info{};
+        info.ApiVersion = VK_API_VERSION_1_3;
+        info.Instance = m_Instance;
+        info.PhysicalDevice = m_PhysicalDevice;
+        info.Device = m_Device;
+        info.QueueFamily = m_GraphicsQueueFamily;
+        info.Queue = m_GraphicsQueue;
+        info.DescriptorPool = imguiPool;
+        // info.DescriptorPoolSize{};
+        info.MinImageCount = 3;
+        info.ImageCount = 3;
+        info.PipelineCache = VK_NULL_HANDLE;
+        // info.PipelineInfoMain{};
+        info.PipelineInfoMain = {
+            // .RenderPass = m_RenderPass,
+            .RenderPass{},
             .Subpass = 0,
-            .MSAASamples = VK_SAMPLE_COUNT_1_BIT
-        },
-        // .UseDynamicRendering = true,
-        .Allocator = VK_NULL_HANDLE,
-    };
+            .MSAASamples = VK_SAMPLE_COUNT_1_BIT,
+            .ExtraDynamicStates{},
+            .PipelineRenderingCreateInfo{
+                .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO,
+                .pNext = nullptr,
+                .viewMask{},
+                .colorAttachmentCount = 1,
+                .pColorAttachmentFormats = &m_SwapchainFormat,
+                .depthAttachmentFormat{},
+                .stencilAttachmentFormat{}
+            },
+            .SwapChainImageUsage{},
+        };
+        // info.PipelineInfoForViewports{};
+        info.UseDynamicRendering = true;
+        info.CheckVkResultFn = nullptr;
+        info.MinAllocationSize = 0;
+        // info.CustomShaderVertCreateInfo{};
+        // info.CustomShaderFragCreateInfo{};
+        info.Allocator = VK_NULL_HANDLE;
+
     ImGui_ImplVulkan_Init(&info);
 
     m_Uninitializers.AddCallback([this, imguiPool]() {
@@ -428,16 +467,17 @@ void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize) {
 
     if (m_Window == nullptr) {
         m_Window = std::make_shared<SDLWindow>();
-        std::static_pointer_cast<SDLWindow>(m_Window)->SetFlags(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE);
+        std::static_pointer_cast<SDLWindow>(m_Window)->SetWindowFlags(SDL_WINDOW_RESIZABLE);
     }
+    m_Window->PrepareInitFor("Vulkan");
 
     m_Window->Init(m_Context, windowTitle, windowSize);
 
     pInitVulkan();
     pInitSwapchain();
     pInitCommands();
-    pInitRenderPass();
-    pInitFramebuffers();
+    // pInitRenderPass();
+    // pInitFramebuffers();
     pInitDescriptors();
     pInitPipeline();
     pInitSyncStructures();
@@ -550,6 +590,9 @@ void VulkanRenderer::Uninit() {
 }
 
 void VulkanRenderer::Render() {
+    if (m_UpdateSwapchain)
+        UpdateSwapchain();
+
     if (m_Context->GFlags & GameFlags_ImGui)
         ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
@@ -560,8 +603,7 @@ void VulkanRenderer::Render() {
     Profiler::StartProfile({ typeid(VulkanRenderer), "Render" }, IM_COL32(255, 0, 35, 255));
 
     if (VK_CHECK_SWAPCHAIN(vkAcquireNextImageKHR(m_Device, m_Swapchain, 1'000'000'000, GetCurrentFrame().PresentSemaphore, VK_NULL_HANDLE, &m_ActiveImageIndex))) {
-        UpdateSwapchain();
-        return;
+        m_UpdateSwapchain = true;
     }
     else m_UpdateSwapchain = false;
    
@@ -572,6 +614,7 @@ void VulkanRenderer::Render() {
     };
     VK_CHECK(vkBeginCommandBuffer(GetCurrentFrame().ActiveCmdBuffer, &cmdInfo));
     vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
     
     VkRenderingInfo renderingInfo{
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
@@ -631,16 +674,16 @@ void VulkanRenderer::Display() {
         vkCmdEndRendering(GetCurrentFrame().ActiveCmdBuffer);
 
     vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
-    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     
     vku::CopyImageToImage(GetCurrentFrame().ActiveCmdBuffer, m_DrawImage.Image, m_SwapchainImages[m_ActiveImageIndex], extent, extent);
 
     vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
 
     RenderImGui();
-    
-    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
+    vku::TransitionImage(m_PipelineMgr, GetCurrentFrame().ActiveCmdBuffer, m_SwapchainImages[m_ActiveImageIndex], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    
     VK_CHECK(vkEndCommandBuffer(GetCurrentFrame().ActiveCmdBuffer));
 
     auto cmdInfo = vki::GetCommandBufferSubmitInfo(GetCurrentFrame().ActiveCmdBuffer);
@@ -696,6 +739,8 @@ void VulkanRenderer::SetGlobalShader(std::shared_ptr<Shader> shader) {
 }
 
 void VulkanRenderer::UpdateSwapchain() {
+    vkDeviceWaitIdle(m_Device);
+
     auto oldSwapchain = m_Swapchain;
 
     auto size = m_Window->GetSize();
@@ -724,6 +769,8 @@ void VulkanRenderer::UpdateSwapchain() {
 
     vkDestroySwapchainKHR(m_Device, oldSwapchain, nullptr);
     AddNameToVKObject(m_Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
+
+    m_UpdateSwapchain = false;
 }
 
 std::shared_ptr<Texture> VulkanRenderer::CreateTexture(std::filesystem::path path) {
@@ -736,17 +783,18 @@ std::shared_ptr<Shader> VulkanRenderer::CreateShader(std::filesystem::path path,
     std::shared_ptr<VulkanShader> shader = std::make_shared<VulkanShader>();
         
     shader->SetType(type);
-    shader->GetFileContents(path);
 
-    if (!shader->Compile(m_Device))
+    if (!shader->Compile(m_Device, path)) {
+        Logger::AddError(typeid(VulkanRenderer), "Failed to compile shader \"{}\"!", path.filename().string());
         return nullptr;
+    }
 
     return shader;
 }
 
 void VulkanRenderer::ShowImGuiRenderTabContent() {
     ImGui::Text("Vulkan Renderer");
-    ImGui::Text("Frame N°%i", m_FrameNumber);
+    ImGui::Text("Frame N°%lu", m_FrameNumber);
     if (ImGui::BeginTabBar("vulkanTabBar")) {
         if (ImGui::BeginTabItem("Device")) {
             ImGui::Text("Active Device: %s", m_DeviceProperties.deviceName);

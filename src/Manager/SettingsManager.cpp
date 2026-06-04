@@ -24,11 +24,13 @@ SettingsManager::SettingsManager(GameContext* context, GameState* state)
 }
 
 void SettingsManager::ReadConfig(fs::path path) {
-    if (path.empty())
+    if (path.empty()) {
         return;
+    }
 
 	Logger::AddDebug(typeid(SettingsManager), "Reading config file \"{}\"", path.stem().string());
 	const char* iniData = GetTextData(path);
+
 	if (iniData != NULL) {
 		size_t iniSize = strlen(iniData);
 

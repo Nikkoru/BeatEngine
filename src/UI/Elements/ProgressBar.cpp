@@ -1,6 +1,6 @@
 #include "BeatEngine/UI/Elements/ProgressBar.h"
 
-#include "BeatEngine/Util/UIHelper.h"
+// #include "BeatEngine/Util/UIHelper.h"
 
 UI::ProgressBar::ProgressBar(float current, float max) : m_Progress(current), m_MaxValue(max) {
 	SetSize({ 100, 20 });
@@ -9,12 +9,13 @@ UI::ProgressBar::ProgressBar(float current, float max) : m_Progress(current), m_
 }
 
 void UI::ProgressBar::OnUpdate(float dt) {
+    (void)dt;
 	m_Percentage = (m_Progress / m_MaxValue);
 
 	// m_InnerRect.setPosition(m_Position);
 	// m_LayoutRect.setPosition(m_Position);
 
-	auto x = UIHelper::Pertentage2PixelsX(m_Percentage, m_Size);
+	// auto x = UIHelper::Pertentage2PixelsX(m_Percentage, m_Size);
 
 	// m_InnerRect.setSize({ x, m_Size.y });
 }

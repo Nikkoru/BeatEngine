@@ -10,16 +10,18 @@ class GameContext;
 class BaseWindow {
 protected:
     GameContext* m_Context{ nullptr };
+    std::string m_RendererName{};
 public:
     BaseWindow() = default;
     virtual ~BaseWindow() = default;
 public:
-
+    void PrepareInitFor(std::string renderer) { m_RendererName = renderer; }
     virtual void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
+
     virtual void Uninit() = 0;
 
     virtual void UninitImGui() = 0;
-    // virtual void UpdateWindow();
+    virtual void InitImGui() = 0;
 
     virtual std::optional<Base::Event> PollEvent() = 0;
 

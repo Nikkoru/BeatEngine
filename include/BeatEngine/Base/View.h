@@ -1,6 +1,5 @@
 #pragma once
 
-#include <memory>
 #include <optional>
 #include <typeindex>
 
@@ -43,6 +42,7 @@ namespace Base {
 
 		virtual ~View() = default;
 	public: // Events
+        virtual void Init() = 0; 
 		/// <summary>
 		/// Notifies the view to draw to the given window.
 		/// </summary>

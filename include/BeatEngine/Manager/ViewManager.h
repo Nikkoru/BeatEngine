@@ -34,8 +34,8 @@ public:
 public:
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)
-	void Push();
-	void Push(std::type_index viewID);
+	bool Push();
+	bool Push(std::type_index viewID);
 
 	void Pop();
 

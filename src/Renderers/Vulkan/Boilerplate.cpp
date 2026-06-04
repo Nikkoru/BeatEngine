@@ -166,25 +166,26 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
         .pNext = &features12,
         .synchronization2 = true,        
-        // .dynamicRendering = true
+        .dynamicRendering = true
     };
 	const VkPhysicalDeviceFeatures features10{ .samplerAnisotropy = VK_TRUE };
     
-    // const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
-    //     .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
-    //     .pNext = &features13,
-    //     .dynamicRendering = VK_TRUE,
-    // };
+    const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+        .pNext = &features13,
+        .dynamicRendering = VK_TRUE,
+    };
         
     const std::vector<const char*> deviceExtensions{ 
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        // VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
+        VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
+        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
     };
 
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        // .pNext = &renderingFeatures,
-        .pNext = &features13,
+        .pNext = &renderingFeatures,
+        // .pNext = &features13,
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueInfo,
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
@@ -399,4 +400,16 @@ VkSemaphoreSubmitInfo vki::GetSemaphoreSubmitInfo(VkPipelineStageFlags2 stageFla
         .stageMask = stageFlags,
         .deviceIndex = 0
     };
+}
+
+VkPipelineInputAssemblyStateCreateInfo vki::GetPipelineInputAssemblyStateInfo(VkPrimitiveTopology topology, VkPipelineInputAssemblyStateCreateFlags flags, VkBool32 primitiveRestartEnable) {
+    VkPipelineInputAssemblyStateCreateInfo info{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = flags,
+        .topology = topology,
+        .primitiveRestartEnable = primitiveRestartEnable
+    };
+
+    return info;
 }

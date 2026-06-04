@@ -14,9 +14,15 @@ public:
     void Init(std::string windowTitle, Vector2u windowSize) override;
     void Uninit() override;
     void Render() override;
+    void RenderImGui() override;
     void Display() override;
     void Clear() override;
     void Update() override;
+
+    void SetGlobalShader(std::shared_ptr<Shader> shader) override;
+
+    std::shared_ptr<Texture> CreateTexture(std::filesystem::path path) override;
+    std::shared_ptr<Shader> CreateShader(std::filesystem::path path, Shader::Type type) override;
 
     std::optional<Base::Event> PollEvent() const override;
 };

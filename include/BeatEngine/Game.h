@@ -32,14 +32,15 @@ private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
 	Game();
+	Game(const std::string name);
 	~Game();
 public:
 	/// <summary>
 	/// Runs and updates the game.
 	/// </summary>
 	void Run();
-    void Initialize();
-    void Uninitialize();
+    void Init();
+    void Uninit();
 public:
     /// <summary>
 	/// Registers a custom system onto the SystemManager.

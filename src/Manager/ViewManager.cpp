@@ -26,17 +26,18 @@ ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(type
 		auto sigView = std::static_pointer_cast<ViewPushSignal>(sig);
 		Push(sigView->ViewID);
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewPopSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
+	SignalManager::GetInstance()->RegisterCallback<ViewPopSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal>) {
 		Pop();
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewSuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
+	SignalManager::GetInstance()->RegisterCallback<ViewSuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal>) {
 		ViewStack.top()->OnSuspend();
 	});
-	SignalManager::GetInstance()->RegisterCallback<ViewUnsuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal> _) {
+	SignalManager::GetInstance()->RegisterCallback<ViewUnsuspendSignal>(typeid(ViewManager), [this](const std::shared_ptr<Base::Signal>) {
 		ViewStack.top()->OnResume();
 	});
     
-    EventManager::GetInstance()->Subscribe<GameExitingEvent>([](const std::shared_ptr<Base::Event> _) {
+    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event>) {
+        Uninit();
     }); 
 }
 
@@ -51,7 +52,7 @@ void ViewManager::Uninit() {
     }
 }
 
-void ViewManager::Push(std::type_index viewID) {
+bool ViewManager::Push(std::type_index viewID) {
 	if (!ViewFabrics.empty()) {
 		if (ViewFabrics.contains(viewID)) {
             if (!ViewStack.empty())
@@ -63,14 +64,19 @@ void ViewManager::Push(std::type_index viewID) {
             m_Context->ActiveView = MainView;
 
 			EventManager::GetInstance()->UpdateMainView(MainView);
+            ViewStack.top()->Init();
 			EventManager::GetInstance()->Send(std::make_shared<EventViewPush>(MainView));
+            return true;
 		}
-		else
+		else {
 			Logger::AddError(typeid(ViewManager), "View not registed. You need to register the view with RegisterView<TView>()");
+            return false;
+        }
 	}
-	else
+	else {
 		Logger::AddError(typeid(ViewManager), "No fabrics found");
-
+        return false;
+    }
 }
 
 void ViewManager::Pop() {
@@ -106,10 +112,12 @@ bool ViewManager::OnDraw() {
     Profiler::StartProfile({ typeid(ViewManager), "OnDraw" }, IM_COL32(255, 255, 0, 255));
 	if (!ViewStack.empty()) {
 		ViewStack.top()->OnDraw();
+        Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
 		return true;
 	}
 	else {
 		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
+        Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
 		return false;
 	}
     Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
@@ -119,13 +127,14 @@ bool ViewManager::OnUpdate(float dt) {
     Profiler::StartProfile({ typeid(ViewManager), "OnUpdate" }, IM_COL32(255, 150, 0, 255));
 	if (!ViewStack.empty()) {
 		ViewStack.top()->OnUpdate(dt);
+        Profiler::EndProfile({ typeid(ViewManager), "OnUpdate" });
 		return true;
 	}
 	else {
 		Logger::AddCritical(typeid(ViewManager), "No view on the stack. Did you forgot to push?");
+        Profiler::EndProfile({ typeid(ViewManager), "OnUpdate" });
 		return false;
 	}
-    Profiler::EndProfile({ typeid(ViewManager), "OnUpdate" });
 }
 
 bool ViewManager::OnExit() {

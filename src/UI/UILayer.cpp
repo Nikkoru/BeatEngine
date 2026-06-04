@@ -1,6 +1,9 @@
 #include "BeatEngine/UI/UILayer.h"
 
 UILayer::UILayer(Vector2f size, Vector2f position) {
+    // TODO: why is this constructor here even
+    (void)size;
+    (void)position;
 }
 
 void UILayer::SetLayerBackPanel() {
