@@ -166,7 +166,7 @@ void TestView::OnDraw() {
 	// window->draw(percentage);
 	// window->draw(count);
     //
-    b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
+    // b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
     b_mState->GetGraphicsMgr().ShowImGuiDebugWindow();
     b_mState->GetSettingsMgr().ShowImGuiDebugWindow();
     b_mState->GetAssetMgr().ShowImGuiDebugWindow();

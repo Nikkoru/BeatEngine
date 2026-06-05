@@ -170,6 +170,7 @@ FetchContent_MakeAvailable(libsndfile)
 
 FetchContent_Declare(taglib
     GIT_REPOSITORY https://github.com/taglib/taglib.git
+    GIT_TAG v2.3
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)

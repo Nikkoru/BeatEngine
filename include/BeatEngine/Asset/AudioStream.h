@@ -2,6 +2,7 @@
 
 #include "BeatEngine/Base/Asset.h"
 
+
 #include <miniaudio.h>
 #include <taglib/fileref.h>
 #include <samplerate.h>

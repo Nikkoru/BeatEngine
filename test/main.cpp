@@ -1,8 +1,8 @@
+
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_video.h>
 #include <filesystem>
 #include <memory>
-
 #include <BeatEngine/Logger.h>
 // #include <BeatEngine/Renderers/OpenGL/Renderer.h>
 #include <BeatEngine/Game.h>
@@ -96,12 +96,12 @@ int main(int argc, char** argv) {
         //         "assets/shaders/shader.vert"
         //     }
         // }
-        {
-            AssetType::ComputeShader,
-            {
-                "/home/niko/Projects/BeatEngine/assets/shaders/gradient.comp"
-            }
-        }
+        // {
+        //     AssetType::ComputeShader,
+        //     {
+        //         "/home/niko/Projects/BeatEngine/assets/shaders/gradient.comp"
+        //     }
+        // }
 	});
 
     game.Init();

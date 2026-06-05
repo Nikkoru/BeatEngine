@@ -58,7 +58,7 @@ if(USE_SDL_WINDOW AND NOT USE_GLFW_WINDOW)
     
     target_link_libraries(${PROJECT_NAME} 
         PUBLIC
-            SDL3
+            SDL3::SDL3
     ) 
 
     message(STATUS "Using SDL backend.")
@@ -93,21 +93,19 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VK_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
+    # target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_VOLK_FILENAME=<volk/volk.h>)
 
     if(NOT CROSS_BUILDING)
         find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
+        target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}/volk")
         target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
         target_link_libraries(${PROJECT_NAME}
-            PRIVATE 
+            PUBLIC 
                 Vulkan::Vulkan
                 Vulkan::volk
                 Vulkan::shaderc_combined
-                SPIRV
-                glslang
-                SPIRV-Tools-opt
-                SPIRV-Tools
         )
     else()
         target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_HEADERS_SOURCE_DIR}/include")
@@ -156,7 +154,7 @@ elseif(USE_SFML)
 endif()
 
 target_link_libraries(${PROJECT_NAME} 
-	PRIVATE 
+    PUBLIC 
 		portaudio
 		miniaudio
 		sndfile
@@ -166,10 +164,19 @@ target_link_libraries(${PROJECT_NAME}
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/include")
-target_include_directories(${PROJECT_NAME} PRIVATE "${taglib_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")
+
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${taglib_SOURCE_DIR})
+
+target_include_directories(${PROJECT_NAME} PUBLIC
+    $<TARGET_PROPERTY:tag,INTERFACE_INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:tag,INCLUDE_DIRECTORIES>
+    $<TARGET_PROPERTY:tag,BINARY_DIR>
+    $<TARGET_PROPERTY:tag,SOURCE_DIR>
+)
 
 if (BUILD_TESTS)
     add_subdirectory("test")
