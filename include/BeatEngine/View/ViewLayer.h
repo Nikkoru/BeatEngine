@@ -20,6 +20,7 @@ namespace Base {
 
 class Game;
 class ViewLayerStack;
+class GraphicsManager;
 class ViewLayer {
 private:
 	friend class ViewLayerStack;
@@ -51,8 +52,8 @@ public:
 	virtual void OnUpdate(float dt) = 0;
 	virtual void OnAttach() {} 
 	virtual void OnDetach() {}
-	virtual void OnEvent(std::optional<Base::Event> event) = 0;
-    virtual void OnDraw() = 0;
+	virtual void OnEvent(Optional<Base::Event> event) = 0;
+    virtual void OnDraw(GraphicsManager& mgr) = 0;
 
 	inline Vector2f GetSize() const { return m_Size; }
 	inline float GetCameraZoom() const { return m_Camera.GetZoom(); };

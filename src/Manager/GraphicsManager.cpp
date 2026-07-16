@@ -1,7 +1,15 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Asset/Shader.h"
+#include "BeatEngine/Base/Signal.h"
+#include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "imgui.h"
+
+#include "BeatEngine/GameContext.h"
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -12,6 +20,18 @@
 #include <filesystem>
 #include <memory>
 #include <string>
+
+GraphicsManager::GraphicsManager() {
+    SignalManager::GetInstance()->RegisterCallback<GameUninitGraphicsSignal>(typeid(GraphicsManager), [&](std::shared_ptr<Base::Signal> sig) {
+        auto uninitSignal = std::static_pointer_cast<GameUninitGraphicsSignal>(sig);
+
+        UninitElement(uninitSignal->Element);
+    });
+}
+
+GraphicsManager::~GraphicsManager() {
+    SignalManager::GetInstance()->RemoveCallbacks(typeid(GraphicsManager));
+}
 
 void GraphicsManager::MakeRenderer(std::shared_ptr<Renderer> renderer) {
     if (!renderer->m_Context)
@@ -37,7 +57,7 @@ void GraphicsManager::Init() {
 }
 
 void GraphicsManager::Update() {
-    
+    m_Renderer->Update(); 
 }
 
 void GraphicsManager::Close() {
@@ -45,6 +65,8 @@ void GraphicsManager::Close() {
 }
 
 void GraphicsManager::ShowImGuiDebugWindow() {
+    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+
     ImGui::Begin("GraphicsManager Debug");
     if (ImGui::BeginTabBar("SelectionTabBar")) {
         if (ImGui::BeginTabItem("Renderer")) {
@@ -105,15 +127,33 @@ void GraphicsManager::Clear() {
     m_Renderer->Clear();
 }
 
+void GraphicsManager::DrawElement(GraphicalElement& element) {
+    if (!element.Data->IsInitialized())
+        InitElement(element);
+    m_Renderer->DrawElement(element);
+}
+
+void GraphicsManager::InitElement(GraphicalElement& element) {
+    m_Renderer->InitElement(element);
+}
+
+void GraphicsManager::UninitElement(GraphicalElement& element) {
+    m_Renderer->UninitElement(element);
+}
+
 std::shared_ptr<Renderer> GraphicsManager::GetRenderer() {
     return m_Renderer;
 }
 
-std::shared_ptr<Texture> GraphicsManager::CreateTexture(std::filesystem::path path) {
+std::shared_ptr<Texture> GraphicsManager::CreateTexture(const std::filesystem::path& path) {
     return m_Renderer->CreateTexture(path);
 }
 
-std::shared_ptr<Shader> GraphicsManager::CreateShader(std::filesystem::path path, Shader::Type type) {
+std::shared_ptr<Font> GraphicsManager::CreateFont(const std::filesystem::path& path) {
+    return m_Renderer->CreateFont(path);
+}
+
+std::shared_ptr<Shader> GraphicsManager::CreateShader(const std::filesystem::path& path, Shader::Type type) {
     return m_Renderer->CreateShader(path, type);
 }
 
@@ -121,8 +161,11 @@ std::shared_ptr<BaseWindow> GraphicsManager::GetWindow() {
     return m_Renderer->GetWindow();
 }
 
-std::optional<Base::Event> GraphicsManager::PollEvent() {
-    return m_Renderer->PollEvent();
+Optional<Base::Event> GraphicsManager::PollEvent() {
+    auto event = m_Renderer->PollEvent();
+    m_Renderer->ProcessEvent(event);
+
+    return event;
 }
 
 bool GraphicsManager::IsOpen() {

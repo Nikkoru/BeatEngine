@@ -40,18 +40,23 @@ void OpenGLRenderer::SetGlobalShader(std::shared_ptr<Shader> shader) {
     (void)shader;
 }
 
-std::shared_ptr<Texture> OpenGLRenderer::CreateTexture(std::filesystem::path path) {
+std::shared_ptr<Texture> OpenGLRenderer::CreateTexture(const std::filesystem::path& path) {
     (void)path;
     return {};
 }
 
-std::shared_ptr<Shader> OpenGLRenderer::CreateShader(std::filesystem::path path, Shader::Type type) {
+std::shared_ptr<Font> OpenGLRenderer::CreateFont(const std::filesystem::path& path) {
+    (void)path;
+    return {};
+}
+
+std::shared_ptr<Shader> OpenGLRenderer::CreateShader(const std::filesystem::path& path, Shader::Type type) {
     (void)path;
     (void)type;
     return {};
 }
 
 
-std::optional<Base::Event> OpenGLRenderer::PollEvent() const {
+Optional<Base::Event> OpenGLRenderer::PollEvent() const {
     return m_Window->PollEvent();
 }

@@ -247,7 +247,7 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
                 // if (m_Context->GFlags & GameFlags_ImGui)
                     // ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str());
 
-				auto font = std::make_shared<Font>();
+                auto font = m_State->GetGraphicsMgr().CreateFont(path);
 
 				handle = Base::AssetHandle<Font>(font, typeid(Font));
 				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
@@ -262,7 +262,7 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-				auto font = std::make_shared<Font>();
+                auto font = m_State->GetGraphicsMgr().CreateFont(path);
 
 				handle = Base::AssetHandle<Font>(font);
 				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
@@ -394,6 +394,8 @@ bool AssetManager::Has(std::string name, const std::type_index viewID) {
 }
 
 void AssetManager::ShowImGuiDebugWindow() {
+    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+
     ImGui::Begin("AssetManager Debug");
     ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());
     ImGui::Text("View Assets: %zu", m_ViewAssets.size());

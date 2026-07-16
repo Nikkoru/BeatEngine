@@ -4,6 +4,7 @@
 #include <typeindex>
 
 
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/View/ViewLayerStack.h"
 
 class ViewManager;
@@ -47,12 +48,12 @@ namespace Base {
 		/// Notifies the view to draw to the given window.
 		/// </summary>
 		/// <param name="window">the SFML window to draw</param>
-		virtual void OnDraw() = 0;
+		virtual void OnDraw(GraphicsManager& mgr) = 0;
 		/// <summary>
 		/// Notifies the view when SFML event is trigged
 		/// </summary>
 		/// <param name="event">the SFML event</param>
-		virtual void OnEvent(const std::optional<Base::Event> event) = 0;
+		virtual void OnEvent(const Optional<Base::Event> event) = 0;
 		/// <summary>
 		/// Notifies the view to update.
 		/// </summary>

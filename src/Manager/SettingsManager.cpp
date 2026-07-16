@@ -69,8 +69,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 }
 
 void SettingsManager::WriteConfig(fs::path path) {
-    if (path.empty())
-        return;
+    if (path.empty()) return;
 
 	Logger::AddInfo(typeid(SettingsManager), "Writing config to \"{}\"", path.stem().string());
 
@@ -139,6 +138,8 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::ShowImGuiDebugWindow() {
+    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+
     ImGui::Begin("SettingsManager Debug");
     static char path[50];
     ImGui::Text("Settings : %zu", m_Settings.size());

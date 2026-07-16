@@ -1,6 +1,8 @@
 #pragma once
 
+#include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
@@ -11,6 +13,8 @@
 
 class TestView : public Base::View {
 private:
+    Camera m_Camera{};
+
     std::shared_ptr<UILayer> m_HUD = nullptr;
 
 	std::wstring m_MusicTitleText;
@@ -29,8 +33,8 @@ public:
 	~TestView() override = default;
 public:
     void Init() override;
-	void OnDraw() override;
-	void OnEvent(std::optional<Base::Event> event) override;
+	void OnDraw(GraphicsManager& mgr) override;
+	void OnEvent(Optional<Base::Event> event) override;
 	void OnUpdate(float dt) override;
 	void OnExit() override;
 

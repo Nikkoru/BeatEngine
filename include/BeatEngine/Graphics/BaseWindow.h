@@ -3,6 +3,7 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
+#include "BeatEngine/Util/Optional.hpp"
 #include <optional>
 #include <string>
 
@@ -23,7 +24,7 @@ public:
     virtual void UninitImGui() = 0;
     virtual void InitImGui() = 0;
 
-    virtual std::optional<Base::Event> PollEvent() = 0;
+    virtual Optional<Base::Event> PollEvent() = 0;
 
     virtual void SetSize(const Vector2u size) { (void)size; };
     virtual void SetMinimumSize(const Vector2u size) { (void)size; };
@@ -40,6 +41,7 @@ public:
     virtual Vector2u GetMaximumSize() const { return {}; }
     virtual std::string GetTitle() const { return {}; }
     virtual Vector2i GetPosition() const { return {}; }
+    virtual Vector2f GetMousePosition() const { return {}; }
     virtual bool IsFullscreen() const { return {}; }
     virtual bool IsCursorGrabbed() const { return {}; }
     virtual bool IsCursorVisible() const { return {}; }

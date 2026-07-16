@@ -1,9 +1,13 @@
 #pragma once
 
+#include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/Camera/Camera.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
+#include "BeatEngine/Util/Optional.hpp"
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -23,11 +27,13 @@ private:
     std::string m_WindowTitle{};
     Vector2u m_WindowSize{};
     bool m_WindowFullscreen{ false };
+
+    Camera* m_MainCamera{ nullptr };
 public:
-    GraphicsManager() = default;
+    GraphicsManager();
     GraphicsManager(GameContext* context, GameState* state)
         : m_Context(context), m_State(state) {}
-    ~GraphicsManager() = default;
+    ~GraphicsManager();
 public:
     template<typename RendererT>
         requires(std::is_base_of_v<Renderer, RendererT>)
@@ -37,6 +43,9 @@ public:
     void Init();
     void Update();
     void Close();
+
+    void SetMainCamera(Camera& camera) { m_MainCamera = &camera; }
+    Camera* GetMainCamera() { return m_MainCamera; }
 
     void ShowImGuiDebugWindow();
 
@@ -50,13 +59,18 @@ public:
     void Display();
     void Clear();
 
-    std::shared_ptr<Texture> CreateTexture(std::filesystem::path path);
-    std::shared_ptr<Shader> CreateShader(std::filesystem::path path, Shader::Type type);
+    void DrawElement(GraphicalElement& element);
+    void InitElement(GraphicalElement& element);
+    void UninitElement(GraphicalElement& element);
+
+    std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path);
+    std::shared_ptr<Font> CreateFont(const std::filesystem::path& path);
+    std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type);
 
     std::shared_ptr<BaseWindow> GetWindow();
     std::shared_ptr<Renderer> GetRenderer();
 
-    std::optional<Base::Event> PollEvent();
+    Optional<Base::Event> PollEvent();
 public:
     bool IsOpen();
 };

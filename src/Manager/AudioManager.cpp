@@ -10,6 +10,7 @@
 #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Util/Humanize.hpp"
 #include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
@@ -211,10 +212,9 @@ int AudioManager::SoundCallback(
 
 AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(context), m_State(state) {
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
-        if (this == nullptr)
-            return;
-
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
+
+        if (!m_AudioStream) return;
 		if (audioSignal->AudioStreamHandle) {
 			auto audioStream = audioSignal->AudioStreamHandle.Get();
 			for (const auto& stream : m_Streams) {
@@ -273,6 +273,7 @@ AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(co
 }
 
 AudioManager::~AudioManager() {
+    SignalManager::GetInstance()->RemoveCallbacks(typeid(AudioManager));
 }
 
 void AudioManager::Init() {
@@ -438,6 +439,8 @@ bool AudioManager::AllSoundsDone() const {
 }
 
 void AudioManager::ShowImGuiDebugWindow() {
+    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+
     ImGui::Begin("AudioManager Debug", nullptr, ImGuiWindowFlags_MenuBar);
     
     if (ImGui::BeginMenuBar()) {
@@ -560,6 +563,7 @@ player:
                     }
                 }
 
+                ImGui::Text("%s", std::format("{} - {}", Humanize::FromSeconds(stream->GetTranscurredSeconds()), Humanize::FromSeconds(stream->GetTotalSeconds())).c_str());
                 auto totalSeconds = stream->GetTotalSeconds();
                 auto transSeconds = stream->GetTranscurredSeconds();
                 auto bufProg = std::format("{}/{} ({}%)", std::floor(transSeconds), std::floor(totalSeconds), std::floor((transSeconds / totalSeconds) * 100));

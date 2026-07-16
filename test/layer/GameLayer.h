@@ -16,6 +16,6 @@ public:
     void Init() override {}
 
     void OnUpdate(float dt) override { (void)dt; }
-    void OnEvent(std::optional<Base::Event> event) override { (void)event; }
-    void OnDraw() override {}
+    void OnEvent(Optional<Base::Event> event) override { (void)event; }
+    void OnDraw(GraphicsManager&) override {}
 };

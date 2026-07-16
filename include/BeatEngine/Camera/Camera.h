@@ -4,29 +4,44 @@
 #include "BeatEngine/Camera/ShakeParams.h"
 #include "BeatEngine/Base/Entity.h"
 #include "BeatEngine/Graphics/Vector2.h"
+#include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 class Camera {
 private:
-    std::shared_ptr<Base::Entity> m_Entity = nullptr;
+    glm::mat4 m_Projection{};
+    float m_ZNear{};
+    float m_ZFar{};
+
+    bool m_Orthographic{ false };
+    bool m_Orthographic2D{ false };
+
+    float m_AspectRatio{ 16.f / 9.f };
+
+    Vector2f m_ViewSize{};
+
+    std::shared_ptr<Base::Entity> m_Entity{ nullptr };
     ShakeParams m_Shake;
     CameraMode m_Mode;
     float m_Zoom;
-    // sf::View m_View;
-    bool m_AutoResizeToWindowSize = true;
+    bool m_AutoResizeToWindowSize{ true };
+    bool m_ClipSpaceYDown{ true };
 public:
     Camera() = default;
     Camera(ShakeParams& shake) : m_Shake(shake) {}
     Camera(ShakeParams& shake, CameraMode& mode) : m_Shake(shake), m_Mode(mode) {}
 public:
-    void SetZoom(float zoom);
+    void InitOrtho2D(const Vector2f& size, float zNear = .0f, float zFar = 1.f);
+public:
+    void SetZoom(float zoom) { m_Zoom = zoom; };
     void SetFollowingEntity(std::shared_ptr<Base::Entity> entity);
-    void SetMode(CameraMode mode);
-    void SetShakeParams(ShakeParams params);
-    void SetPosition(Vector2f pos);
-    void SetSize(Vector2f size);
-    void SetAutoResize(bool resize);
+    void SetMode(CameraMode mode) { m_Mode = mode; };
+    void SetShakeParams(ShakeParams params) { m_Shake = params; };
+    void SetPosition(Vector2f pos) { (void)pos; };
+    void SetSize(Vector2f size) { (void)size; };
+    void SetAutoResize(bool resize) { m_AutoResizeToWindowSize = resize; };
 public:
     float GetZoom() const;
+    glm::mat4 GetProjection() const { return m_Projection; }
     std::shared_ptr<Base::Entity> GetEntity() const;
     CameraMode GetMode() const;
     ShakeParams GetShakeParams() const;

@@ -1,7 +1,11 @@
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/AudioManager.h"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Manager/EventManager.h"
 
 void GameState::CreateManagers(GameContext* context) {
+    // SignalManager::GetInstance()->ClearCallbacks();
+    // EventManager::GetInstance()->ClearCallbacks();
     ViewMgr = ViewManager(context, this);
     SystemMgr = SystemManager(context, this);
     AssetMgr = AssetManager(context, this);

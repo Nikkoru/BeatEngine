@@ -1,6 +1,7 @@
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Events/MouseEvents.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
@@ -9,13 +10,17 @@
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Profiler.h"
+#include "BeatEngine/Windows/Mouse.hpp"
+#include "SDL3/SDL_keycode.h"
 #include "imgui.h"
 
+#include <SDL3/SDL_keyboard.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_init.h>
 #include <SDL3/SDL_mouse.h>
 #include <SDL3/SDL_video.h>
+#include <optional>
 #include <vulkan/vulkan_core.h>
 
 #include <memory>
@@ -149,6 +154,13 @@ Vector2i SDLWindow::GetPosition() const {
     return pos;
 }
 
+Vector2f SDLWindow::GetMousePosition() const {
+    Vector2f pos;
+    SDL_GetMouseState(&pos.X, &pos.Y);
+
+    return pos;
+}
+
 bool SDLWindow::IsFullscreen() const {
     return m_Fullscreen;
 }
@@ -161,25 +173,75 @@ bool SDLWindow::IsCursorVisible() const {
     return SDL_CursorVisible();
 }
 
-std::optional<Base::Event> SDLWindow::PollEvent() {
+Optional<Base::Event> SDLWindow::PollEvent() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
+        ImGui_ImplSDL3_ProcessEvent(&e);
         switch (e.type) {
             case SDL_EVENT_QUIT:
                 return GameExitingEvent();
             case SDL_EVENT_WINDOW_RESIZED:
                 EventManager::GetInstance()->Send(std::make_shared<GameResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
-                break;
+                return GameResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
             case SDL_EVENT_KEY_DOWN:
                 if (e.key.key == SDLK_PIPE) {
-                    SignalManager::GetInstance()->Send(std::make_shared<GameToggleDrawingDebugInfo>());
+                        SignalManager::GetInstance()->Send(std::make_shared<GameToggleDrawingDebugInfo>());
                }
+
+                else if (e.key.key == SDLK_G)
+                    if (e.key.mod & SDL_KMOD_CTRL || e.key.mod & SDL_KMOD_LCTRL || e.key.mod & SDL_KMOD_RCTRL) {
+                        SignalManager::GetInstance()->Send(std::make_shared<GameToggleImGui>());
+                    }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                return MouseMovedEvent{{ static_cast<int>(e.motion.x), static_cast<int>(e.motion.y) }};
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+                {
+                    Mouse::Button btn{};
+                    switch (e.button.button) {
+                        case SDL_BUTTON_LEFT:
+                            btn = Mouse::Button::Left;
+                            break;
+                        case SDL_BUTTON_MIDDLE:
+                            btn = Mouse::Button::Middle;
+                            break;
+                        case SDL_BUTTON_RIGHT:
+                            btn = Mouse::Button::Right;
+                            break;
+                        case SDL_BUTTON_X1:
+                            btn = Mouse::Button::Extra1;
+                            break;
+                        case SDL_BUTTON_X2:
+                            btn = Mouse::Button::Extra1;
+                            break;
+                    }
+                    return MouseButtonDownEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
+                }
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+                Mouse::Button btn{};
+                switch (e.button.button) {
+                    case SDL_BUTTON_LEFT:
+                        btn = Mouse::Button::Left;
+                        break;
+                    case SDL_BUTTON_MIDDLE:
+                        btn = Mouse::Button::Middle;
+                        break;
+                    case SDL_BUTTON_RIGHT:
+                        btn = Mouse::Button::Right;
+                        break;
+                    case SDL_BUTTON_X1:
+                        btn = Mouse::Button::Extra1;
+                        break;
+                    case SDL_BUTTON_X2:
+                        btn = Mouse::Button::Extra1;
+                        break;
+                }
+                return MouseButtonUpEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
         }
 
-        ImGui_ImplSDL3_ProcessEvent(&e);
     } 
 
-    return {};
+    return std::nullopt;
 }
 
 void SDLWindow::OnRender() {
@@ -202,6 +264,7 @@ void SDLWindow::ImGuiWindowContent() {
     ImGui::Text("Window Title: %s", GetTitle().c_str());
     ImGui::Text("Window Size: (X: %u, Y: %u)", GetSize().X, GetSize().Y);
     ImGui::Text("Window Position: (X: %u, Y: %u)", GetPosition().X, GetPosition().Y);
+    ImGui::Text("Mouse Position: (X: %f, Y: %f)", GetMousePosition().X, GetMousePosition().Y);
 }
 
 SDL_WindowFlags SDLWindow::GetWindowFlags() {

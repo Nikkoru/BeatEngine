@@ -1,4 +1,5 @@
 #include "BeatEngine/View/ViewLayerStack.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 
 
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
@@ -17,7 +18,7 @@ std::shared_ptr<ViewLayer> ViewLayerStack::GetLayer(std::type_index id) {
 	return nullptr;
 }
 
-void ViewLayerStack::OnEvent(std::optional<Base::Event> event) {
+void ViewLayerStack::OnEvent(Optional<Base::Event> event) {
 	for (const auto& [type, layer] : m_Layers) {
 		layer->OnEvent(event);
 	}
@@ -29,8 +30,12 @@ void ViewLayerStack::OnUpdate(float dt) {
 	}
 }
 
-void ViewLayerStack::OnDraw() {
+void ViewLayerStack::Draw(GraphicsManager& mgr) {
 	for (const auto& [type, layer] : m_Layers) {
-		layer->OnDraw();
+		layer->OnDraw(mgr);
 	}
+}
+
+void ViewLayerStack::OnDraw(GraphicsManager& mgr) {
+    Draw(mgr);
 }

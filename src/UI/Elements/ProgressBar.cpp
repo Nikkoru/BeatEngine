@@ -1,23 +1,24 @@
 #include "BeatEngine/UI/Elements/ProgressBar.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/UI/UIElement.h"
+#include "BeatEngine/Util/UIHelper.h"
 
-// #include "BeatEngine/Util/UIHelper.h"
-
-UI::ProgressBar::ProgressBar(float current, float max) : m_Progress(current), m_MaxValue(max) {
+UI::ProgressBar::ProgressBar(float current, float max) : UIElement(typeid(ProgressBar)), m_Progress(current), m_MaxValue(max) {
 	SetSize({ 100, 20 });
-	// m_InnerRect.setFillColor(m_InnerColor);
-	// m_LayoutRect.setFillColor(m_BackColor);
+	m_InnerRect.SetColor(m_InnerColor);
+	m_LayoutRect.SetColor(m_BackColor);
 }
 
 void UI::ProgressBar::OnUpdate(float dt) {
     (void)dt;
 	m_Percentage = (m_Progress / m_MaxValue);
 
-	// m_InnerRect.setPosition(m_Position);
-	// m_LayoutRect.setPosition(m_Position);
+	m_InnerRect.SetPosition(m_Position);
+	m_LayoutRect.SetPosition(m_Position);
 
-	// auto x = UIHelper::Pertentage2PixelsX(m_Percentage, m_Size);
+	auto x = UIHelper::Pertentage2PixelsX(m_Percentage, m_Size);
 
-	// m_InnerRect.setSize({ x, m_Size.y });
+	m_InnerRect.SetSize({ x, m_Size.Y });
 }
 
 void UI::ProgressBar::UpdateProgress(float progress) {
@@ -40,17 +41,27 @@ float UI::ProgressBar::GetPercentage() const {
 	return m_Percentage;
 }
 
-// void UI::ProgressBar::SetInnerColor(sf::Color color) {
-// 	m_InnerColor = color;
-// 	m_InnerRect.setFillColor(color);
-// }
-//
-// void UI::ProgressBar::SetBackColor(sf::Color color) {
-// 	m_BackColor = color;
-// 	m_LayoutRect.setFillColor(color);
-// }
+void UI::ProgressBar::SetInnerColor(RGBColor color) {
+	m_InnerColor = color;
+	m_InnerRect.SetColor(color);
+}
 
-void UI::ProgressBar::OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
-	// target.draw(m_LayoutRect);
-	// target.draw(m_InnerRect);
+void UI::ProgressBar::SetBackColor(RGBColor color) {
+	m_BackColor = color;
+	m_LayoutRect.SetColor(color);
+}
+
+void UI::ProgressBar::OnDraw(GraphicsManager& mgr) {
+	m_LayoutRect.Draw(mgr);
+	m_InnerRect.Draw(mgr);
+}
+
+void UI::ProgressBar::OnUninitGraphics(GraphicsManager& mgr) {
+    m_LayoutRect.UninitGraphics(mgr);
+    m_InnerRect.UninitGraphics(mgr);
+}
+
+void UI::ProgressBar::SpecificImGuiDebug() {
+    ImGui::Text("ProgressBar Progress: %f", m_Progress);
+    ImGui::Text("ProgressBar MaxValue: %f", m_MaxValue);
 }

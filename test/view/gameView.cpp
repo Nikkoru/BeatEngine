@@ -18,10 +18,10 @@ void GameView::Init() {
 
 }
 
-void GameView::OnDraw() {
+void GameView::OnDraw(GraphicsManager&) {
 
 }
-void GameView::OnEvent(const std::optional<Base::Event>) {
+void GameView::OnEvent(const Optional<Base::Event>) {
     // if (auto data = event->getIf<sf::Event::KeyPressed>()) {
     //     if (data->scancode == sf::Keyboard::Scan::Escape)
     //         SignalManager::GetInstance()->Send(std::make_shared<ViewPopSignal>());

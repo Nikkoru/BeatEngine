@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/UI/UIElement.h"
 
 #include <memory>
 #include <typeindex>
@@ -24,7 +25,7 @@ public:
 	UIManager(GameContext* context, GameState* state);
 	~UIManager() = default;
 
-	void OnEvent(std::optional<Base::Event> event);
+	void OnEvent(Optional<Base::Event> event);
 
 	std::shared_ptr<UILayer> AddLayer(const std::string layerName, bool global = false);
 	void RemoveLayer(const std::string layerName, bool global = false);
@@ -38,4 +39,6 @@ public:
 	void Update(float dt);
     
     void ShowImGuiDebugWindow();
+private:
+    void DrawDebugElement(UIElement& element);
 };

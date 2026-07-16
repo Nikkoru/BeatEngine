@@ -10,24 +10,28 @@
 // #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/Graphics/RectShape.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
+#include "BeatEngine/Util/Optional.hpp"
 
 /// <summary>
 /// Semi-abstract base class for UI Elements compatible with SFML.
 /// As is compatible with SFML, it can draw its components using the normal <code>window.draw(UIElement)</code> method which each derivated class needs to implement.
 /// </summary>
-class UIElement /*: public sf::Drawable*/ {
+class UIElement : public GraphicalElement {
 protected:
+    friend class UIManager;
 	std::map<std::string, Texture> m_Textures;
 
 	std::type_index m_ID = typeid(nullptr);
 
 	Vector2f m_Size = { 0, 0 };
-	Vector2f m_Position = { 0, 0 };;
-	// sf::RectangleShape m_LayoutRect = sf::RectangleShape(m_Size);
+	Vector2f m_Position = { 0, 0 };
+    RectShape m_LayoutRect;
 
     UIAlignmentV m_VAlignment = UIAlignmentV::Down;
     UIAlignmentH m_HAlignment = UIAlignmentH::Left;
@@ -69,6 +73,7 @@ public:
 
 	Vector2f GetSize() const;
 	Vector2f GetPosition() const;
+    RectShape& GetLayoutRect() { return m_LayoutRect; }
 	bool IsVisible() const;
 public:
 	bool HasChild() const;
@@ -76,11 +81,18 @@ public:
     size_t ChildCount() const;
 	void RemoveChild(const std::string& name);
 
-	void OnEvent(std::optional<Base::Event> event);
-	virtual void EventHandler(std::optional<Base::Event> event) { (void)event; }
+	void OnEvent(Optional<Base::Event> event);
+	virtual void EventHandler(Optional<Base::Event> event) { (void)event; }
 
-	virtual void OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const = 0;
-	void draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const /*override*/;
+	virtual void OnDraw(GraphicsManager& mgr) = 0;
+	void Draw(GraphicsManager& mgr) override;
+
+    void UninitGraphics(GraphicsManager& mgr) override;
+    virtual void OnUninitGraphics(GraphicsManager& mgr) { m_LayoutRect.UninitGraphics(mgr); }
+
+    void DrawImGuiDrawData() override;
+
+    virtual void SpecificImGuiDebug() {};
 
 	template<typename TElement, typename... Args>
 		requires(std::is_base_of_v<UIElement, TElement>)

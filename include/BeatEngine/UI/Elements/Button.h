@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BeatEngine/Graphics/Color.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIClickeable.h"
 
 #include "BeatEngine/Asset/Font.h"
@@ -13,25 +15,29 @@ namespace UI {
 		float m_FontSize = 30;
 
 		// sf::Text m_SFMLText;
-		//
-		// sf::Color m_NormalColor		= sf::Color::White;
-		// sf::Color m_HoverColor		= sf::Color(100, 100, 100, 255);
-		// sf::Color m_ActiveColor		= sf::Color(150, 150, 150, 255);
-		// sf::Color m_TextNormalColor	= sf::Color::Black;
-		// sf::Color m_TextActiveColor = sf::Color::Black;
-		// sf::Color m_TextHoverColor = sf::Color::Black;
-		//
-		// sf::Color m_Color = m_NormalColor;
-		// sf::Color m_TextColor = m_TextNormalColor;
+        
+		RGBColor m_NormalColor		= RGBColor::White();
+		RGBColor m_HoverColor		= RGBColor(100, 100, 100, 255);
+		RGBColor m_ActiveColor		= RGBColor(150, 150, 150, 255);
+		RGBColor m_TextNormalColor	= RGBColor::Black();
+		RGBColor m_TextHoverColor = RGBColor::Black();
+		RGBColor m_TextActiveColor = RGBColor::Black();
+
+		RGBColor m_Color = m_NormalColor;
+		RGBColor m_TextColor = m_TextNormalColor;
 	public:
 		Button() : Button(Font(), "Button") {};
-		// Button(sf::Font font, std::string text, float fontSize = 30);
         Button(Font font, std::string text, float fontSize = 30);
 
 		void SetText(const std::string& text);
-		// void SetColors(sf::Color normalColor, sf::Color hoverColor, sf::Color activeColor, sf::Color textColor, sf::Color textActiveColor);
+        void SetNormalColor(RGBColor color) { m_NormalColor = color; }
+        void SetHoverColor(RGBColor color) { m_HoverColor = color; }
+        void SetActiveColor(RGBColor color) { m_ActiveColor = color; }
+        void SetTextNormalColor(RGBColor color) { m_TextNormalColor = color; }
+        void SetTextHoverColor(RGBColor color) { m_TextHoverColor = color; }
+        void SetTextActiveColor(RGBColor color) { m_TextActiveColor = color; }
+
 		void SetFontSize(float size);
-		// void SetFont(sf::Font font);
 		void SetFont(Font font);
 
 		std::string GetText();
@@ -39,6 +45,8 @@ namespace UI {
 
 		void OnUpdate(float dt) override;
 
-		void OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const override;
+		void OnDraw(GraphicsManager& mgr) override;
+
+        void SpecificImGuiDebug() override;
 	};
 }

@@ -97,7 +97,7 @@ void ViewManager::Pop() {
 		Logger::AddInfo(typeid(ViewManager), "Only one or no view. Not popping view");
 }
 
-bool ViewManager::OnEvent(std::optional<Base::Event> event) {
+bool ViewManager::OnEvent(Optional<Base::Event> event) {
 	if (!ViewStack.empty()) {
 		    ViewStack.top()->OnEvent(event);
 		return true;
@@ -111,7 +111,7 @@ bool ViewManager::OnEvent(std::optional<Base::Event> event) {
 bool ViewManager::OnDraw() {
     Profiler::StartProfile({ typeid(ViewManager), "OnDraw" }, IM_COL32(255, 255, 0, 255));
 	if (!ViewStack.empty()) {
-		ViewStack.top()->OnDraw();
+		ViewStack.top()->OnDraw(m_State->GetGraphicsMgr());
         Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
 		return true;
 	}
@@ -156,6 +156,8 @@ void ViewManager::GetViewKeybinds() {
 }
 
 void ViewManager::ShowImGuiDebugWindow() {
+    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+
     ImGui::Begin("ViewManager Debug");
     ImGui::Text("Registered Views: %zu", ViewFabrics.size());
     ImGui::Text("Size of stack: %zu", ViewStack.size());

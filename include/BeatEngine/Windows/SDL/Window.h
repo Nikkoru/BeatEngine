@@ -41,11 +41,12 @@ public:
     Vector2u GetMaximumSize() const override;
     std::string GetTitle() const override;
     Vector2i GetPosition() const override;
+    Vector2f GetMousePosition() const override;
     bool IsFullscreen() const override;
     bool IsCursorGrabbed() const override;
     bool IsCursorVisible() const override;
 
-    std::optional<Base::Event> PollEvent() override;
+    Optional<Base::Event> PollEvent() override;
 
     void OnRender() override;
     void OnDisplay() override;

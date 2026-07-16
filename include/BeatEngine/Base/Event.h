@@ -1,6 +1,8 @@
 #pragma once
 
+#include "BeatEngine/Util/Optional.hpp"
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <typeindex>
 
@@ -17,7 +19,12 @@ namespace Base {
 
         template<typename TEvent>
             requires(std::is_base_of_v<Base::Event, TEvent>)
-        std::shared_ptr<TEvent> GetIf() { if (Is<TEvent>()) return std::static_pointer_cast<TEvent>(this); }
+        static Optional<TEvent> GetIf(Optional<Event> e) {
+            if (e.HasValue() && e->Is<TEvent>()) {
+                return e.StaticCastTo<TEvent>();
+            }
+            else return std::nullopt;
+        }
 	public:
 		std::type_index ID;
 	};

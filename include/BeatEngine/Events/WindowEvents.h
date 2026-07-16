@@ -5,3 +5,4 @@
 class WindowResizedEvent : public Base::Event {
 
 };
+

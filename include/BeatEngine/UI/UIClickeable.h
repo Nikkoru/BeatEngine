@@ -1,6 +1,8 @@
 #pragma once
 
 #include "BeatEngine/UI/UIElement.h"
+#include "BeatEngine/Util/Optional.hpp"
+#include "BeatEngine/Windows/Mouse.hpp"
 
 class UIClickeable : public UIElement {
 protected:
@@ -26,9 +28,9 @@ public:
 
     bool IsHovered();
 
-	void EventHandler(std::optional<Base::Event> event) override;
+	void EventHandler(Optional<Base::Event> event) override;
 private:
 	void OnMouseMove(Vector2i position);
-	// void OnMousePressed(sf::Mouse::Button button, sf::Vector2i position);
-	// void OnMouseReleased(sf::Mouse::Button button, sf::Vector2i position);
+	void OnMousePressed(Mouse::Button button, Vector2i position);
+	void OnMouseReleased(Mouse::Button button, Vector2i position);
 };

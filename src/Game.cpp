@@ -34,6 +34,8 @@
 #include "BeatEngine/Util/CountedArray.h"
 #include "BeatEngine/Util/Profiler.h"
 
+#include "version.h"
+
 Game::Game() : Game("BeatEngine Game") {
 }
 
@@ -309,6 +311,7 @@ void Game::DrawImGuiDebug() {
 
             ImGui::Text("Build date: %s", __DATE__);
             ImGui::Text("Build time: %s", __TIME__);
+            ImGui::Text("Build commit: %s", BEATENGINE_COMMIT_ID_BUILD);
 
             ImGui::EndTabItem();
         }
@@ -400,7 +403,7 @@ void Game::Draw() {
 	if (!m_State.GetViewMgr().OnDraw())
 		Uninit();
 
-	m_GlobalLayers.OnDraw();
+	m_GlobalLayers.Draw(m_State.GetGraphicsMgr());
     m_State.GetUIMgr().OnDraw();
 
     Profiler::EndProfile({ typeid(Game), "Draw" });

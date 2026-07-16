@@ -1,6 +1,7 @@
 #include "BeatEngine/UI/Elements/UIPanel.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 
-void UIPanel::OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
+void UIPanel::OnDraw(GraphicsManager& mgr) {
    // if (m_ShowRect)
    //     target.draw(m_LayoutRect);
 }

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Util/Optional.hpp"
 #include <functional>
 #include <memory>
 #include <typeindex>
@@ -27,7 +29,7 @@ private:
 public:
     ViewManager() : ViewManager(nullptr, nullptr) {}
 	ViewManager(GameContext* context, GameState* state);
-	~ViewManager() = default;
+	~ViewManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(ViewManager)); };
 public:
     void Init();
     void Uninit();
@@ -43,7 +45,7 @@ public:
 		requires(std::is_base_of_v<Base::View, TView>)
 	void RegisterView();
 
-	bool OnEvent(std::optional<Base::Event> event);
+	bool OnEvent(Optional<Base::Event> event);
 	bool OnDraw();
 	bool OnUpdate(float dt);
 	bool OnExit();

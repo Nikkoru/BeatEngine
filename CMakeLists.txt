@@ -9,6 +9,9 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 project("BeatEngine")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+
+include(TargetShaders)
 
 option(BUILD_TESTS "Build & include tests" ON)
 option(MAKE_TEST_BUILD "Makes this project a BeatEngine Test Build" OFF)
@@ -29,16 +32,33 @@ set(HEADER_DEST_DIR "${PROJECT_SOURCE_DIR}/include")
 
 set(SOURCES "")
 set(HEADERS "")
+set(SHADERS "")
 
 # Include sub-projects.
 add_subdirectory("externals")
 add_subdirectory("src")
 add_subdirectory("include")
 
-add_library(BeatEngine 
+add_library("BeatEngine"
 	${SOURCES}
 	${HEADERS}
 )
+
+target_shaders(BeatEngine 
+    "${SHADERS}"
+)
+
+add_custom_target(UpdateGitVersion
+    COMMAND ${CMAKE_COMMAND} 
+        -DPROJECT_SOURE_DIR="${CMAKE_CURRENT_SOURCE_DIR}"
+        -DBINARY_DIR=${CMAKE_CURRENT_BINARY_DIR}
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/GenerateCommitID.cmake"
+    BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/version.h"
+    COMMENT "Fetching latest Git commit hash..."
+)
+
+add_dependencies(BeatEngine UpdateGitVersion)
+target_include_directories(BeatEngine PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
@@ -154,12 +174,19 @@ elseif(USE_SFML)
 endif()
 
 target_link_libraries(${PROJECT_NAME} 
+<<<<<<< HEAD
     PUBLIC 
+=======
+	PRIVATE 
+        glm::glm
+        freetype
+>>>>>>> 2695a99 (FINALLY we can draw stuff (using vulkan rendering), abstractions for drawing elements via GraphicalElement, many other changes)
 		portaudio
 		miniaudio
 		sndfile
 		samplerate
         tag
+        stb::image
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE "${PROJECT_SOURCE_DIR}/include")
@@ -167,6 +194,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${libsndfile_SOURCE_DIR}/inc
 target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")
+target_include_directories(${PROJECT_NAME} PRIVATE "${stb_SOURCE_DIR}/")
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${taglib_SOURCE_DIR})

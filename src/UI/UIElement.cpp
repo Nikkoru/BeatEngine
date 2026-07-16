@@ -1,7 +1,11 @@
 #include "BeatEngine/UI/UIElement.h"
 
+#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/UIHelper.h"
+#include <memory>
 
 UIElement::~UIElement() {
 }
@@ -52,12 +56,12 @@ void UIElement::Update(float dt) {
 
 void UIElement::SetSize(Vector2f size) {
 	this->m_Size = size;
-	// this->m_LayoutRect.setSize(size);
+	this->m_LayoutRect.SetSize(size);
 }
 
 void UIElement::SetPosition(Vector2f position) {
 	this->m_Position = position;
-    // this->m_LayoutRect.setPosition(position);
+    this->m_LayoutRect.SetPosition(position);
 }
 
 void UIElement::AddTexture(std::string name, const Texture& texture) {
@@ -110,12 +114,13 @@ void UIElement::RemoveChild(const std::string& name) {
 	for (auto& [childName, element] : m_Childs) {
 		if (childName == name) {
 			auto it = m_Childs.find(childName);
+            SignalManager::GetInstance()->Send(std::make_shared<GameUninitGraphicsSignal>(*it->second));
 			m_Childs.erase(it);
 		}
 	}
 }
 
-void UIElement::OnEvent(std::optional<Base::Event> event) {
+void UIElement::OnEvent(Optional<Base::Event> event) {
 	EventHandler(event);
 
 	if (!m_Childs.empty())
@@ -123,12 +128,31 @@ void UIElement::OnEvent(std::optional<Base::Event> event) {
 			element->EventHandler(event);
 }
 
-void UIElement::draw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
- //    if (!m_Hidden)
-	//     OnDraw(target, states);
-	//
-	// if (!m_Childs.empty())
-	// 	for (const auto& [childName, element] : m_Childs)
- //            if (!element->m_Hidden)
-	// 		    element->OnDraw(target, states);
+void UIElement::Draw(GraphicsManager& mgr) {
+    if (!m_Hidden)
+	    OnDraw(mgr);
+
+	if (m_Childs.empty()) return;
+
+    for (const auto& [childName, element] : m_Childs)
+        if (!element->m_Hidden)
+            element->OnDraw(mgr);
+}
+
+void UIElement::UninitGraphics(GraphicsManager& mgr) {
+    OnUninitGraphics(mgr);
+
+    if (m_Childs.empty()) return;
+
+    for (const auto& [childName, element] : m_Childs) {
+        element->UninitGraphics(mgr);
+    }
+}
+
+void UIElement::DrawImGuiDrawData() {
+    m_LayoutRect.DrawImGuiDrawData();
+
+    // for (const auto& [childName, element] : m_Childs) {
+    //     element->DrawImGuiDrawData();
+    // }
 }

@@ -9,8 +9,12 @@
 
 // #include "BeatEngine/Base/Event.h"
 // #include "BeatEngine/Asset/Shader.h"
+#include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/GameContext.h"
+#include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/Renderer.h"
+#include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 // #include "BeatEngine/Manager/SignalManager.h"
@@ -18,12 +22,15 @@
 #include "BeatEngine/Events/AudioEvent.h"
 // #include "BeatEngine/Signals/GameSignals.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
+#include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/UI/Elements/Button.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/UI/Elements/ProgressBar.h"
 #include "BeatEngine/UI/UILayer.h"
 // #include "gameView.h"
+
+#include <imgui.h>
 
 TestView::TestView(GameContext* context, GameState* state) 
 	: Base::View(typeid(TestView), context, state) {
@@ -80,12 +87,43 @@ TestView::TestView(GameContext* context, GameState* state)
 }
 
 void TestView::Init() {
-    // auto windowSize = b_mContext->WindowSize;
+    Vector2f size{ static_cast<float>(b_mContext->WindowSize.X), static_cast<float>(b_mContext->WindowSize.Y) };
+    m_Camera.InitOrtho2D(size);
+    b_mState->GetGraphicsMgr().SetMainCamera(m_Camera);
+
+    m_Font = std::make_shared<Font>();
+
+    auto windowSize = b_mContext->WindowSize;
     
     m_HUD = b_mState->GetUIMgr().AddLayer("mainViewUI");
 
     auto button = m_HUD->SetRootElement<UI::Button>();
     auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
+
+	auto playBtn = button->AddChild<UI::Button>("playBtn", *m_Font, "Play");
+	playBtn->SetSize({ 80, 30 });
+    playBtn->SetPosition({ 5 , 5 + button->GetPosition().Y + button->GetSize().Y });
+
+	auto stopBtn = button->AddChild<UI::Button>("stopBtn", *m_Font, "Stop");
+	stopBtn->SetSize({ 80, 30 });
+    stopBtn->SetPosition({ 5 + playBtn->GetPosition().X + playBtn->GetSize().X, 5 + button->GetPosition().Y + button->GetSize().Y });
+
+	auto pauseBtn = button->AddChild<UI::Button>("pauseBtn", *m_Font, "Pause");
+	pauseBtn->SetSize({ 80, 30 });
+    pauseBtn->SetPosition({ 5, 5 + playBtn->GetPosition().Y + playBtn->GetSize().Y });
+
+    auto gameBtn = button->AddChild<UI::Button>("gameBtn", *m_Font, "Game");
+    gameBtn->SetSize({ 80, 30 });
+    gameBtn->SetPosition({ static_cast<float>(windowSize.Y / 2) - static_cast<float>(gameBtn->GetSize().Y / 2), 100 });
+
+    playBtn->SetVAlignment(UIAlignmentV::Center);
+    playBtn->SetHAlignment(UIAlignmentH::Center);
+
+    stopBtn->SetVAlignment(UIAlignmentV::Center);
+    stopBtn->SetHAlignment(UIAlignmentH::Center);
+
+    pauseBtn->SetVAlignment(UIAlignmentV::Center);
+    pauseBtn->SetHAlignment(UIAlignmentH::Center);
 
 	// auto fontHandle = b_mAssetMgr->Get<Font>(std::string("main-font"));
 	// m_Font = fontHandle.Get();
@@ -119,7 +157,7 @@ void TestView::Init() {
     });
 }
 
-void TestView::OnDraw() {
+void TestView::OnDraw(GraphicsManager& mgr) {
 	// auto font = m_Font->GetSFMLFont();
  //    
  //    auto musicTitle = sf::Text(*font, m_MusicTitleText, 15);
@@ -142,8 +180,19 @@ void TestView::OnDraw() {
 	// auto percentage = sf::Text(*font, std::format("{:.0f}%", progressBar->GetPercentage() * 100), 15);
 	// percentage.setPosition({ 800 - percentage.getLocalBounds().size.x, count.getPosition().y + count.getLocalBounds().size.y + 1 });
 	//
-	//
-	// // window->draw(*m_HUD);
+    auto root = m_HUD->GetRootElement<UI::Button>(); 
+    if (b_mContext->GFlags & GameFlags_ImGui){
+        auto color = root->GetLayoutRect().GetColor();
+        ImGui::Begin("the real testing");
+        ImGui::Text("m_HUD root pos: X: %f Y: %f", root->GetPosition().X, root->GetPosition().Y);
+        ImGui::Text("m_HUD root size: X: %f Y: %f", root->GetSize().X, root->GetSize().Y);
+        ImGui::Text("m_HUD root color: R: %f G: %f, B: %f, A: %f", color.R, color.G, color.B, color.A);
+        ImGui::Text("m_HUD button text: %s", root->GetText().c_str());
+        root->DrawWindowImGuiDrawData();
+        ImGui::End();
+    }
+    root->Draw(mgr);
+	// m_HUD->Draw(mgr);
 	//
  //    if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
  //        auto musicProgressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("musicProg");
@@ -174,19 +223,19 @@ void TestView::OnDraw() {
     b_mState->GetUIMgr().ShowImGuiDebugWindow();
 }
 
-void TestView::OnEvent(std::optional<Base::Event> event) {
+void TestView::OnEvent(Optional<Base::Event> event) {
     (void)event;
-	// m_HUD->OnSFMLEvent(event);
+	m_HUD->OnEvent(event);
 	//
- //    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
- //        if (data->scancode == sf::Keyboard::Scan::Escape)
- //            SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
- //    }
- //    if (event->is<sf::Event::Resized>()) {
- //        auto windowSize = b_mContext->WindowSize;
- //        auto btn = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("gameBtn");
- //        btn->SetPosition({ static_cast<float>(windowSize.x / 2) - static_cast<float>(btn->GetSize().x / 2), 100 });
- //    }
+    // if (auto data = event->GetIf<EventKeyPressed>()) {
+    //     if (data->scancode == )
+    //         SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+    // }
+    if (event->Is<GameResizedEvent>()) {
+        auto windowSize = b_mContext->WindowSize;
+        auto btn = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("gameBtn");
+        btn->SetPosition({ static_cast<float>(windowSize.X / 2) - static_cast<float>(btn->GetSize().X / 2), 100 });
+    }
 }
 
 void TestView::OnUpdate(float dt) {
@@ -217,6 +266,7 @@ void TestView::OnUpdate(float dt) {
 
 void TestView::OnExit() {
     Logger::AddInfo(typeid(TestView), "OnExit() called");
+    m_HUD->UninitGraphics(b_mState->GetGraphicsMgr());
 }
 
 void TestView::OnSuspend() {

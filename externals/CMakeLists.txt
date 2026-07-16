@@ -33,6 +33,14 @@ list(APPEND HEADERS
     ${imgui_SOURCE_DIR}/imstb_truetype.h
 )
 
+FetchContent_Declare(freetype
+    GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+FetchContent_MakeAvailable(freetype)
+
 if (USE_SDL_WINDOW)
     # Fetch SDL
     FetchContent_Declare(SDL3
@@ -129,6 +137,35 @@ elseif(USE_SFML)
         SYSTEM)
     FetchContent_MakeAvailable(ImGui-SFML)
 endif()
+
+# Fetch glm
+FetchContent_Declare(glm
+    GIT_REPOSITORY https://github.com/g-truc/glm
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+FetchContent_MakeAvailable(glm)
+
+# Fetch stb
+FetchContent_Declare(stb
+    GIT_REPOSITORY https://github.com/nothings/stb
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM
+)
+FetchContent_GetProperties(stb)
+if(NOT stb_POPULATED)
+    FetchContent_MakeAvailable(stb)
+endif()
+
+add_library(stb_image INTERFACE)
+target_include_directories(stb_image INTERFACE "${stb_SOURCE_DIR}")
+add_library(stb::image ALIAS stb_image)
+
+#list(APPEND HEADERS
+#    ${stb_SOURCE_DIR}/stb_image.h
+#)
 
 # Fetch miniaudio
 FetchContent_Declare(miniaudio

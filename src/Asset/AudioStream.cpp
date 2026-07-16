@@ -3,6 +3,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Util/Exception.h"
+#include "BeatEngine/Util/Humanize.hpp"
 #include "BeatEngine/Util/Math.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Logger.h"
@@ -377,6 +378,8 @@ bool AudioStream::Erase() const {
 
 void AudioStream::ShowImGuiDetails(bool* open) {
     ImGui::Begin(m_Name.c_str(), open);
+    ImGui::Text("Title: %s", m_Metadata.Title.toCString(true));
+    ImGui::Text("Duration: %s", Humanize::FromSeconds(static_cast<int>(m_TotalSeconds)).c_str());
     if (ImGui::Button("Play")) {
         SignalManager::GetInstance()->Send(std::make_shared<PlayAudioStreamSignal>(m_Name));
     }

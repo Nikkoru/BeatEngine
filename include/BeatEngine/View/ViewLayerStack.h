@@ -1,8 +1,8 @@
 #pragma once
 
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/View/ViewLayer.h"
 
-#include <optional>
 #include <map>
 #include <typeindex>
 #include <memory>
@@ -11,7 +11,8 @@ namespace Base {
 	class View;
 }
 
-class ViewLayerStack /*: public sf::Drawable*/ {
+class GraphicsManager;
+class ViewLayerStack : public GraphicalElement {
 private:
 	friend class Base::View;
 	std::map<std::type_index, std::shared_ptr<ViewLayer>> m_Layers;
@@ -28,9 +29,10 @@ public:
 
 	std::shared_ptr<ViewLayer> GetLayer(std::type_index id);
 
-	void OnEvent(std::optional<Base::Event> event);
+	void OnEvent(Optional<Base::Event> event);
 	void OnUpdate(float dt);
-	void OnDraw();
+    void OnDraw(GraphicsManager& mgr);
+	void Draw(GraphicsManager& mgr) override;
 };
 
 #include "BeatEngine/View/ViewLayerStack.inl"

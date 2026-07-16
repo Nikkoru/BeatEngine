@@ -3,12 +3,14 @@
 #include <memory>
 
 #include "BeatEngine/Base/Event.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
 #include "BeatEngine/UI/UIElement.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
 
-class UILayer /*: public sf::Drawable*/ {
+class UILayer : public GraphicalElement {
 private:
 	std::shared_ptr<UIElement> m_Root = nullptr;
 	std::shared_ptr<UIPanel> m_BackPanel = nullptr;
@@ -31,10 +33,11 @@ public:
 
 	void SetLayerBackPanel();
 	void SetLayerBackPanel(std::shared_ptr<UIPanel> backPanel);
-	void OnEvent(std::optional<Base::Event> event);
+	void OnEvent(Optional<Base::Event> event);
 	
 	void Update(float dt);
-	void Render(/*sf::RenderTarget& target, sf::RenderStates states */) const /*override*/;
+	void Draw(GraphicsManager& mgr) override;
+    void UninitGraphics(GraphicsManager& mgr) override;
 
     void SetVisible(bool visible);
 

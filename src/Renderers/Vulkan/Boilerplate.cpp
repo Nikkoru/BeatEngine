@@ -29,6 +29,17 @@ void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle
 
     VK_CHECK(vkSetDebugUtilsObjectNameEXT(device, &objNameInfo));
 }
+bool VK_CHECK_SWAPCHAIN_SOURCE(VkResult result,
+                               const std::source_location location) {
+  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+    Logger::AddLog("\e[0;41mVulkan\033[0m", "",
+                   "Swapchain out of date. Requesting update");
+    return true;
+  } else {
+    VK_CHECK_SOURCE(result, location);
+    return false;
+  }
+}
 
 VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::vector<const char*> pInstExt, std::vector<const char*> pInstLayers) {
     VkInstance instance{ VK_NULL_HANDLE };
@@ -42,8 +53,11 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
 
     VkApplicationInfo appInfo{ 
         .sType = VK_STRUCTURE_TYPE_APPLICATION_INFO,
+        .pNext = nullptr,
         .pApplicationName = appName.c_str(),
+        .applicationVersion{},
         .pEngineName = "BeatEngine",
+        .engineVersion{},
         .apiVersion = apiVersion,
     };
 
@@ -121,20 +135,24 @@ std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swa
     return images;
 }
 
-std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage> images, VkFormat format) {
+std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format) {
     std::vector<VkImageView> imageViews(images.size());
 
     for (size_t i = 0; i < images.size(); i++) {
         VkImageViewCreateInfo info{
             .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .pNext = nullptr,
             .flags = 0,
             .image = images[i],
             .viewType = VK_IMAGE_VIEW_TYPE_2D,
             .format = format,
+            .components{},
             .subresourceRange {
                 .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                .baseMipLevel{},
                 .levelCount = 1,
-                .layerCount = 1
+                .baseArrayLayer{},
+                .layerCount = 1,
             }
         };
         VK_CHECK(vkCreateImageView(device, &info, nullptr, &imageViews[i]));
@@ -149,6 +167,8 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
 
     VkDeviceQueueCreateInfo queueInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags{},
         .queueFamilyIndex = queueFamily,
         .queueCount = 1,
         .pQueuePriorities = &qfpriorities
@@ -156,8 +176,12 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
 
     VkPhysicalDeviceVulkan12Features features12{
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+        .pNext = nullptr,
         .descriptorIndexing = true,
         .shaderSampledImageArrayNonUniformIndexing = true,
+        .descriptorBindingSampledImageUpdateAfterBind = true,
+        .descriptorBindingStorageImageUpdateAfterBind = true,
+        .descriptorBindingPartiallyBound = true,
         .descriptorBindingVariableDescriptorCount = true,
         .runtimeDescriptorArray = true,
         .bufferDeviceAddress = true
@@ -168,12 +192,24 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .synchronization2 = true,        
         .dynamicRendering = true
     };
-	const VkPhysicalDeviceFeatures features10{ .samplerAnisotropy = VK_TRUE };
+	VkPhysicalDeviceFeatures features10{ 
+        .imageCubeArray = VK_TRUE,
+        .geometryShader = VK_TRUE,
+        .depthClamp = VK_TRUE,
+        .samplerAnisotropy = VK_TRUE,
+    };
+    features10.largePoints = VK_TRUE;
+
     
-    const VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
+    VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
         .pNext = &features13,
         .dynamicRendering = VK_TRUE,
+    };
+    const VkPhysicalDeviceShaderObjectFeaturesEXT shaderFeatures {
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
+        .pNext = &renderingFeatures,
+        .shaderObject = VK_TRUE
     };
         
     const std::vector<const char*> deviceExtensions{ 
@@ -182,22 +218,39 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
     };
 
+    {
+        uint32_t propertiesCount;
+        std::vector<VkExtensionProperties> extProps;
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, nullptr);
+        extProps.resize(propertiesCount);
+        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, extProps.data());
+
+        // for (const auto& prVop : extProps) {
+        //     prop.
+        // }
+    }
+
+
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
-        .pNext = &renderingFeatures,
+        .pNext = &shaderFeatures,
+        // .pNext = &renderingFeatures,
         // .pNext = &features13,
+        .flags{},
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueInfo,
+        .enabledLayerCount{},
+        .ppEnabledLayerNames{},
         .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
         .ppEnabledExtensionNames = deviceExtensions.data(),
-        .pEnabledFeatures = &features10
+        .pEnabledFeatures = &features10,
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &device));
     return device;
 }
 
-VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkSwapchainKHR oldSwapchain, VkFormat imageFormat) {
+VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkPresentModeKHR presentMode, VkSwapchainKHR oldSwapchain, VkFormat imageFormat) {
     VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
 
     VkSurfaceCapabilitiesKHR surfaceCaps{};
@@ -205,6 +258,8 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
 
     VkSwapchainCreateInfoKHR swapchainInfo{
         .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .pNext = nullptr,
+        .flags{},
         .surface = surface,
         .minImageCount = surfaceCaps.minImageCount,
         .imageFormat = imageFormat,
@@ -218,7 +273,7 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = VK_PRESENT_MODE_FIFO_KHR
+        .presentMode = presentMode 
     };
     if (oldSwapchain)
         swapchainInfo.oldSwapchain = oldSwapchain;
@@ -236,6 +291,23 @@ VkImageSubresourceRange vkb::GetImageSubresourceRange(VkImageAspectFlags flags) 
         .baseArrayLayer = 0,
         .layerCount = VK_REMAINING_ARRAY_LAYERS
     };
+}
+
+VkPipelineLayout vkb::CreatePipelineLayout(VkDevice device, VkDescriptorSetLayout descLayout, VkPushConstantRange range) {
+
+    const auto info = VkPipelineLayoutCreateInfo{
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pNext = nullptr,
+        .setLayoutCount = 1,
+        .pSetLayouts = &descLayout,
+        .pushConstantRangeCount = 1,
+        .pPushConstantRanges = &range
+    };
+
+    VkPipelineLayout layout;
+    VK_CHECK(vkCreatePipelineLayout(device, &info, nullptr, &layout));
+
+    return layout;
 }
 
 void vku::TransitionImage(PipelineManager mgr, VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout) {
@@ -365,7 +437,7 @@ VkRenderingInfo vki::GetRenderingInfo(VkExtent2D extent, VkRenderingAttachmentIn
     return renderInfo;
 }
 
-VkSubmitInfo2 vki::GetSubmitInfo(VkCommandBufferSubmitInfo *cmdInfo, VkSemaphoreSubmitInfo* signalSemaphoreInfo, VkSemaphoreSubmitInfo* waitSemaphoreInfo) {
+VkSubmitInfo2 vki::GetSubmitInfo(const VkCommandBufferSubmitInfo *cmdInfo, const VkSemaphoreSubmitInfo* signalSemaphoreInfo, const VkSemaphoreSubmitInfo* waitSemaphoreInfo) {
     auto info = VkSubmitInfo2{
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
         .pNext = nullptr,
@@ -388,6 +460,25 @@ VkCommandBufferSubmitInfo vki::GetCommandBufferSubmitInfo(VkCommandBuffer cmd) {
         .pNext = nullptr,
         .commandBuffer = cmd,
         .deviceMask = 0
+    };
+}
+
+VkCommandPoolCreateInfo vki::GetCommandPoolCreateInfo(VkCommandPoolCreateFlags flags, uint32_t queueFamilyIndex) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = flags,
+        .queueFamilyIndex = queueFamilyIndex
+    };
+}
+
+VkCommandBufferAllocateInfo vki::GetCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount) {
+    return {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = commandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = commandBufferCount
     };
 }
 

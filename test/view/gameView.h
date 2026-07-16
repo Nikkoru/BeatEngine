@@ -11,8 +11,8 @@ public:
     GameView(GameContext* context, GameState* state);
 public:
     void Init() override;
-    void OnDraw() override;
-    void OnEvent(const std::optional<Base::Event> event) override;
+    void OnDraw(GraphicsManager& mgr) override;
+    void OnEvent(const Optional<Base::Event> event) override;
     void OnUpdate(float dt) override;
     void OnExit() override;
 };

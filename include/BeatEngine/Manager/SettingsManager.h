@@ -7,6 +7,8 @@
 #include <type_traits>
 #include <typeindex>
 
+#include "BeatEngine/Manager/SignalManager.h"
+
 namespace fs = std::filesystem;
 
 namespace Base {
@@ -24,7 +26,7 @@ private:
 public:
     SettingsManager() : SettingsManager(nullptr, nullptr) {}
 	SettingsManager(GameContext* context, GameState* state); 
-	~SettingsManager() = default;
+	~SettingsManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(SettingsManager)); };
 private:
 	friend class Game;
 	void ReadConfig(fs::path path);

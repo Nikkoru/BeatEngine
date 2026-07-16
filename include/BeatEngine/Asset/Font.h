@@ -4,17 +4,18 @@
 #include "BeatEngine/Base/Asset.h"
 
 class Font : public Base::Asset {
-private:
-	// std::shared_ptr<sf::Font> m_SFMLFont = nullptr;
 public:
 	Font() = default;
-	Font(const Font& other) /*: m_SFMLFont(other.m_SFMLFont)*/ { (void)other; }
-	Font(const Font&& other) noexcept /*: m_SFMLFont(std::move(other.m_SFMLFont))*/ { (void)other; }
-	// Font(sf::Font font) : m_SFMLFont(std::make_shared<sf::Font>(font)) {}
+	Font(const Font& other) { *this = other; }
+	Font(const Font&& other) noexcept { *this = std::move(other); }
 
 	explicit operator bool() const;
+
 	Font& operator=(const Font& other);
 	Font& operator=(const Font&& other) noexcept;
+
+    virtual bool IsValid() const { return false; }
 public:
-	const std::shared_ptr<Font> GetFont();
+    virtual void MakeCopy(const Font& other) { (void)other; } 
+    virtual void MakeMove(const Font&& other) noexcept { (void)other; } 
 };

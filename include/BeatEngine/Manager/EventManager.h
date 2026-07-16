@@ -29,6 +29,8 @@ public:
 	void Send(const std::shared_ptr<Base::Event> event);
 
 	void SetExitCallback(ExitCallback callback);
+
+    void ClearCallbacks() { m_ViewSubscribers.clear(); m_Subscribers.clear(); };
 protected:
 	friend class ViewManager;
 	void UpdateMainView(const std::type_index id);

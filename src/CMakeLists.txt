@@ -13,8 +13,19 @@
 	"${PROJECT_SOURCE_DIR}/src/Base/View.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/Graphics/BaseWindow.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/GraphicalElement.cpp"
     "${PROJECT_SOURCE_DIR}/src/Graphics/Renderer.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/Shape.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/RectShape.cpp"
 
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Core.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageData.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageCache.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/BindlessSetManager.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/RendererData.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Instance.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImmediateExecutor.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Swapchain.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Renderer.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Boilerplate.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/UninitQueue.cpp"
@@ -41,6 +52,7 @@
 	"${PROJECT_SOURCE_DIR}/src/Util/UIHelper.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/ChronoHelper.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/Profiler.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Util/Humanize.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/UID.cpp"
     "${PROJECT_SOURCE_DIR}/src/Util/Helper.cpp"
 
@@ -73,4 +85,10 @@
     "${PROJECT_SOURCE_DIR}/src/ImGui/MultiPlot.cpp"
 )
 
+list(APPEND SHADERS
+    "${PROJECT_SOURCE_DIR}/src/shaders/base.frag"
+    "${PROJECT_SOURCE_DIR}/src/shaders/base.vert"
+)
+
 set(SOURCES ${SOURCES} PARENT_SCOPE)
+set(SHADERS ${SHADERS} PARENT_SCOPE)

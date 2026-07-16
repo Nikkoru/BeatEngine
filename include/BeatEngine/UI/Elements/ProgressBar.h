@@ -1,14 +1,15 @@
 #pragma once
 
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIElement.h"
 
 namespace UI {
 	class ProgressBar : public UIElement {
 	private:
-		// sf::Color m_InnerColor = sf::Color(255, 255, 255, 255);
-		// sf::Color m_BackColor = sf::Color(155, 155, 155, 255);
+		RGBColor m_InnerColor{ 255, 255, 255 };
+		RGBColor m_BackColor{ 155, 155, 155 };
 
-		// sf::RectangleShape m_InnerRect;
+		RectShape m_InnerRect;
 
 		float m_Progress;
 		float m_MaxValue;
@@ -26,9 +27,12 @@ namespace UI {
 		float GetMaxValue() const;
 		float GetPercentage() const;
 
-		// void SetInnerColor(sf::Color color);
-		// void SetBackColor(sf::Color color);
+		void SetInnerColor(RGBColor color);
+		void SetBackColor(RGBColor color);
 
-		void OnDraw(/*sf::RenderTarget& target, sf::RenderStates states = sf::RenderStates::Default*/) const override;
+		void OnDraw(GraphicsManager& mgr) override;
+		void OnUninitGraphics(GraphicsManager& mgr) override;
+
+        void SpecificImGuiDebug() override;
 	};
 }

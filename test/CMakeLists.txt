@@ -26,6 +26,7 @@ target_compile_features(BeatEngineTest PRIVATE cxx_std_23)
 
 target_include_directories(BeatEngineTest PRIVATE "${HEADER_SOURCE_DIR}")
 target_include_directories(BeatEngineTest PRIVATE "${libsndfile_SOURCE_DIR}/include")
+target_include_directories(BeatEngineTest PRIVATE "${IMGUI_DIR}")
 target_include_directories(BeatEngineTest PRIVATE "${portaudio_SOURCE_DIR}/include")
 target_include_directories(BeatEngineTest PRIVATE "${samplerate_SOURCE_DIR}/include")
 target_include_directories(BeatEngineTest PRIVATE "${miniaudio_SOURCE_DIR}")

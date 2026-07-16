@@ -27,8 +27,8 @@ public:
 	void OnUpdate(float dt) override;
 	void OnAttach() override;
 	void OnDetach() override;
-	void OnEvent(std::optional<Base::Event> event) override;
-	void OnDraw() override;
+	void OnEvent(Optional<Base::Event> event) override;
+	void OnDraw(GraphicsManager& mgr) override;
 
     void ToggleImGuiDrawing();
 

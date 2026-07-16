@@ -1,31 +1,33 @@
 #include "BeatEngine/UI/Elements/Button.h"
 // #include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/Alignment.h"
+#include "imgui.h"
 
-UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize)/*, m_SFMLText(font, text, m_FontSize)*/ {
-	SetOnHover([]() {
-		// m_Color = m_HoverColor;
-		// m_TextColor = m_TextHoverColor;
+UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize) /*, m_SFMLText(font, text, m_FontSize)*/ {
+	SetOnHover([&]() {
+		m_Color = m_HoverColor;
+		m_TextColor = m_TextHoverColor;
 	});
-	SetOnUnHover([]() {
-		// m_Color = m_NormalColor;
-		// m_TextColor = m_TextNormalColor;
+	SetOnUnHover([&]() {
+		m_Color = m_NormalColor;
+		m_TextColor = m_TextNormalColor;
 	});
-	SetOnActive([]() {
+	SetOnActive([&]() {
 		// m_Color = m_ActiveColor;
 		// m_TextColor = m_TextActiveColor;
 	});
-	SetOnDeactive([this]() {
+	SetOnDeactive([&]() {
 		if (m_Hovered) {
-			// m_Color = m_HoverColor;
-			// m_TextColor = m_TextHoverColor;
+			m_Color = m_HoverColor;
+			m_TextColor = m_TextHoverColor;
 		}
 		else {
-			// m_Color = m_NormalColor;
-			// m_TextColor = m_TextNormalColor;
+			m_Color = m_NormalColor;
+			m_TextColor = m_TextNormalColor;
 		}
 	});
-    SetOnHide([this]() {
+    SetOnHide([&]() {
         if (m_Hovered) {
             // SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
         }
@@ -37,14 +39,6 @@ UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(t
 void UI::Button::SetText(const std::string& text) {
 	this->m_Text = text;
 }
-
-// void UI::Button::SetColors(sf::Color normalColor, sf::Color hoverColor, sf::Color activeColor, sf::Color textColor, sf::Color textActiveColor) {
-// 	this->m_ActiveColor = activeColor;
-// 	this->m_HoverColor = hoverColor;
-// 	this->m_ActiveColor = activeColor;
-// 	this->m_TextColor = textColor;
-// 	this->m_TextActiveColor = textActiveColor;
-// }
 
 void UI::Button::SetFontSize(float size) {
 	this->m_FontSize = size;
@@ -104,12 +98,18 @@ void UI::Button::OnUpdate(float dt) {
 		// m_LayoutRect.setTexture(texture.get());
 	}
 
-// 	m_LayoutRect.setFillColor(m_Color);
-// 	m_LayoutRect.setSize(m_Size);
-// 	m_LayoutRect.setPosition(m_Position);
+	m_LayoutRect.SetColor(m_Color);
+	m_LayoutRect.SetSize(m_Size);
+	m_LayoutRect.SetPosition(m_Position);
 }
 
-void UI::Button::OnDraw(/*sf::RenderTarget& target, sf::RenderStates states*/) const {
-// 	target.draw(m_LayoutRect);
-// 	target.draw(m_SFMLText);
+void UI::Button::OnDraw(GraphicsManager& mgr) {
+	m_LayoutRect.Draw(mgr);
+	// target.draw(m_SFMLText);
+}
+
+void UI::Button::SpecificImGuiDebug() {
+    ImGui::Text("Button text: %s", m_Text.c_str());
+    ImGui::Text("Font size: %f", m_FontSize);
+    m_Hovered ? ImGui::TextColored({ 0, 255, 0, 255 }, "Hovered") : ImGui::TextColored({ 255, 0, 0, 255 }, "Not Hovered");
 }

@@ -23,6 +23,9 @@ public:
 		requires (std::is_base_of_v<Base::Signal, TSignal>)
 	void RegisterCallback(std::type_index id, Callback callback); 
 	void Send(std::shared_ptr<Base::Signal> sig);
+
+    void ClearCallbacks() { m_SignalCallbacks.clear(); }
+    void RemoveCallbacks(std::type_index id) { if (m_SignalCallbacks.contains(id)) m_SignalCallbacks.at(id).clear(); }
 };
 
 #include "BeatEngine/Manager/SignalManager.inl"

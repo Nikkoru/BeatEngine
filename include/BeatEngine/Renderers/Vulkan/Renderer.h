@@ -6,10 +6,12 @@
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
+#include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
 #include "BeatEngine/Renderers/Vulkan/DescriptorAllocator.h"
 #include "BeatEngine/Renderers/Vulkan/FrameData.h"
 #include "BeatEngine/Renderers/Vulkan/PipelineManager.h"
 #include "BeatEngine/Renderers/Vulkan/UninitQueue.h"
+#include "BeatEngine/Renderers/Vulkan/Instance.h"
 
 #include <filesystem>
 #include <memory>
@@ -23,59 +25,32 @@ public:
     VulkanRenderer(GameContext* context) : Renderer(context) {}
     ~VulkanRenderer() override = default;
 private:
-    UninitQueue m_Uninitializers;
+    // UninitQueue m_Uninitializers;
 
     // Vulkan::Core
-    VkInstance m_Instance{ VK_NULL_HANDLE };
-    VkDebugUtilsMessengerEXT m_DebugMessenger{ VK_NULL_HANDLE };
-    VkPhysicalDeviceProperties m_DeviceProperties{};
-    VkPhysicalDevice m_PhysicalDevice{ VK_NULL_HANDLE };
-    VkDevice m_Device{ VK_NULL_HANDLE };
-    VkSurfaceKHR m_Surface{ VK_NULL_HANDLE };
-    VmaAllocator m_Allocator{ VK_NULL_HANDLE };
-
-    // Vulkan::Queue
-    VkQueue m_GraphicsQueue{ VK_NULL_HANDLE };
-    uint32_t m_GraphicsQueueFamily{};
+    VK::Instance m_Instance;
+    AllocatedImage m_AllocatedDrawImage{};
+    VkCommandBuffer m_ActiveCmd{};
 
     // Vulkan::Pipeline
     PipelineManager m_PipelineMgr;
     VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
     std::vector<VkFramebuffer> m_Framebuffers;
 
-    // Vulkan::Swapchain
-    VkSwapchainKHR m_Swapchain{ VK_NULL_HANDLE };
-    std::vector<VkImage> m_SwapchainImages;
-	std::vector<VkImageView> m_SwapchainImageViews;
-
-    VkFormat m_SwapchainFormat{ VK_FORMAT_B8G8R8A8_UNORM };
-    AllocatedImage m_DrawImage;
-    FrameData m_Frames[FRAME_OVERLAP];
-
-    uint32_t m_ActiveImageIndex;
-
     DescriptorAllocator m_GlobalDescriptorAllocator;
     VkDescriptorSet m_ImageDescriptor{ VK_NULL_HANDLE };
     VkDescriptorSetLayout m_ImageDescriptorLayout{ VK_NULL_HANDLE };
 private:
     bool m_StopRendering{ false };
-    bool m_UpdateSwapchain{ false };
-    bool m_CreateDebugMessenger{ true };
-    uint64_t m_FrameNumber{};
 private:
-    inline FrameData& GetCurrentFrame() { return m_Frames[m_FrameNumber % FRAME_OVERLAP]; }
-private:
-    void pInitVulkan();
-    void pInitSwapchain();
-    void pInitCommands();
-    void pInitSyncStructures();
     void pInitRenderPass();
     void pInitPipeline();
     void pInitDescriptors();
     void pInitFramebuffers();
     void pInitImGui();
 private:
-    void CreateDebugCallback();
+    VulkanTexture& GetErrorTexture() { return m_Instance.GetErrorTexture(); }
+    VulkanTexture& GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
 public:
     void Init(std::string windowTitle, Vector2u windowSize) override;
     void Uninit() override;
@@ -86,15 +61,20 @@ public:
     void Display() override;
     void Update() override;
     void SetGlobalShader(std::shared_ptr<Shader> shader) override;
+    void ProcessEvent(Optional<Base::Event> event) override;
 
-    void UpdateSwapchain();
+    void DrawElement(GraphicalElement& element) override;
+    void InitElement(GraphicalElement& element) override;
+    void UninitElement(GraphicalElement& element) override;
 
-    std::shared_ptr<Texture> CreateTexture(std::filesystem::path path) override;
-    std::shared_ptr<Shader> CreateShader(std::filesystem::path path, Shader::Type type) override;
+    std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;
+    std::shared_ptr<Font> CreateFont(const std::filesystem::path& path) override;
+    std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
 
     void ShowImGuiRenderTabContent() override;
 
-    std::optional<Base::Event> PollEvent() const override;
+    Optional<Base::Event> PollEvent() const override;
 public:
+
     std::shared_ptr<BaseWindow> GetWindow() const;
 };

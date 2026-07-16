@@ -1,22 +1,15 @@
 #include "BeatEngine/Asset/Font.h"
 
 Font::operator bool() const {
-// 	return m_SFMLFont != nullptr;
-    return false;
+    return IsValid();
 }
 
 Font& Font::operator=(const Font& other) {
-    (void)other;
-	// this->m_SFMLFont = other.m_SFMLFont;
+    MakeCopy(other);
 	return *this;
 }
 
 Font& Font::operator=(const Font&& other) noexcept {
-    (void)other;
-	// this->m_SFMLFont = std::move(other.m_SFMLFont);
+    MakeMove(std::move(other));
 	return *this;
-}
-
-const std::shared_ptr<Font> Font::GetFont() {
-	return nullptr;
 }

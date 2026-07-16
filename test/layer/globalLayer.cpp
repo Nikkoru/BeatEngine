@@ -1,7 +1,9 @@
 #include "globalLayer.h"
 // #include "BeatEngine/Enum/GameFlags.h"
 // #include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Manager/AssetManager.h"
+#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Settings/GameSettings.h"
 #include "BeatEngine/Signals/GameSignals.h"
 #include "BeatEngine/Signals/SettingsSignals.h"
@@ -106,10 +108,10 @@ void GlobalTestLayerUI::OnAttach() {
 void GlobalTestLayerUI::OnDetach() {
 }
 
-void GlobalTestLayerUI::OnEvent(std::optional<Base::Event> event) {
+void GlobalTestLayerUI::OnEvent(Optional<Base::Event> event) {
     (void)event;
-	// m_HUD->OnSFMLEvent(event);
-	//
+	m_HUD->OnEvent(event);
+
  //    if (auto data = event->getIf<sf::Event::KeyPressed>()) {
  //        if (data->scancode == sf::Keyboard::Scan::Grave) {
  //            ToggleImGuiDrawing();
@@ -118,12 +120,12 @@ void GlobalTestLayerUI::OnEvent(std::optional<Base::Event> event) {
  //            m_HUD->SetVisible(!m_HUD->IsVisible());
  //        }
  //    }
- //    else if (event->is<sf::Event::Resized>()) {
- //        UpdatePositions();
- //    }
+    if (event->Is<GameResizedEvent>()) {
+        UpdatePositions();
+    }
 }
 
-void GlobalTestLayerUI::OnDraw() {
+void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr) {
  //    auto font = m_Font->GetSFMLFont();
 	//
 	// auto fpsText = sf::Text(*font, m_FPSText, 15);
@@ -145,7 +147,7 @@ void GlobalTestLayerUI::OnDraw() {
 	//
 	// target.draw(fpsText);
 	// target.draw(deltaText);
-	// target.draw(*m_HUD);
+	m_HUD->Draw(mgr);
     DrawImGuiDebug();
 }
 
