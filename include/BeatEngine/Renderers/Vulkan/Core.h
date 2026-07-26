@@ -15,6 +15,7 @@ struct Core {
     VkInstance Instance{ VK_NULL_HANDLE };
     VkDebugUtilsMessengerEXT DebugMessenger{ VK_NULL_HANDLE };
     VkPhysicalDeviceProperties DeviceProperties{};
+    std::vector<VkExtensionProperties> DeviceExtensions{};
     VkImageFormatProperties ImageProperties{};
     VkPhysicalDevice PhysicalDevice{ VK_NULL_HANDLE };
     VkDevice Device{ VK_NULL_HANDLE };

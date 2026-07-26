@@ -25,12 +25,14 @@ void UILayer::Update(float dt) {
 		m_Root->Update(dt);
 }
 
-void UILayer::Draw(GraphicsManager& mgr) {
-    if (m_BackPanel)
-        m_BackPanel->Draw(mgr);
+void UILayer::Draw(GraphicsManager& mgr, RenderState state) {
+    if (m_BackPanel) {
+        m_BackPanel->Draw(mgr, state);
+    }
 
-	if (m_Root && !m_Hidden)
-		m_Root->Draw(mgr);
+	if (m_Root && !m_Hidden) {
+		m_Root->Draw(mgr, state);
+    }
 }
 
 void UILayer::UninitGraphics(GraphicsManager& mgr) {

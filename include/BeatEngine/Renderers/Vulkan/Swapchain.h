@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
@@ -8,7 +9,6 @@
 
 #include <array>
 #include <cstdint>
-#include <source_location>
 #include <vulkan/vulkan_core.h>
 
 
@@ -24,13 +24,15 @@ private:
     AllocatedImage m_DrawImage;
     std::array<FrameData, FRAME_OVERLAP> m_Frames;
 
+    VSyncMode m_VSync{ None };
+
     uint32_t m_ActiveImageIndex{};
 
     bool m_Outdated{ false };
 
     UninitQueue m_Uninitializers;
 public:
-    void Create(const Core& core, unsigned int width, unsigned int height, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM);
+    void Create(const Core& core, std::shared_ptr<BaseWindow> window, unsigned int width, unsigned int height, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM);
     void Uninit();
     Vector2u GetExtent() { return m_Extent; }
 

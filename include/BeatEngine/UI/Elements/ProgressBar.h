@@ -30,7 +30,7 @@ namespace UI {
 		void SetInnerColor(RGBColor color);
 		void SetBackColor(RGBColor color);
 
-		void OnDraw(GraphicsManager& mgr) override;
+		void OnDraw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
 		void OnUninitGraphics(GraphicsManager& mgr) override;
 
         void SpecificImGuiDebug() override;

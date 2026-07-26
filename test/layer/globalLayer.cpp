@@ -26,9 +26,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(GameContext* context, GameState* state) : V
 
 void GlobalTestLayerUI::Init() {
     m_HUD = m_State->GetUIMgr().AddLayer("GlobalTestLayerUI", true);
-
-	// m_Font = assetMgr->Get<Font>("main-font").Get();
-    // auto windowSize = m_Context->WindowSize;
+	m_Font = m_State->GetAssetMgr().Get<Font>("main-font").Get();
 
 	auto root = m_HUD->SetRootElement<UI::Button>();
     
@@ -37,17 +35,18 @@ void GlobalTestLayerUI::Init() {
     auto toggleFullscreenBtn = root->AddChild<UI::Button>("fullscreenToggle");
     auto settings = std::static_pointer_cast<GameSettings>(m_State->GetSettingsMgr().GetSettings(typeid(GameSettings)));
 
-	// root->SetFont(*m_Font);
+	root->SetFont(m_Font);
 	root->SetSize({80, 30});
     root->SetText("120 FPS");
 
-    root->SetOnLClick([settings]() {
+    root->SetOnLClick([&]() {
         settings->FpsLimit = 120;
 
-        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
+        m_State->GetSettingsMgr().SetSettings(typeid(GameSettings), settings);
+        // SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
 
-    // exitBtn->SetFont(*m_Font);
+    exitBtn->SetFont(m_Font);
     exitBtn->SetSize({ 80, 30 });
     exitBtn->SetText("Exit");
 
@@ -55,7 +54,7 @@ void GlobalTestLayerUI::Init() {
         SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
     });
 
-    // toggleVSyncBtn->SetFont(*m_Font);
+    toggleVSyncBtn->SetFont(m_Font);
     toggleVSyncBtn->SetSize({ 110, 30 });
     if (settings->VSync)
         toggleVSyncBtn->SetText("VSync On");
@@ -73,7 +72,7 @@ void GlobalTestLayerUI::Init() {
         SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(GameSettings), settings));
     });
 
-    // toggleFullscreenBtn->SetFont(*m_Font);
+    toggleFullscreenBtn->SetFont(m_Font);
     toggleFullscreenBtn->SetSize({ 110, 30 });
     if (settings->WindowFullScreen)
         toggleFullscreenBtn->SetText("In fullscreen");
@@ -98,8 +97,8 @@ void GlobalTestLayerUI::OnUpdate(float dt) {
     m_FPSText = std::format("FPS {:.2f}", 1 / dt);
     m_DeltaText = std::format("DT {:.3f}", dt);
 	m_HUD->Update(dt);
-    m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("exitBtn")->Update(dt);
-    m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("vSyncToggle")->Update(dt);
+    // m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("exitBtn")->Update(dt);
+    // m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("vSyncToggle")->Update(dt);
 }
 
 void GlobalTestLayerUI::OnAttach() {
@@ -125,7 +124,7 @@ void GlobalTestLayerUI::OnEvent(Optional<Base::Event> event) {
     }
 }
 
-void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr) {
+void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr, RenderState state) {
  //    auto font = m_Font->GetSFMLFont();
 	//
 	// auto fpsText = sf::Text(*font, m_FPSText, 15);
@@ -147,7 +146,7 @@ void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr) {
 	//
 	// target.draw(fpsText);
 	// target.draw(deltaText);
-	m_HUD->Draw(mgr);
+	m_HUD->Draw(mgr, state);
     DrawImGuiDebug();
 }
 

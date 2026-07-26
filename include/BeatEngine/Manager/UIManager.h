@@ -39,6 +39,8 @@ public:
 	void Update(float dt);
     
     void ShowImGuiDebugWindow();
+
+    void Uninit();
 private:
     void DrawDebugElement(UIElement& element);
 };

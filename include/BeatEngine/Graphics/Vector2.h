@@ -12,6 +12,9 @@ public:
     constexpr Vector2() = default;
     constexpr Vector2(T x);
     constexpr Vector2(T x, T y);
+    
+    template<typename U>
+    constexpr explicit operator Vector2<U>() const { return Vector2<U>(static_cast<U>(X), static_cast<U>(Y)); }
     // constexpr Vector2(ImVec2 vec);
 
     constexpr Vector2<T> operator*=(Vector2<T> right);
@@ -25,6 +28,8 @@ public:
 
 
     constexpr glm::vec2 ToGLMVec2();
+    constexpr Vector2<T> ComponentWiseDivision(Vector2<T> other);
+    constexpr Vector2<T> ComponentWiseMultiplication(Vector2<T> other);
     // constexpr Vector2<T> operator=(ImVec2 vec);
 };
 

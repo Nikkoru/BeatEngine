@@ -11,7 +11,7 @@ public:
     OpenGLRenderer() = default;
     ~OpenGLRenderer() override = default;
 public:
-    void Init(std::string windowTitle, Vector2u windowSize) override;
+    void Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync) override;
     void Uninit() override;
     void Render() override;
     void RenderImGui() override;

@@ -128,15 +128,15 @@ void UIElement::OnEvent(Optional<Base::Event> event) {
 			element->EventHandler(event);
 }
 
-void UIElement::Draw(GraphicsManager& mgr) {
+void UIElement::Draw(GraphicsManager& mgr, RenderState state) {
     if (!m_Hidden)
-	    OnDraw(mgr);
+	    OnDraw(mgr, state);
 
 	if (m_Childs.empty()) return;
 
     for (const auto& [childName, element] : m_Childs)
         if (!element->m_Hidden)
-            element->OnDraw(mgr);
+            element->OnDraw(mgr, state);
 }
 
 void UIElement::UninitGraphics(GraphicsManager& mgr) {

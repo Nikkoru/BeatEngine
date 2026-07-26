@@ -27,4 +27,6 @@ struct LinearColor {
 
     static LinearColor White() { return { 1.f, 1.f, 1.f }; }
     static LinearColor Black() { return { .0f, .0f, .0f}; }
+
+    bool operator<=>(const LinearColor& other) const = default;
 };

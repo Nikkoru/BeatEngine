@@ -213,5 +213,27 @@ FetchContent_Declare(taglib
     SYSTEM)
 FetchContent_MakeAvailable(taglib)
 
+FetchContent_Declare(harfbuzz
+    GIT_REPOSITORY https://github.com/harfbuzz/harfbuzz.git
+    GIT_TAG 14.2.1
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(harfbuzz)
+
+set_target_properties(harfbuzz PROPERTIES UNITY_BUILD OFF)
+
+if(BUILD_SHARED_LIBS)
+    set_target_properties(freetype harfbuzz PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endif()
+
+FetchContent_Declare(sheenbidi
+    GIT_REPOSITORY https://github.com/Tehreer/SheenBidi
+    GIT_TAG v3.0.0
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(sheenbidi)
+
 set(SOURCES ${SOURCES} PARENT_SCOPE)
 set(HEADERS ${HEADERS} PARENT_SCOPE)

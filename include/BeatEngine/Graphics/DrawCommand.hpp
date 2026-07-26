@@ -5,6 +5,7 @@
 
 class DrawCommand {
 public:
+    glm::mat4 projection;
     glm::mat4 transform;
     glm::vec2 padding;
     uint32_t textureID;

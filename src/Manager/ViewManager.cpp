@@ -36,9 +36,9 @@ ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(type
 		ViewStack.top()->OnResume();
 	});
     
-    EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event>) {
-        Uninit();
-    }); 
+    // EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event>) {
+    //     Uninit();
+    // }); 
 }
 
 void ViewManager::Init() {

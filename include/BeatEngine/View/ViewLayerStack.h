@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/Graphics/RenderState.hpp"
 #include "BeatEngine/View/ViewLayer.h"
 
 #include <map>
@@ -31,8 +32,8 @@ public:
 
 	void OnEvent(Optional<Base::Event> event);
 	void OnUpdate(float dt);
-    void OnDraw(GraphicsManager& mgr);
-	void Draw(GraphicsManager& mgr) override;
+    void OnDraw(GraphicsManager& mgr, RenderState state);
+	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
 };
 
 #include "BeatEngine/View/ViewLayerStack.inl"

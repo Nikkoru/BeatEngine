@@ -4,7 +4,7 @@
 #include "BeatEngine/UI/Alignment.h"
 #include "imgui.h"
 
-UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize) /*, m_SFMLText(font, text, m_FontSize)*/ {
+UI::Button::Button(std::shared_ptr<Font> font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize) , m_TextElement(font, text, m_FontSize) {
 	SetOnHover([&]() {
 		m_Color = m_HoverColor;
 		m_TextColor = m_TextHoverColor;
@@ -14,8 +14,8 @@ UI::Button::Button(Font font, std::string text, float fontSize) : UIClickeable(t
 		m_TextColor = m_TextNormalColor;
 	});
 	SetOnActive([&]() {
-		// m_Color = m_ActiveColor;
-		// m_TextColor = m_TextActiveColor;
+		m_Color = m_ActiveColor;
+		m_TextColor = m_TextActiveColor;
 	});
 	SetOnDeactive([&]() {
 		if (m_Hovered) {
@@ -44,14 +44,9 @@ void UI::Button::SetFontSize(float size) {
 	this->m_FontSize = size;
 }
 
-// void UI::Button::SetFont(sf::Font font) {
-// 	this->m_Font = font;
-// 	m_SFMLText.setFont(font);
-// }
-//
-void UI::Button::SetFont(Font font) {
+void UI::Button::SetFont(std::shared_ptr<Font> font) {
 	this->m_Font = font;
-	// m_SFMLText.setFont(*font.GetSFMLFont());
+	m_TextElement.SetFont(font);
 }
 
 std::string UI::Button::GetText() {
@@ -65,47 +60,55 @@ float UI::Button::GetFontSize() const {
 void UI::Button::OnUpdate(float dt) {
     (void)dt;
 
-	// m_SFMLText = sf::Text(m_Font, m_Text, m_FontSize);
-    
-    float x = 0, y = 0;
+    if (m_Text != m_TextElement.GetText())
+        m_TextElement.SetString(m_Text);
+    if (m_FontSize != m_TextElement.GetCharacterSize())
+        m_TextElement.SetCharacterSize(m_FontSize);
+
+    Vector2f textPos{};
     switch (m_HAlignment) {
     case UIAlignmentH::Left:
-        x = m_Position.X;
+        if (m_TextElement.GetLineAlignment() != TextElement::LineAlignment::Left)
+            m_TextElement.SetLineAlignment(TextElement::LineAlignment::Left);
+        textPos.X = m_Position.X;
         break;
     case UIAlignmentH::Right:
-        x = m_Position.X;
+        if (m_TextElement.GetLineAlignment() != TextElement::LineAlignment::Right)
+            m_TextElement.SetLineAlignment(TextElement::LineAlignment::Right);
+
+        textPos.X = m_Position.X + m_Size.X;
         break;
     case UIAlignmentH::Center:
-        x = m_Position.X / 2 /*- m_SFMLText.getLocalBounds().size.x / 2*/;
+        if (m_TextElement.GetLineAlignment() != TextElement::LineAlignment::Center)
+            m_TextElement.SetLineAlignment(TextElement::LineAlignment::Center);
+        textPos.X = m_Position.X + m_Size.X / 2.f; 
+        break;
     }
 
     switch (m_VAlignment) {
     case UIAlignmentV::Down:
-        y = m_Position.Y;
+        textPos.Y = m_Position.Y;
         break;
     case UIAlignmentV::Up:
-        y = m_Position.Y;
+        textPos.Y = m_Position.Y;
         break;
     case UIAlignmentV::Center:
-        x = m_Position.Y / 2 /*- m_SFMLText.getLocalBounds().size.y / 2*/;
+        textPos.Y = m_Position.Y;
     }
     
-	// m_SFMLText.setPosition({ x, y });
-	// m_SFMLText.setFillColor(m_TextColor);
-
-	if (!m_Textures.empty()) {
-		// auto& texture = m_Textures.begin()->second.GetSFMLTexture();
-		// m_LayoutRect.setTexture(texture.get());
-	}
+    if (textPos != m_TextElement.GetPosition())
+        m_TextElement.SetPosition(textPos);
+    if (m_TextColor != m_TextElement.GetColor())
+        m_TextElement.SetColor(m_TextColor);
 
 	m_LayoutRect.SetColor(m_Color);
 	m_LayoutRect.SetSize(m_Size);
 	m_LayoutRect.SetPosition(m_Position);
 }
 
-void UI::Button::OnDraw(GraphicsManager& mgr) {
-	m_LayoutRect.Draw(mgr);
-	// target.draw(m_SFMLText);
+void UI::Button::OnDraw(GraphicsManager& mgr, RenderState state) {
+	m_LayoutRect.Draw(mgr, state);
+	m_TextElement.Draw(mgr, state);
 }
 
 void UI::Button::SpecificImGuiDebug() {

@@ -30,12 +30,12 @@ void ViewLayerStack::OnUpdate(float dt) {
 	}
 }
 
-void ViewLayerStack::Draw(GraphicsManager& mgr) {
-	for (const auto& [type, layer] : m_Layers) {
-		layer->OnDraw(mgr);
-	}
+void ViewLayerStack::OnDraw(GraphicsManager& mgr, RenderState state) {
+    Draw(mgr, state);
 }
 
-void ViewLayerStack::OnDraw(GraphicsManager& mgr) {
-    Draw(mgr);
+void ViewLayerStack::Draw(GraphicsManager& mgr, RenderState state) {
+	for (const auto& [type, layer] : m_Layers) {
+		layer->OnDraw(mgr, state);
+	}
 }

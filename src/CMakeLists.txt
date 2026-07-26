@@ -13,7 +13,11 @@
 	"${PROJECT_SOURCE_DIR}/src/Base/View.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/Graphics/BaseWindow.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/Transform.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/Transformable.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/RenderState.cpp"
     "${PROJECT_SOURCE_DIR}/src/Graphics/GraphicalElement.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Graphics/TextElement.cpp"
     "${PROJECT_SOURCE_DIR}/src/Graphics/Renderer.cpp"
     "${PROJECT_SOURCE_DIR}/src/Graphics/Shape.cpp"
     "${PROJECT_SOURCE_DIR}/src/Graphics/RectShape.cpp"
@@ -22,16 +26,12 @@
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageData.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageCache.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/BindlessSetManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/RendererData.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Instance.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImmediateExecutor.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Swapchain.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Renderer.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Boilerplate.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/UninitQueue.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/PipelineManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/DescriptorBuilder.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/DescriptorAllocator.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Assets/Texture.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Assets/Shader.cpp"
 
@@ -49,6 +49,7 @@
 	"${PROJECT_SOURCE_DIR}/src/Asset/Texture.cpp"
 
 	"${PROJECT_SOURCE_DIR}/src/Util/Exception.cpp"
+	"${PROJECT_SOURCE_DIR}/src/Util/Graphics.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/UIHelper.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/ChronoHelper.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Util/Profiler.cpp"
@@ -74,6 +75,8 @@
     "${PROJECT_SOURCE_DIR}/src/Settings/GameDebugSettings.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/System/Clock.cpp"
+    "${PROJECT_SOURCE_DIR}/src/System/DataStream.cpp"
+    "${PROJECT_SOURCE_DIR}/src/System/String.cpp"
     "${PROJECT_SOURCE_DIR}/src/System/Time.cpp"
  
 	"${PROJECT_SOURCE_DIR}/src/Logger.cpp"

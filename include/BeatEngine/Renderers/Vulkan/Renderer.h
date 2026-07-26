@@ -7,10 +7,6 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
-#include "BeatEngine/Renderers/Vulkan/DescriptorAllocator.h"
-#include "BeatEngine/Renderers/Vulkan/FrameData.h"
-#include "BeatEngine/Renderers/Vulkan/PipelineManager.h"
-#include "BeatEngine/Renderers/Vulkan/UninitQueue.h"
 #include "BeatEngine/Renderers/Vulkan/Instance.h"
 
 #include <filesystem>
@@ -25,34 +21,44 @@ public:
     VulkanRenderer(GameContext* context) : Renderer(context) {}
     ~VulkanRenderer() override = default;
 private:
-    // UninitQueue m_Uninitializers;
+    uint32_t m_DeviceIndex{};
+
 
     // Vulkan::Core
     VK::Instance m_Instance;
     AllocatedImage m_AllocatedDrawImage{};
     VkCommandBuffer m_ActiveCmd{};
+    bool m_Active{ false };
 
-    // Vulkan::Pipeline
-    PipelineManager m_PipelineMgr;
-    VkRenderPass m_RenderPass{ VK_NULL_HANDLE };
-    std::vector<VkFramebuffer> m_Framebuffers;
+    struct DrawData {
+        GPUBuffer DrawCommandBuffer;
+        GPUBuffer VertexBuffer;
+    };
 
-    DescriptorAllocator m_GlobalDescriptorAllocator;
-    VkDescriptorSet m_ImageDescriptor{ VK_NULL_HANDLE };
-    VkDescriptorSetLayout m_ImageDescriptorLayout{ VK_NULL_HANDLE };
+    struct FrameDrawData {
+        std::unordered_map<std::type_index, std::vector<DrawData>> DrawDatas;
+    };
+
+    class DefaultPushConstants : public PushConstants {
+    public:
+        VkDeviceAddress CommandBuffer;
+    public:
+        DefaultPushConstants(VkDeviceAddress cmd) : CommandBuffer(cmd) {}
+    };
+
+    std::shared_ptr<Shader> m_DefaultVertexShader{};
+    std::shared_ptr<Shader> m_DefaultFragmentShader{};
+
+    std::array<FrameDrawData, FRAME_OVERLAP> m_RenderFramesData;
+    std::unordered_map<std::type_index, std::vector<VkPipelineLayout>> m_Layouts;
+    std::unordered_map<std::type_index, std::vector<VertexArray>> m_Highlights;
 private:
     bool m_StopRendering{ false };
-private:
-    void pInitRenderPass();
-    void pInitPipeline();
-    void pInitDescriptors();
-    void pInitFramebuffers();
-    void pInitImGui();
 private:
     VulkanTexture& GetErrorTexture() { return m_Instance.GetErrorTexture(); }
     VulkanTexture& GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
 public:
-    void Init(std::string windowTitle, Vector2u windowSize) override;
+    void Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync = VSyncMode::Disable) override;
     void Uninit() override;
 public:
     void Render() override;
@@ -63,18 +69,33 @@ public:
     void SetGlobalShader(std::shared_ptr<Shader> shader) override;
     void ProcessEvent(Optional<Base::Event> event) override;
 
-    void DrawElement(GraphicalElement& element) override;
-    void InitElement(GraphicalElement& element) override;
-    void UninitElement(GraphicalElement& element) override;
+    void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) override;
+    void InitVertices(VertexArray& vertices, RenderState state) override;
+    void UninitVertices(VertexArray& vertices) override;
 
+
+    unsigned int GetMaxTextureSize() override;
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;
+    std::shared_ptr<Texture> CreateTexture(const uint8_t* pixelData, Vector2u size) override;
+    std::shared_ptr<Texture> CreateEmptyTexture(Vector2u size) override;
+    void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData, Vector2u size, Vector2u dest) override;
+    void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) override { UpdateTexture(texture, pixelData, texture->GetSize(), { 0, 0 }); };
+    void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) override;
+    void DestroyTexture(std::shared_ptr<Texture> texture) override;
     std::shared_ptr<Font> CreateFont(const std::filesystem::path& path) override;
+    void DestroyFont(std::shared_ptr<Font> font) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
+
+    const AllocatedImage& GetImageFromID(ImageID id) { return m_Instance.GetImageFromID(id); }
 
     void ShowImGuiRenderTabContent() override;
 
     Optional<Base::Event> PollEvent() const override;
-public:
 
+    uint32_t GetFreeBufferIndex(std::type_index viewID); 
+    uint32_t GetFreeHighlightIndex(std::type_index viewID);
+
+    void SetDeviceIndex(uint32_t index) { m_DeviceIndex = index; }
+public:
     std::shared_ptr<BaseWindow> GetWindow() const;
 };

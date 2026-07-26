@@ -10,7 +10,12 @@ layout (set = 0, binding = 1) uniform sampler samplers[];
 #define LINEAR_SAMPLER_ID  1
 #define SHADOW_SAMPLER_ID  2
 
+#define NULL_TEXTURE 0xFFFFFFFF
+
 vec4 sampleTexture2DNearest(uint texID, vec2 uv) {
+    if (texID == NULL_TEXTURE)
+        return texture(nonuniformEXT(sampler2D(textures[1], samplers[NEAREST_SAMPLER_ID])), uv);
+
     return texture(nonuniformEXT(sampler2D(textures[texID], samplers[NEAREST_SAMPLER_ID])), uv);
 }
 

@@ -14,6 +14,7 @@ private:
 
     bool m_Orthographic{ false };
     bool m_Orthographic2D{ false };
+    bool m_UpdateProjection{ false };
 
     float m_AspectRatio{ 16.f / 9.f };
 

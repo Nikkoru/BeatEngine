@@ -1,7 +1,9 @@
 #pragma once
 
 enum VSyncMode {
-    Disable = 0,
+    None = 0,
+    Default,
+    Disable,
     SyncWithFirstRefresh,
     SyncWithSecondRefresh,
     Adaptative

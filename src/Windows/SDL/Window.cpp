@@ -46,7 +46,22 @@ void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u win
     if (windowSize == Vector2u{}) {
         windowSize = GetSize();
     }
-    Logger::AddLog("\e[30;46mSDL\033[0m", "", "Window created. Size = ({}, {}), Title = {}", windowSize.X, windowSize.Y, windowTitle);
+    
+    auto driverName = SDL_GetCurrentVideoDriver();
+
+    if (driverName) {
+        if (strcmp(driverName, "x11") == 0) m_WindowDriver = WindowDriver::X11;
+        else if (strcmp(driverName, "wayland") == 0) m_WindowDriver = WindowDriver::Wayland;
+        else if (strcmp(driverName, "cocoa") == 0) m_WindowDriver = WindowDriver::Cocoa;
+        else if (strcmp(driverName, "windows") == 0) m_WindowDriver = WindowDriver::Windows;
+    }
+    else {
+        m_WindowDriver = WindowDriver::None;
+        driverName = "No video driver";
+    }
+
+
+    Logger::AddLog("\e[30;46mSDL\033[0m", "", "Window created. Size = ({}, {}), Driver = {}, Title = {}", windowSize.X, windowSize.Y, driverName, windowTitle);
     LogActiveFlags();
 }
 

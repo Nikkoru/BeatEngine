@@ -18,6 +18,10 @@ public:
     VkDescriptorSetLayout GetSetLayout() const { return m_DescLayout; }
     const VkDescriptorSet& GetSet() const { return m_DescSet; }
 
+    VkSampler& GetLinearSampler() { return m_NearestSampler; }
+    VkSampler& GetNearestSampler() { return m_LinearSampler; }
+    VkSampler& GetShadowMapSampler() { return m_ShadowMapSampler; }
+
     void AddImage(VkDevice device, uint32_t id, const VkImageView imageView);
     void AddSampler(VkDevice device, uint32_t id, VkSampler sampler);
 private:

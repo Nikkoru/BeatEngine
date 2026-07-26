@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Graphics/Color.h"
+#include "BeatEngine/Graphics/TextElement.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIClickeable.h"
 
@@ -11,10 +12,10 @@ namespace UI {
 	class Button : public UIClickeable {
 	private:
 		std::string m_Text = "Button";
-		Font m_Font;
+        std::shared_ptr<Font> m_Font{ nullptr };
 		float m_FontSize = 30;
 
-		// sf::Text m_SFMLText;
+		TextElement m_TextElement;
         
 		RGBColor m_NormalColor		= RGBColor::White();
 		RGBColor m_HoverColor		= RGBColor(100, 100, 100, 255);
@@ -26,8 +27,8 @@ namespace UI {
 		RGBColor m_Color = m_NormalColor;
 		RGBColor m_TextColor = m_TextNormalColor;
 	public:
-		Button() : Button(Font(), "Button") {};
-        Button(Font font, std::string text, float fontSize = 30);
+		Button() : Button(nullptr, "Button") {};
+        Button(std::shared_ptr<Font> font, std::string text, float fontSize = 30);
 
 		void SetText(const std::string& text);
         void SetNormalColor(RGBColor color) { m_NormalColor = color; }
@@ -38,14 +39,14 @@ namespace UI {
         void SetTextActiveColor(RGBColor color) { m_TextActiveColor = color; }
 
 		void SetFontSize(float size);
-		void SetFont(Font font);
+		void SetFont(std::shared_ptr<Font> font);
 
 		std::string GetText();
 		float GetFontSize() const;
 
 		void OnUpdate(float dt) override;
 
-		void OnDraw(GraphicsManager& mgr) override;
+		void OnDraw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
 
         void SpecificImGuiDebug() override;
 	};

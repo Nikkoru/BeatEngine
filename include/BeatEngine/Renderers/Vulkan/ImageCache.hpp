@@ -2,6 +2,7 @@
 
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include "BeatEngine/Renderers/Vulkan/BindlessSetManager.h"
+#include <cassert>
 #include <vector>
 
 namespace VK {
@@ -17,10 +18,11 @@ public:
     BindlessSetManager BindlessSetMgr{};
 public:
     ImageCache(VK::Instance& instance);
+    ~ImageCache() = default; 
 
     ImageID AddImage(AllocatedImage image);
     ImageID AddImage(ImageID id, AllocatedImage image);
-    const AllocatedImage& GetImage(ImageID id) { return m_Images[id]; };
+    const AllocatedImage& GetImage(ImageID id);
 
     void SetMissingImageID(ImageID id) { m_MissingImageID = id; }
 

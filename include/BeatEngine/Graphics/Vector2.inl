@@ -15,42 +15,42 @@ template<typename T>
 constexpr Vector2<T> Vector2<T>::operator*=(Vector2<T> right) {
     this->X *= right.X;
     this->Y *= right.Y;
-    return this;
+    return *this;
 }
 
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator*=(T right) {
     this->X *= right;
     this->Y *= right;
-    return this;
+    return *this;
 }
 
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator/=(Vector2<T> right) {
     this->X /= right.X;
     this->Y /= right.Y;
-    return this;
+    return *this;
 }
 
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator/=(T right) {
     this->X /= right;
     this->Y /= right;
-    return this;
+    return *this;
 }
 
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator+=(Vector2<T> right) {
     this->X += right.X;
     this->Y += right.Y;
-    return this;
+    return *this;
 }
 
 template<typename T>
 constexpr Vector2<T> Vector2<T>::operator-=(Vector2<T> right) {
     this->X -= right.X;
     this->Y -= right.Y;
-    return this;
+    return *this;
 }
 
 template<typename T>
@@ -68,11 +68,29 @@ constexpr glm::vec2 Vector2<T>::ToGLMVec2() {
     return glm::vec2(this->X, this->Y);
 }
 
+
+template<typename T>
+constexpr Vector2<T> Vector2<T>::ComponentWiseDivision(Vector2<T> other) {
+    return { X / other.X, Y / other.Y };
+}
+
+template<typename T>
+constexpr Vector2<T> Vector2<T>::ComponentWiseMultiplication(Vector2<T> other) {
+    return { X * other.X, Y * other.Y };
+}
+
 // template<typename T>
 // constexpr Vector2<T> Vector2<T>::operator=(ImVec2 vec) {
 //     this->X = vec.x;
 //     this->Y = vec.y;
 //     return *this;
+// }
+
+// template<typename T>
+// constexpr Vector2<T> operator+=(Vector2<T>& left, Vector2<T> right) {
+//     left.X += right.X;
+//     left.Y += right.Y;
+//     return left;
 // }
 
 template<typename T>
@@ -106,7 +124,7 @@ constexpr Vector2<T> operator/(Vector2<T> left, Vector2<T> right) {
 
 template<typename T>
 constexpr Vector2<T> operator/(Vector2<T> left, T right) {
-    return Vector2<T>(left.X / right.X, left.Y / right.Y);
+    return Vector2<T>(left.X / right, left.Y / right);
 }
 
 template<typename T>

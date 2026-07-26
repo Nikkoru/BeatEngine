@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
-#include "BeatEngine/Renderers/Vulkan/PipelineManager.h"
 #include <source_location>
 #include <string>
 #include <vector>
@@ -20,8 +19,8 @@ void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle
 
 namespace vkb {
     VkInstance CreateInstance(std::string appName, uint32_t apiVersion, std::vector<const char*> pInstExt = {}, std::vector<const char*> pInstLayers = {});
-    VkPhysicalDevice CreatePhysicalDevice(VkInstance instance, uint32_t deviceIndex = 0, VkPhysicalDeviceProperties* props = nullptr);
-    VkDevice CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily);
+    VkPhysicalDevice CreatePhysicalDevice(VkInstance instance, std::vector<VkExtensionProperties>& availableExts, uint32_t deviceIndex = 0, VkPhysicalDeviceProperties* props = nullptr);
+    VkDevice CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily, std::vector<const char*>& requestedExts, std::vector<VkExtensionProperties>& deviceExts);
     VkSwapchainKHR CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE, VkFormat imageFormat = VK_FORMAT_B8G8R8A8_UNORM);
 
     uint32_t GetQueueFamily(VkPhysicalDevice device);
@@ -34,7 +33,7 @@ namespace vkb {
 }
 
 namespace vku {
-    void TransitionImage(PipelineManager mgr, VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout);
+    void TransitionImage(VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout);
     void CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destination, VkExtent2D srcSize, VkExtent2D dstSize);
 }
 

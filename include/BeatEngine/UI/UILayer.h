@@ -36,7 +36,7 @@ public:
 	void OnEvent(Optional<Base::Event> event);
 	
 	void Update(float dt);
-	void Draw(GraphicsManager& mgr) override;
+	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
     void UninitGraphics(GraphicsManager& mgr) override;
 
     void SetVisible(bool visible);

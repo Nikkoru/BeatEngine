@@ -17,6 +17,8 @@ struct AllocatedImage {
     VkExtent3D Extent{};
     VkFormat Format{};
 
+    VkSampler Linear{};
+
     uint32_t MipLevels{};
 
     ImageID CachedID{ NULL_IMAGE_ID };

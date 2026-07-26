@@ -84,8 +84,8 @@ public:
 	void OnEvent(Optional<Base::Event> event);
 	virtual void EventHandler(Optional<Base::Event> event) { (void)event; }
 
-	virtual void OnDraw(GraphicsManager& mgr) = 0;
-	void Draw(GraphicsManager& mgr) override;
+	virtual void OnDraw(GraphicsManager& mgr, RenderState state ) = 0;
+	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
 
     void UninitGraphics(GraphicsManager& mgr) override;
     virtual void OnUninitGraphics(GraphicsManager& mgr) { m_LayoutRect.UninitGraphics(mgr); }

@@ -10,9 +10,15 @@
 #include <vulkan/vulkan_core.h>
 
 
-void VK::Swapchain::Create(const Core& core, unsigned int width, unsigned int height, VSyncMode vSync, VkFormat format) {
+void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window, unsigned int width, unsigned int height, VSyncMode vSync, VkFormat format) {
+    if (m_VSync == VSyncMode::None)
+        m_VSync = vSync;
+
     VkPresentModeKHR presentMode{};
-    switch (vSync) {
+    switch (m_VSync) {
+    default:
+    case None:
+        m_VSync = VSyncMode::Disable;
     case Disable:
         presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         break;
@@ -26,32 +32,51 @@ void VK::Swapchain::Create(const Core& core, unsigned int width, unsigned int he
         presentMode = VK_PRESENT_MODE_FIFO_KHR;
         break;
     }
-    VkSwapchainKHR swapchain{};
-    if (!m_Swapchain) {
-        swapchain = vkb::CreateSwapchainKHR(
-            core.Device, 
-            core.PhysicalDevice, 
-            core.Surface, 
-            width, 
-            height,
-            presentMode
-        );
-    }
-    else {
-        swapchain = vkb::CreateSwapchainKHR(
-            core.Device, 
-            core.PhysicalDevice, 
-            core.Surface, 
-            width, 
-            height,
-            presentMode,
-            m_Swapchain
-        );
+    
+    m_Format = format;
+    {
+        auto capabilities = VkSurfaceCapabilitiesKHR{};
+        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(core.PhysicalDevice, core.Surface, &capabilities);
+        if (capabilities.currentExtent.width != UINT32_MAX)
+            width = capabilities.currentExtent.width;
+        else
+            width = std::clamp(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+
+        if (capabilities.currentExtent.height != UINT32_MAX)
+            height = capabilities.currentExtent.height;
+        else
+            height = std::clamp(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+
     }
 
-    m_Format = format;
-    
-    if (!m_Swapchain) {
+    VkSwapchainKHR oldSwapchain = nullptr;
+    if (m_Swapchain)
+        oldSwapchain = m_Swapchain;
+
+    m_Swapchain = vkb::CreateSwapchainKHR(
+        core.Device, 
+        core.PhysicalDevice, 
+        core.Surface, 
+        width, 
+        height,
+        presentMode,
+        oldSwapchain
+    );
+
+    if (oldSwapchain) {
+        for (const auto& frame : m_Frames) {
+            vkDestroyFence(core.Device, frame.RenderFence, nullptr);
+            vkDestroySemaphore(core.Device, frame.PresentSemaphore, nullptr);
+            vkDestroySemaphore(core.Device, frame.RenderSemaphore, nullptr);
+        }
+        for (const auto& imageView : m_ImageViews) {
+            vkDestroyImageView(core.Device, imageView, nullptr);
+        }
+        m_ImageViews.clear();
+        
+        vkDestroySwapchainKHR(core.Device, oldSwapchain, nullptr);
+    }
+    else
         m_Uninitializers.AddCallback([&]() {
             for (const auto& frame : m_Frames) {
                 vkDestroyFence(core.Device, frame.RenderFence, nullptr);
@@ -65,28 +90,16 @@ void VK::Swapchain::Create(const Core& core, unsigned int width, unsigned int he
             
             vkDestroySwapchainKHR(core.Device, m_Swapchain, nullptr);
         });
-    }
-    else {
-        vkDestroySwapchainKHR(core.Device, m_Swapchain, nullptr);
-
-        for (const auto& imageView : m_ImageViews) {
-            vkDestroyImageView(core.Device, imageView, nullptr);
-        }
-        m_ImageViews.clear();
-    }
 
     m_Extent = { width, height };
-    m_Images = vkb::GetSwapchainImages(core.Device, swapchain);
+    m_Images = vkb::GetSwapchainImages(core.Device, m_Swapchain);
     m_ImageViews = vkb::GetSwapchainImageViews(core.Device, m_Images, m_Format);
-
 
     m_Outdated = false;
 
-    if (!m_Swapchain) {
-        CreateCommandBuffers(core.Device, core.GraphicsQueueFamily);
-        CreateSync(core.Device);
-    }
-    m_Swapchain = swapchain;
+    CreateCommandBuffers(core.Device, core.GraphicsQueueFamily);
+    CreateSync(core.Device);
+
     AddNameToVKObject(core.Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
 }
 
@@ -117,6 +130,10 @@ std::pair<VkImage, uint32_t> VK::Swapchain::AcquireImage(VkDevice device, size_t
         VK_NULL_HANDLE, 
         &imgIndex
     ));
+
+    if (m_Outdated)
+        return {};
+
     m_ActiveImageIndex = imgIndex;
 
     return { m_Images[imgIndex], imgIndex };
@@ -140,7 +157,8 @@ void VK::Swapchain::SubmitAndPresent(const VkCommandBuffer cmd, VkQueue graphics
             .pWaitSemaphores = &frame.RenderSemaphore,
             .swapchainCount = 1,
             .pSwapchains = &m_Swapchain,
-            .pImageIndices = &imageIndex
+            .pImageIndices = &imageIndex,
+            .pResults{}
         };
 
         m_Outdated = VK_CHECK_SWAPCHAIN(vkQueuePresentKHR(graphicsQueue, &presentInfo));
@@ -172,7 +190,11 @@ void VK::Swapchain::CreateCommandBuffers(VkDevice device, uint32_t graphicsQueue
 }
 
 void VK::Swapchain::CreateSync(VkDevice device) {
-    VkSemaphoreCreateInfo semaphoreInfo{ .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO };
+    VkSemaphoreCreateInfo semaphoreInfo{ 
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags{}
+    };
     VkFenceCreateInfo fenceInfo {
         .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
                 .pNext = nullptr,

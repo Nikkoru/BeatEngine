@@ -9,44 +9,36 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
-void GraphicalElement::BaseDraw(GraphicsManager& mgr) {
-    if (!Data) {
-        mgr.InitElement(*this);
-    }
-    else if (!Data->IsInitialized()) {
-        mgr.InitElement(*this);
-    }
-
-    Data->SetVertices(m_Vertices);
-
-    glm::mat4 transform{};
+void GraphicalElement::BaseDraw(GraphicsManager& mgr, RenderState state) {
+    glm::mat4 transform{ 1.f };
     if (auto camera = mgr.GetMainCamera()) {
         transform = camera->GetProjection();
     }
-    
-    Data->PrepareDrawing();
-
-    auto textureID{ NULL_IMAGE_ID };
-
-
-    if (auto vulkanTexture = std::dynamic_pointer_cast<VulkanTexture>(m_Texture)) {
-        textureID = vulkanTexture->GetID();        
-    }
-
 
     DrawCommand cmd{
-        .transform = transform,
+        .projection = transform,
+        .transform = glm::mat4{ 1.f },
         .padding = m_Padding.ToGLMVec2(),
-        .textureID = textureID,
+        .textureID = NULL_IMAGE_ID,
         .shaderID = 0,
     };
-    SetCommand(std::make_shared<DrawCommand>(cmd));
+    if (m_Texture)
+        cmd.textureID = m_Texture->GetID();
 
-    mgr.DrawElement(*this);
+    state._DrawCommand = std::make_shared<DrawCommand>(cmd);
+    state.DrawCommandSize = sizeof(DrawCommand);
+
+    m_Vertices.SetType(m_PrimitiveType);
+
+    mgr.DrawVertices(m_Vertices, state);
 }
 
 void GraphicalElement::UninitGraphics(GraphicsManager& mgr) {
     mgr.UninitElement(*this);
+}
+
+void GraphicalElement::SetTexture(std::shared_ptr<Texture> texture) {
+    m_Texture = texture;
 }
 
 void GraphicalElement::DrawWindowImGuiDrawData() {
@@ -56,11 +48,8 @@ void GraphicalElement::DrawWindowImGuiDrawData() {
 }
 
 void GraphicalElement::BaseDrawImGuiDrawData() {
-    if (!Data) return;
-
-    Data->DrawImGuiDrawData();
 }
 
 void GraphicalElement::SetCommand(std::shared_ptr<DrawCommand> cmd) {
-    Data->SetCommand(cmd);
+    (void)cmd;
 }

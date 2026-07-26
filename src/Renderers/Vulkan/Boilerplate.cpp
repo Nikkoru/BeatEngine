@@ -1,10 +1,11 @@
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/Logger.h"
-#include "BeatEngine/Renderers/Vulkan/PipelineManager.h"
+#include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Util/Exception.h"
 
 #include <SDL3/SDL_vulkan.h>
 #include <cstdint>
+#include <cstring>
 #include <vector>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
@@ -22,6 +23,7 @@ void VK_CHECK_SOURCE(VkResult result, const std::source_location location) {
 void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle, std::string name) {
     VkDebugUtilsObjectNameInfoEXT objNameInfo{
         .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_OBJECT_NAME_INFO_EXT,
+        .pNext = nullptr,
         .objectType = type,
         .objectHandle = objectHandle,
         .pObjectName = name.c_str()
@@ -63,6 +65,8 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
 
     VkInstanceCreateInfo instanceInfo{
         .sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags{},
         .pApplicationInfo = &appInfo,
         .enabledLayerCount = static_cast<uint32_t>(pInstLayers.size()),
         .ppEnabledLayerNames = pInstLayers.data(), 
@@ -75,7 +79,7 @@ VkInstance vkb::CreateInstance(std::string appName, uint32_t apiVersion, std::ve
     return instance;
 }
 
-VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceIndex, VkPhysicalDeviceProperties* prop) {
+VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, std::vector<VkExtensionProperties>& availableExts, uint32_t deviceIndex, VkPhysicalDeviceProperties* prop) {
     VkPhysicalDevice device{ VK_NULL_HANDLE };
 
     uint32_t devCount{};
@@ -84,8 +88,13 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceI
     Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Available devices: {}", devCount);
     std::vector<VkPhysicalDevice> devices(devCount);
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, devices.data()));
+
     
-    VkPhysicalDeviceProperties2 devProperties{ .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2 };
+    VkPhysicalDeviceProperties2 devProperties{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,
+        .pNext = nullptr,
+        .properties{}
+    };
     if (deviceIndex >= devices.size()) {
         Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Not a valid index. autoselecting index 0");
         deviceIndex = 0;
@@ -97,6 +106,11 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, uint32_t deviceI
         *prop = std::move(devProperties.properties);
 
     device = devices[deviceIndex];
+
+    uint32_t extensionCount{};
+    VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr));
+    availableExts.resize(extensionCount);
+    VK_CHECK(vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExts.data()));
 
     return device;
 }
@@ -161,7 +175,7 @@ std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vecto
     return imageViews;
 }
 
-VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily) {
+VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily, std::vector<const char*>& requestedExts, std::vector<VkExtensionProperties>& deviceExts) {
     VkDevice device { VK_NULL_HANDLE };
     const float qfpriorities{ 1.0f };
 
@@ -174,75 +188,80 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .pQueuePriorities = &qfpriorities
     };
 
-    VkPhysicalDeviceVulkan12Features features12{
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
-        .pNext = nullptr,
-        .descriptorIndexing = true,
-        .shaderSampledImageArrayNonUniformIndexing = true,
-        .descriptorBindingSampledImageUpdateAfterBind = true,
-        .descriptorBindingStorageImageUpdateAfterBind = true,
-        .descriptorBindingPartiallyBound = true,
-        .descriptorBindingVariableDescriptorCount = true,
-        .runtimeDescriptorArray = true,
-        .bufferDeviceAddress = true
-    };
-    VkPhysicalDeviceVulkan13Features features13{
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
-        .pNext = &features12,
-        .synchronization2 = true,        
-        .dynamicRendering = true
-    };
-	VkPhysicalDeviceFeatures features10{ 
-        .imageCubeArray = VK_TRUE,
-        .geometryShader = VK_TRUE,
-        .depthClamp = VK_TRUE,
-        .samplerAnisotropy = VK_TRUE,
-    };
+    VkPhysicalDeviceVulkan12Features features12{}; // for stoping the -Wmissing-field-initializers we're going to set the variables from the obj and not from a initializer list
+    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    features12.pNext = nullptr;
+    features12.descriptorIndexing = true;
+    features12.shaderSampledImageArrayNonUniformIndexing = true;
+    features12.descriptorBindingSampledImageUpdateAfterBind = true;
+    features12.descriptorBindingStorageImageUpdateAfterBind = true;
+    features12.descriptorBindingPartiallyBound = true;
+    features12.descriptorBindingVariableDescriptorCount = true;
+    features12.runtimeDescriptorArray = true;
+    features12.bufferDeviceAddress = true;
+    
+    VkPhysicalDeviceVulkan13Features features13{};
+    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    features13.pNext = &features12;
+    features13.synchronization2 = true;        
+    features13.dynamicRendering = true;
+
+	VkPhysicalDeviceFeatures features10{}; 
+    features10.imageCubeArray = VK_TRUE;
+    features10.geometryShader = VK_TRUE;
+    features10.depthClamp = VK_TRUE;
+    features10.samplerAnisotropy = VK_TRUE;
     features10.largePoints = VK_TRUE;
 
-    
-    VkPhysicalDeviceDynamicRenderingFeatures renderingFeatures{
-        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DYNAMIC_RENDERING_FEATURES,
+    auto shaderRelaxedFeatures = VkPhysicalDeviceShaderRelaxedExtendedInstructionFeaturesKHR{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_RELAXED_EXTENDED_INSTRUCTION_FEATURES_KHR,
         .pNext = &features13,
-        .dynamicRendering = VK_TRUE,
+        .shaderRelaxedExtendedInstruction = VK_TRUE
     };
+
     const VkPhysicalDeviceShaderObjectFeaturesEXT shaderFeatures {
         .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
-        .pNext = &renderingFeatures,
+        .pNext = &shaderRelaxedFeatures,
         .shaderObject = VK_TRUE
     };
-        
-    const std::vector<const char*> deviceExtensions{ 
-        VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_EXT_SHADER_OBJECT_EXTENSION_NAME,
-        VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME 
-    };
+    requestedExts.emplace_back(
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+
+    requestedExts.emplace_back(VK_EXT_SHADER_OBJECT_EXTENSION_NAME);
+
+    requestedExts.emplace_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
 
     {
-        uint32_t propertiesCount;
-        std::vector<VkExtensionProperties> extProps;
-        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, nullptr);
-        extProps.resize(propertiesCount);
-        vkEnumerateDeviceExtensionProperties(physicalDevice, nullptr, &propertiesCount, extProps.data());
+        bool supported = false;
+        for (const auto& requestedExt : requestedExts) {
+            supported = false;
+            for (const auto& deviceExt : deviceExts) {
+                if (strcmp(requestedExt, deviceExt.extensionName) == 0) {
+                    supported = true;
+                    break;
+                }
+            }
+            if (!supported) {
+                Logger::AddError(typeid(VulkanRenderer), "Requested device extension \"{}\" is not available on this device", requestedExt);
+            }
+        }
 
-        // for (const auto& prVop : extProps) {
-        //     prop.
-        // }
+        if (!supported) {
+            THROW_RUNTIME_ERROR("One of the requested device extensions is not available");
+        }
     }
 
 
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
         .pNext = &shaderFeatures,
-        // .pNext = &renderingFeatures,
-        // .pNext = &features13,
         .flags{},
         .queueCreateInfoCount = 1,
         .pQueueCreateInfos = &queueInfo,
         .enabledLayerCount{},
         .ppEnabledLayerNames{},
-        .enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size()),
-        .ppEnabledExtensionNames = deviceExtensions.data(),
+        .enabledExtensionCount = static_cast<uint32_t>(requestedExts.size()),
+        .ppEnabledExtensionNames = requestedExts.data(),
         .pEnabledFeatures = &features10,
     };
 
@@ -271,9 +290,13 @@ VkSwapchainKHR vkb::CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physica
         .imageArrayLayers = 1,
         .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .queueFamilyIndexCount{},
+        .pQueueFamilyIndices{},
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .presentMode = presentMode 
+        .presentMode = presentMode,
+        .clipped{},
+        .oldSwapchain{}
     };
     if (oldSwapchain)
         swapchainInfo.oldSwapchain = oldSwapchain;
@@ -298,6 +321,7 @@ VkPipelineLayout vkb::CreatePipelineLayout(VkDevice device, VkDescriptorSetLayou
     const auto info = VkPipelineLayoutCreateInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
+        .flags{},
         .setLayoutCount = 1,
         .pSetLayouts = &descLayout,
         .pushConstantRangeCount = 1,
@@ -310,21 +334,23 @@ VkPipelineLayout vkb::CreatePipelineLayout(VkDevice device, VkDescriptorSetLayou
     return layout;
 }
 
-void vku::TransitionImage(PipelineManager mgr, VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout) {
-    VkImageMemoryBarrier2 imageBarrier {.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2};
-    imageBarrier.pNext = nullptr;
-
-    imageBarrier.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-    imageBarrier.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT;
-    imageBarrier.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT;
-    imageBarrier.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT;
-
-    imageBarrier.oldLayout = curLayout;
-    imageBarrier.newLayout = newLayout;
-
+void vku::TransitionImage(VkCommandBuffer cmd, VkImage image, VkImageLayout curLayout, VkImageLayout newLayout) {
     VkImageAspectFlags aspectMask = (newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL) ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
-    imageBarrier.subresourceRange = vkb::GetImageSubresourceRange(aspectMask);
-    imageBarrier.image = image;
+
+    VkImageMemoryBarrier2 imageBarrier {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+        .pNext = nullptr,
+        .srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+        .srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT,
+        .dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+        .dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT | VK_ACCESS_2_MEMORY_READ_BIT,
+        .oldLayout = curLayout,
+        .newLayout = newLayout,
+        .srcQueueFamilyIndex{},
+        .dstQueueFamilyIndex{},
+        .image = image,
+        .subresourceRange = vkb::GetImageSubresourceRange(aspectMask),
+    };
 
     VkDependencyInfo depInfo {};
     depInfo.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO;
@@ -346,12 +372,14 @@ void vku::CopyImageToImage(VkCommandBuffer cmd, VkImage source, VkImage destinat
             .baseArrayLayer = 0,
             .layerCount = 1
         },
+        .srcOffsets{},
         .dstSubresource{
             .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
             .mipLevel = 0,
             .baseArrayLayer = 0,
             .layerCount = 1
-        }
+        },
+        .dstOffsets{},
     };
 
 	blitRegion.srcOffsets[1].x = srcSize.width;
@@ -381,6 +409,7 @@ VkImageCreateInfo vki::GetImageCreateInfo(VkFormat format, VkImageUsageFlags usa
     return {
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
         .pNext = nullptr,
+        .flags{},
         .imageType = VK_IMAGE_TYPE_2D,
         .format = format,
         .extent = extent,
@@ -388,7 +417,11 @@ VkImageCreateInfo vki::GetImageCreateInfo(VkFormat format, VkImageUsageFlags usa
         .arrayLayers = 1,
         .samples = VK_SAMPLE_COUNT_1_BIT,
         .tiling = VK_IMAGE_TILING_OPTIMAL,
-        .usage = usageFlags
+        .usage = usageFlags,
+        .sharingMode{},
+        .queueFamilyIndexCount{},
+        .pQueueFamilyIndices{},
+        .initialLayout{}
     };
 }
 
@@ -396,9 +429,11 @@ VkImageViewCreateInfo vki::GetImageViewCreateInfo(VkFormat format, VkImage image
     return {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .pNext = nullptr,
+        .flags{},
         .image = image,
         .viewType = VK_IMAGE_VIEW_TYPE_2D,
         .format = format,
+        .components{},
         .subresourceRange {
             .aspectMask = aspectFlags,
             .baseMipLevel = 0,
@@ -415,6 +450,9 @@ VkRenderingAttachmentInfo vki::GetRenderingAttachmentInfo(VkImageView target, Vk
         .pNext = nullptr,
         .imageView = target,
         .imageLayout = layout,
+        .resolveMode{},
+        .resolveImageView{},
+        .resolveImageLayout{},
         .loadOp = clear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD,
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .clearValue = clear ? *clear : VkClearValue(),
@@ -426,8 +464,10 @@ VkRenderingInfo vki::GetRenderingInfo(VkExtent2D extent, VkRenderingAttachmentIn
     VkRenderingInfo renderInfo {
         .sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
         .pNext = nullptr,
+        .flags{},
         .renderArea = VkRect2D{ VkOffset2D { 0, 0 }, extent },
         .layerCount = 1,
+        .viewMask{},
         .colorAttachmentCount = 1,
         .pColorAttachments = colorAttachment,
         .pDepthAttachment = depthAttachment,
@@ -441,8 +481,13 @@ VkSubmitInfo2 vki::GetSubmitInfo(const VkCommandBufferSubmitInfo *cmdInfo, const
     auto info = VkSubmitInfo2{
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
         .pNext = nullptr,
+        .flags{},
+        .waitSemaphoreInfoCount{},
+        .pWaitSemaphoreInfos{},
         .commandBufferInfoCount = 1,
-        .pCommandBufferInfos = cmdInfo
+        .pCommandBufferInfos = cmdInfo,
+        .signalSemaphoreInfoCount{},
+        .pSignalSemaphoreInfos{}
     };
 
     info.waitSemaphoreInfoCount = waitSemaphoreInfo == nullptr ? 0 : 1;

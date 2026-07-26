@@ -12,7 +12,7 @@
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "SDL3/SDL_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
-#include "imgui.h"
+#include <imgui.h>
 #include <imgui_internal.h>
 #include <cassert>
 #include <cstdint>
@@ -25,13 +25,13 @@
 #include <volk.h>
 
 
-void VK::Instance::Init(GameContext* context, std::string appName, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
+void VK::Instance::Init(GameContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
     m_Context = context;
-    InitVulkan(window, appName.c_str());
+    InitVulkan(window, appName.c_str(), deviceIndex);
     m_Executor.Init(m_Core.Device, m_Core.GraphicsQueueFamily, m_Core.GraphicsQueue);
 
     auto size = window->GetSize();
-    m_Swapchain.Create(m_Core, size.X, size.Y, vSync);
+    m_Swapchain.Create(m_Core, window, size.X, size.Y, vSync);
 
     CheckDeviceCapabilities();
     m_ImageCache.BindlessSetMgr.Init(m_Core.Device, m_MaxSamplerAnisotropy);
@@ -61,8 +61,7 @@ void VK::Instance::Init(GameContext* context, std::string appName, std::shared_p
             },
             pixels.data()
         );
-        auto id = m_ImageCache.AddImage(m_ErrorTexture.m_Image);
-        m_ImageCache.SetMissingImageID(id);
+        m_ImageCache.SetMissingImageID(m_ErrorTexture.m_CacheID);
     }
 
     {
@@ -93,8 +92,13 @@ void VK::Instance::Init(GameContext* context, std::string appName, std::shared_p
         InitImGui(window);
 
     m_Uninitializers.AddCallback([&]() {
-        DestroyImage(m_ErrorTexture.m_Image);
-        DestroyImage(m_WhiteTexture.m_Image);
+        DestroyImage(m_ErrorTexture.m_CacheID);
+        DestroyImage(m_WhiteTexture.m_CacheID);
+
+        if (m_ImageAllocs > 0)
+            THROW_RUNTIME_ERROR("Images are still being allocated. Did you forget to destroy a image?");
+        if (m_BufferAllocs > 0)
+            THROW_RUNTIME_ERROR("Buffers are still being allocated. Did you forget to destroy a buffer?");
     });
 }
 
@@ -102,15 +106,41 @@ void VK::Instance::Uninit() {
     m_Uninitializers.Flush();
 }
 
-void VK::Instance::AttachImageData(AllocatedImage& texture, void* pixelData, uint32_t layer) {
+void VK::Instance::AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
+    auto image = m_ImageCache.GetImage(textureID);
+    AttachImageData(image, pixelData, offset, extent, layer);
+}
+
+void VK::Instance::AttachImageData(AllocatedImage& image, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
     int numChannels = 4;
-    const auto dataSize = texture.Extent.depth * texture.Extent.height * texture.Extent.width * numChannels;
+    uint32_t dataSize{};
+
+    if (extent == Vector2u{})
+        dataSize = image.Extent.depth * image.Extent.height * image.Extent.width * numChannels;
+    else 
+        dataSize = extent.X * extent.Y * numChannels;
+
+    if (extent + offset >= Vector2u{ image.Extent.width, image.Extent.height })
+        THROW_RUNTIME_ERROR("Dest position is outside of the image extent");
+        
 
     const auto uploadBuffer = CreateBuffer(dataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
     memcpy(uploadBuffer.AllocationInfo.pMappedData, pixelData, dataSize);
 
+    VkExtent3D vkExtent;
+    vkExtent.depth = image.Extent.depth;
+    
+    if (extent == Vector2u{}) {
+        vkExtent.height = image.Extent.height;
+        vkExtent.width = image.Extent.width;
+    }
+    else {
+        vkExtent.height = extent.Y;
+        vkExtent.width = extent.X;
+    }
+
     m_Executor.ImmediateSumbit([&](VkCommandBuffer cmd) {
-        vku::TransitionImage({}, cmd, texture.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+        vku::TransitionImage(cmd, image.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
         
         const auto copyRegion = VkBufferImageCopy{
             .bufferOffset = 0,
@@ -122,20 +152,25 @@ void VK::Instance::AttachImageData(AllocatedImage& texture, void* pixelData, uin
                 .baseArrayLayer = layer,
                 .layerCount = 1
             },
-            .imageExtent = texture.Extent
+            .imageOffset = {
+                .x = static_cast<int32_t>(offset.X),
+                .y = static_cast<int32_t>(offset.Y),
+                .z{}
+            },
+            .imageExtent = vkExtent
         };
 
-        vkCmdCopyBufferToImage(cmd, uploadBuffer.Buffer, texture.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
-        if (texture.MipLevels > 1) {
+        vkCmdCopyBufferToImage(cmd, uploadBuffer.Buffer, image.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+        if (image.MipLevels > 1) {
             Logger::AddWarning(typeid(VK::Instance), "MipMaps are not implemented yet");
         } else {
-            vku::TransitionImage({}, cmd, texture.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+            vku::TransitionImage(cmd, image.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
     });
     DestroyBuffer(uploadBuffer);
 }
 
-void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName) {
+void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex) {
     AddVulkanLog("Initializing Vulkan handlers");
     VK_CHECK(volkInitialize());
 
@@ -156,9 +191,12 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     m_Core.Instance = vkb::CreateInstance(name, VK_API_VERSION_1_3, extensions, layers);
     volkLoadInstance(m_Core.Instance);
 
-    m_Core.PhysicalDevice = vkb::CreatePhysicalDevice(m_Core.Instance, 1);
+    extensions.clear();
+    extensions.emplace_back(VK_KHR_SHADER_RELAXED_EXTENDED_INSTRUCTION_EXTENSION_NAME);
+
+    m_Core.PhysicalDevice = vkb::CreatePhysicalDevice(m_Core.Instance, m_Core.DeviceExtensions, deviceIndex);
     m_Core.GraphicsQueueFamily = vkb::GetQueueFamily(m_Core.PhysicalDevice);
-    m_Core.Device = vkb::CreateDevice(m_Core.PhysicalDevice, m_Core.GraphicsQueueFamily);
+    m_Core.Device = vkb::CreateDevice(m_Core.PhysicalDevice, m_Core.GraphicsQueueFamily, extensions, m_Core.DeviceExtensions);
     volkLoadDevice(m_Core.Device);
 
     AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Core.Device, "VkDevice");
@@ -166,18 +204,23 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_INSTANCE, (uint64_t)m_Core.Instance, "VkInstance");
     vkGetDeviceQueue(m_Core.Device, m_Core.GraphicsQueueFamily, 0, &m_Core.GraphicsQueue);
 
-    VmaVulkanFunctions vkFunctions{
-        .vkGetInstanceProcAddr = vkGetInstanceProcAddr,
-        .vkGetDeviceProcAddr = vkGetDeviceProcAddr,
-        .vkCreateImage = vkCreateImage
-    };
+    VmaVulkanFunctions vkFunctions{}; // for stoping the -Wmissing-field-initializers we're going to set the variables from the obj and not a from initializer list
+    vkFunctions.vkGetInstanceProcAddr = vkGetInstanceProcAddr;
+    vkFunctions.vkGetDeviceProcAddr = vkGetDeviceProcAddr;
+    vkFunctions.vkCreateImage = vkCreateImage;
 
     VmaAllocatorCreateInfo allocatorInfo{
         .flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
         .physicalDevice = m_Core.PhysicalDevice,
         .device = m_Core.Device,
+        .preferredLargeHeapBlockSize{},
+        .pAllocationCallbacks{},
+        .pDeviceMemoryCallbacks{},
+        .pHeapSizeLimit{},
         .pVulkanFunctions = &vkFunctions,
-        .instance = m_Core.Instance
+        .instance = m_Core.Instance,
+        .vulkanApiVersion = VK_API_VERSION_1_3,
+        .pTypeExternalMemoryHandleTypes{}
     };
     VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_Core.Allocator));
 
@@ -185,6 +228,7 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
         VkDebugUtilsMessengerCreateInfoEXT messengerInfo{
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .pNext = nullptr,
+            .flags{},
             .messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT |
                                VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
@@ -291,10 +335,13 @@ void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
             },
             .SwapChainImageUsage{},
         },
+        .PipelineInfoForViewports{},
         .UseDynamicRendering = true,
         .Allocator = nullptr,
         .CheckVkResultFn = nullptr,
         .MinAllocationSize = 0,
+        .CustomShaderVertCreateInfo{},
+        .CustomShaderFragCreateInfo{},
     };
 
     ImGui_ImplVulkan_Init(&info);
@@ -308,18 +355,34 @@ void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
     });
 }
 
+ImageID VK::Instance::AddImageToCache(AllocatedImage& image) {
+    auto id = m_ImageCache.AddImage(image);
+    image.CachedID = id;
+    return id;
+}
+
 GPUBuffer VK::Instance::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) {
     const auto bufferInfo = VkBufferCreateInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
+        .flags{},
         .size = size,
         .usage = usage,
+        .sharingMode{},
+        .queueFamilyIndexCount{},
+        .pQueueFamilyIndices{}
     };
 
     const auto allocInfo = VmaAllocationCreateInfo{
         .flags = VMA_ALLOCATION_CREATE_MAPPED_BIT |
                  VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
-        .usage = memoryUsage
+        .usage = memoryUsage,
+        .requiredFlags{},
+        .preferredFlags{},
+        .memoryTypeBits{},
+        .pool{},
+        .pUserData{},
+        .priority{}
     };
 
     GPUBuffer buf{};
@@ -344,6 +407,7 @@ GPUBuffer VK::Instance::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaM
 void VK::Instance::DestroyBuffer(const GPUBuffer& buffer) {
     vmaDestroyBuffer(m_Core.Allocator, buffer.Buffer, buffer.Allocation);
     m_BufferAllocs--;
+    Logger::AddDebug(typeid(VulkanRenderer), "Current buffer allocs: {}", m_BufferAllocs);
 }
 
 AllocatedImage VK::Instance::CreateImageRaw(
@@ -391,8 +455,14 @@ AllocatedImage VK::Instance::CreateImageRaw(
     }
 
     static const auto defaultAllocInfo = VmaAllocationCreateInfo{
+        .flags{},
         .usage = VMA_MEMORY_USAGE_AUTO,
-        .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
+        .requiredFlags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+        .preferredFlags{},
+        .memoryTypeBits{},
+        .pool{},
+        .pUserData{},
+        .priority{}
     };
 
     const auto allocInfo = customAllocInfo 
@@ -432,6 +502,7 @@ AllocatedImage VK::Instance::CreateImageRaw(
             .image = image.Image,
             .viewType = viewType,
             .format = info.format,
+            .components{},
             .subresourceRange =
                 VkImageSubresourceRange{
                     .aspectMask = aspectFlag,
@@ -480,20 +551,25 @@ VkCommandBuffer VK::Instance::BeginFrame() {
 void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     const auto [swapchainImage, swapchainImageIndex] = m_Swapchain.AcquireImage(m_Core.Device, GetCurrentFrameIndex());
 
-    if (!swapchainImage)
+    if (!swapchainImage || NeedsRecreateSwapchain()) {
+        if (m_Context->GFlags & GameFlags_ImGui) {
+            ImGui::Render();
+            ImGui::EndFrame();
+        }
         return;
+    }
 
     m_Swapchain.ResetFence(m_Core.Device, GetCurrentFrameIndex());
     
-    auto swapchainLayout = VK_IMAGE_LAYOUT_GENERAL;
+    auto swapchainLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    vku::TransitionImage({},
+    vku::TransitionImage(
         cmd,
         drawImage.Image,
-        VK_IMAGE_LAYOUT_ATTACHMENT_OPTIMAL,
+        VK_IMAGE_LAYOUT_GENERAL,
         VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
     );
-    vku::TransitionImage({},
+    vku::TransitionImage(
         cmd, 
         swapchainImage, 
         swapchainLayout, 
@@ -525,8 +601,8 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
             /* filter */);
     }
 
-    vku::TransitionImage({}, cmd, swapchainImage, swapchainLayout, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
-    swapchainLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    vku::TransitionImage(cmd, swapchainImage, swapchainLayout, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+    swapchainLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     // vku::TransitionImage({}, cmd, drawImage.Image, swapchainLayout, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     // swapchainLayout = V_IMAGE_LAYOUT_PRESENT_SRC_KHR;
@@ -540,29 +616,52 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     }
     
     VK_CHECK(vkEndCommandBuffer(cmd));
+
     m_Swapchain.SubmitAndPresent(cmd, m_Core.GraphicsQueue, GetCurrentFrameIndex(), swapchainImageIndex);
 
     m_FrameNumber++;
 }
 
 void VK::Instance::ClearImage(VkCommandBuffer cmd, VkClearColorValue clearColor, VkImageSubresourceRange imageRange) {
-    vku::TransitionImage({}, cmd, m_Swapchain.GetImage(GetCurrentFrameIndex()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+    vku::TransitionImage(cmd, m_Swapchain.GetImage(GetCurrentFrameIndex()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
     vkCmdClearColorImage(cmd, m_Swapchain.GetImage(GetCurrentFrameIndex()), VK_IMAGE_LAYOUT_GENERAL, &clearColor, 1, &imageRange);
 }
 
-AllocatedImage VK::Instance::CreateImage(VkImageCreateInfo info, void* pixelData) {
+AllocatedImage VK::Instance::CreateImage(VkImageCreateInfo info, const void* pixelData, bool cache) {
     auto image = CreateImageRaw(info);
     if (pixelData) {
         AttachImageData(image, pixelData);
     }
 
+    image.Linear = m_ImageCache.BindlessSetMgr.GetLinearSampler();
+
+    if (cache) {
+        auto id = m_ImageCache.AddImage(image);
+        image.CachedID = id;
+    }
+
     return image;
+}
+
+void VK::Instance::CopyImageToImage(ImageID srcID, ImageID dstID) {
+    auto src = m_ImageCache.GetImage(srcID);
+    auto dst = m_ImageCache.GetImage(dstID);
+
+    m_Executor.ImmediateSumbit([&](VkCommandBuffer cmd) {
+        vku::CopyImageToImage(cmd, src.Image, dst.Image, { src.Extent.width, src.Extent.height },{ dst.Extent.width, dst.Extent.height });
+    });
+}
+
+void VK::Instance::DestroyImage(const ImageID imageID) {
+    const auto& allocImage = m_ImageCache.GetImage(imageID);
+    DestroyImage(allocImage);
 }
 
 void VK::Instance::DestroyImage(const AllocatedImage& image) {
     vkDestroyImageView(m_Core.Device, image.ImageView, nullptr);
     vmaDestroyImage(m_Core.Allocator, image.Image, image.Allocation);
     m_ImageAllocs--;
+    Logger::AddDebug(typeid(VulkanRenderer), "Current image allocs: {}", m_ImageAllocs);
 }
 
 AllocatedImage VK::Instance::CreateDrawImage(Vector2u size) {
@@ -580,7 +679,7 @@ AllocatedImage VK::Instance::CreateDrawImage(Vector2u size) {
              VK_IMAGE_USAGE_SAMPLED_BIT;
 
     const auto info = vki::GetImageCreateInfo(m_Swapchain.GetFormat(), usage, extent);
-    return CreateImage(info, nullptr);
+    return CreateImage(info, nullptr, false);
 }
 
 void VK::Instance::CheckDeviceCapabilities() {
@@ -622,9 +721,10 @@ void VK::Instance::WaitIdle() {
     vkDeviceWaitIdle(m_Core.Device);
 }
 
-void VK::Instance::RecreateSwapchain(Vector2u size) {
+void VK::Instance::RecreateSwapchain(std::shared_ptr<BaseWindow> window, Vector2u size) {
     WaitIdle();
-    m_Swapchain.Create(m_Core, size.X, size.Y);
+    m_Swapchain.Uninit();
+    m_Swapchain.Create(m_Core, window, size.X, size.Y);
 }
 
 namespace {

@@ -28,7 +28,7 @@ public:
 	void OnAttach() override;
 	void OnDetach() override;
 	void OnEvent(Optional<Base::Event> event) override;
-	void OnDraw(GraphicsManager& mgr) override;
+	void OnDraw(GraphicsManager& mgr, RenderState state) override;
 
     void ToggleImGuiDrawing();
 

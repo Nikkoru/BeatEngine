@@ -10,6 +10,7 @@
 #include <BeatEngine/Settings/GameSettings.h>
 #include <BeatEngine/Renderers/Vulkan/Renderer.h>
 #include <BeatEngine/Windows/SDL/Window.h>
+#include <string>
 
 #include "view/gameView.h"
 #include "view/view.h"
@@ -17,15 +18,28 @@
 #include "layer/globalLayer.h"
 
 int main(int argc, char** argv) {
+    auto renderer = std::make_shared<VulkanRenderer>();
+    auto window = std::make_shared<SDLWindow>();
+    window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
+    window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
+
+    renderer->SetWindow(window);
+
     std::vector<std::filesystem::path> paths;
     
     if (argc >= 2) {
-        if (!std::filesystem::exists(argv[1])) {
-            Logger::AddCritical("\"{}\" must be a valid path that contains .mp3 files", argv[1]);
+        auto index = std::stoi(argv[1]);
+        
+        renderer->SetDeviceIndex(index);
+
+    }
+    if (argc >= 3) {
+        if (!std::filesystem::exists(argv[2])) {
+            Logger::AddCritical("\"{}\" must be a valid path that contains .mp3 files", argv[2]);
             return 1;
         }
 
-        for (const auto& entry : fs::directory_iterator(argv[1])) {
+        for (const auto& entry : fs::directory_iterator(argv[2])) {
             if (entry.path().extension() == ".mp3" || entry.path().extension() == ".flac") { 
                 paths.emplace_back(entry.path());
             }
@@ -55,12 +69,6 @@ int main(int argc, char** argv) {
     game.UseImGui(true);
     game.UseImGuiDocking(true);
 
-    auto renderer = std::make_shared<VulkanRenderer>();
-    auto window = std::make_shared<SDLWindow>();
-    window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
-    window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
-
-    renderer->SetWindow(window);
 
     game.SetRenderer(renderer);
 

@@ -17,5 +17,5 @@ public:
 
     void OnUpdate(float dt) override { (void)dt; }
     void OnEvent(Optional<Base::Event> event) override { (void)event; }
-    void OnDraw(GraphicsManager&) override {}
+    void OnDraw(GraphicsManager&, RenderState) override {}
 };

@@ -113,10 +113,9 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE VK_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_NO_PROTOTYPES)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
-    # target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_VOLK_FILENAME=<volk/volk.h>)
 
     if(NOT CROSS_BUILDING)
-        find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined)
+        find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined glslang)
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}/volk")
         target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
@@ -126,6 +125,9 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
                 Vulkan::Vulkan
                 Vulkan::volk
                 Vulkan::shaderc_combined
+                Vulkan::glslang
+                SPIRV-Tools 
+                SPIRV-Tools-opt
         )
     else()
         target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_HEADERS_SOURCE_DIR}/include")
@@ -173,19 +175,19 @@ elseif(USE_SFML)
     message(FATAL_ERROR "SFML already implements renderer and window. No need to set default renderer and/or window")
 endif()
 
+target_compile_definitions(${PROJECT_NAME} PRIVATE FT_CONFIG_OPTION_ERROR_STRINGS)
+
 target_link_libraries(${PROJECT_NAME} 
-<<<<<<< HEAD
     PUBLIC 
-=======
-	PRIVATE 
         glm::glm
         freetype
->>>>>>> 2695a99 (FINALLY we can draw stuff (using vulkan rendering), abstractions for drawing elements via GraphicalElement, many other changes)
 		portaudio
 		miniaudio
 		sndfile
 		samplerate
         tag
+        harfbuzz
+        SheenBidi::SheenBidi
         stb::image
 )
 
@@ -195,6 +197,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${portaudio_SOURCE_DIR}/incl
 target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/include")
 target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")
 target_include_directories(${PROJECT_NAME} PRIVATE "${stb_SOURCE_DIR}/")
+target_include_directories(${PROJECT_NAME} PRIVATE "${harfbuzz_SOURCE_DIR}/src")
 
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${taglib_SOURCE_DIR})

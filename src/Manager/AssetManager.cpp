@@ -4,6 +4,8 @@
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
+#include <freetype/freetype.h>
+#include <freetype/ftstroke.h>
 #include <memory>
 #include <miniaudio.h>
 #include <sndfile.h>
@@ -24,9 +26,24 @@
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/Logger.h"
 
+#include "BeatEngine/System/DataStream.hpp"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
+
+namespace {
+unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, unsigned long count) {
+    auto* stream = static_cast<DataStream*>(rec->descriptor.pointer);
+    if (auto streamPos = stream->Seek(offset).Value(); streamPos == offset) {
+        if (count > 0)
+            return static_cast<unsigned long>(stream->Read(reinterpret_cast<char*>(buffer), count).Value());
+
+        return 0;
+    }
+    return count > 0 ? 0 : 1;
+}
+void close(FT_Stream) {}
+}
 
 AssetManager::AssetManager(GameContext* context, GameState* state)
     : m_Context(context), m_State(state) {}
@@ -38,7 +55,37 @@ AssetManager::~AssetManager() {
 
 
 void AssetManager::Uninit() {
+    for (const auto& [viewID, assetMap] : m_ViewAssets) {
+        for (const auto& [assetName, asset] : assetMap) {
+            if (asset.Type == typeid(Texture)) {
+                Logger::AddDebug(typeid(AssetManager), "Destroying texture \"{}\"", assetName);
+                auto texture = std::dynamic_pointer_cast<Texture>(asset.Asset);
+                m_State->GetGraphicsMgr().DestroyTexture(texture);
+            }
+            else if (asset.Type == typeid(Font)) {
+                Logger::AddDebug(typeid(AssetManager), "Destroying font \"{}\"", assetName);
+                auto font = std::dynamic_pointer_cast<Font>(asset.Asset);
+                for (const auto& [charSize, page] : font->m_Pages) {
+                    m_State->GetGraphicsMgr().DestroyTexture(page.PageTexture);
+                }
+            }
+        }
+    }
 
+    for (const auto& [assetName, asset] : m_GlobalAssets) {
+        if (asset.Type == typeid(Texture)) {
+            Logger::AddDebug(typeid(AssetManager), "Destroying texture \"{}\"", assetName);
+            auto texture = std::dynamic_pointer_cast<Texture>(asset.Asset);
+            m_State->GetGraphicsMgr().DestroyTexture(texture);
+        }
+        else if (asset.Type == typeid(Font)) {
+            Logger::AddDebug(typeid(AssetManager), "Destroying font \"{}\"", assetName);
+            auto font = std::dynamic_pointer_cast<Font>(asset.Asset);
+                for (const auto& [charSize, page] : font->m_Pages) {
+                    m_State->GetGraphicsMgr().DestroyTexture(page.PageTexture);
+                }
+        }
+    }
 }
 
 
@@ -54,8 +101,8 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
 			if (!m_GlobalAssets.contains(name)) {
                 auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
 
-				handle = Base::AssetHandle<Texture>(texture);
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+				handle = Base::AssetHandle<Texture>(texture, typeid(Texture));
+				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture), typeid(Texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
@@ -69,7 +116,7 @@ template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::pat
                 auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
 
 				handle = Base::AssetHandle<Texture>(texture, typeid(Texture));
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture) };
+				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture), typeid(Texture) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
@@ -240,17 +287,74 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 
 		Base::AssetHandle<Font> handle;
 
+        auto font = std::make_shared<Font>();
+
 		bool global = viewID == typeid(nullptr);
+		bool exists = false;
+
+		if (global) {
+			if (m_GlobalAssets.contains(name)) {
+				exists = true;
+			}
+		}
+		else {
+			if (!m_ViewAssets.contains(viewID))
+				m_ViewAssets[viewID];
+			if (m_ViewAssets.at(viewID).contains(name)) {
+				exists = true;
+			}
+		}
+
+        if (!exists) {
+            if (FT_Init_FreeType(&font->m_FTLibrary) != 0) {
+                Logger::AddCritical("Failed to load font \"{}\": FreeType failed to init", name);
+                THROW_RUNTIME_ERROR("Failed to load font");
+            }
+
+            font->m_Stream.StartReadForFile(path);
+
+            font->m_FTStreamRec.base = nullptr;
+            font->m_FTStreamRec.size = static_cast<unsigned long>(font->m_Stream.GetSize());
+            font->m_FTStreamRec.pos = 0;
+            font->m_FTStreamRec.descriptor.pointer = &font->m_Stream;
+            font->m_FTStreamRec.read = &read;
+            font->m_FTStreamRec.close = &close;
+
+            FT_Open_Args args{};
+            args.flags = FT_OPEN_STREAM;
+            args.stream = &font->m_FTStreamRec;
+            args.driver = nullptr;
+
+            if (auto result = FT_Open_Face(font->m_FTLibrary, &args, 0, &font->m_FTFace); result != 0) {
+                auto errStringC = FT_Error_String(result);
+                auto errStr = errStringC == nullptr ? "error in the error thats amazing" : errStringC; 
+                Logger::AddCritical("", "Failed to load font \"{}\": FreeType failed to create the font face, reason: {}", name, errStr);
+                THROW_RUNTIME_ERROR("Failed to load font");
+            }
+
+            if (FT_Stroker_New(font->m_FTLibrary, &font->m_FTStroker) != 0) {
+                Logger::AddCritical("Failed to load font \"{}\": FreeType failed to create the stroker", name);
+                THROW_RUNTIME_ERROR("Failed to load font");
+            }
+
+            if (FT_Select_Charmap(font->m_FTFace, FT_ENCODING_UNICODE) != 0) {
+                Logger::AddCritical("Failed to load font \"{}\": FreeType failed set unicode character set", name);
+                THROW_RUNTIME_ERROR("Failed to load font");
+            }
+
+            font->m_FamilyName = font->m_FTFace->family_name ? font->m_FTFace->family_name : "";
+            font->m_HasKerning = FT_HAS_KERNING(font->m_FTFace);
+            font->m_HasVerticalMetrics = FT_HAS_VERTICAL(font->m_FTFace);
+        }
+
+        handle = Base::AssetHandle<Font>(font, typeid(Font));
+
+        // the handle id is sufficient
+        font->m_ID = handle.GetID();
 
 		if (global) {
 			if (!m_GlobalAssets.contains(name)) {
-                // if (m_Context->GFlags & GameFlags_ImGui)
-                    // ImGui::GetIO().Fonts->AddFontFromFileTTF(path.c_str());
-
-                auto font = m_State->GetGraphicsMgr().CreateFont(path);
-
-				handle = Base::AssetHandle<Font>(font, typeid(Font));
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font), typeid(Font) };
 			}
 			else {
 				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -262,10 +366,7 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 			if (!m_ViewAssets.contains(viewID))
 				m_ViewAssets[viewID];
 			if (!m_ViewAssets.at(viewID).contains(name)) {
-                auto font = m_State->GetGraphicsMgr().CreateFont(path);
-
-				handle = Base::AssetHandle<Font>(font);
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font) };
+				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font), typeid(Font) };
 			}
 			else {
 				Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
@@ -691,6 +792,12 @@ void AssetManager::ShowAssetBrowser() {
 
                         drawList->AddRectFilled(boxMin, boxMax, iconBgColor);
 
+                        if (assetType == typeid(Texture)) {
+                            auto texture = Base::AssetHandle<Texture>::Cast(assetData).Get();
+                            ImVec2 padBoxMin = { boxMin.x - 3, boxMin.y - 3 };
+                            ImVec2 padBoxMax = { boxMax.x - 3, boxMax.y - 3 };
+                            drawList->AddImage(texture->GetImGuiTexture(m_State->GetGraphicsMgr()), padBoxMin, padBoxMax);
+                        }
 
                         std::string typeLabel;
 

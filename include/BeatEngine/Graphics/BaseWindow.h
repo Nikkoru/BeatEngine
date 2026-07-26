@@ -4,14 +4,22 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Util/Optional.hpp"
-#include <optional>
 #include <string>
+
+enum class WindowDriver {
+    None = 0,
+    X11,
+    Wayland,
+    Cocoa,
+    Windows
+};
 
 class GameContext;
 class BaseWindow {
 protected:
     GameContext* m_Context{ nullptr };
     std::string m_RendererName{};
+    WindowDriver m_WindowDriver{ WindowDriver::None };
 public:
     BaseWindow() = default;
     virtual ~BaseWindow() = default;
@@ -45,6 +53,8 @@ public:
     virtual bool IsFullscreen() const { return {}; }
     virtual bool IsCursorGrabbed() const { return {}; }
     virtual bool IsCursorVisible() const { return {}; }
+
+    WindowDriver GetWindowDriver() const { return m_WindowDriver; }
 
     virtual void OnRender() {};
     virtual void OnDisplay() {};

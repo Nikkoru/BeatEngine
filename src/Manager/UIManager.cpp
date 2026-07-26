@@ -147,6 +147,22 @@ void UIManager::ShowImGuiDebugWindow() {
     ImGui::End();
 }
 
+void UIManager::Uninit() {
+    if (m_GlobalLayers.empty() && m_Layers.empty()) return;
+
+    // for (const auto& [viewID, layerMap] : m_Layers) {
+    //     for (const auto& [layerName, layer] : layerMap) {
+    //         Logger::AddDebug(typeid(UIManager), "Uninitializing layer \"{}\" from {}", layerName, viewID.name());
+    //         layer->UninitGraphics(m_State->GetGraphicsMgr());
+    //     }
+    // }
+    //
+    // for (const auto& [layerName, layer] : m_GlobalLayers) {
+    //     Logger::AddDebug(typeid(UIManager), "Uninitializing global layer \"{}\"", layerName);
+    //     layer->UninitGraphics(m_State->GetGraphicsMgr());
+    // }
+}
+
 namespace {
 void DrawVertexArrayImGui(VertexArray& array) {
     // ImGui::
@@ -179,7 +195,7 @@ void UIManager::DrawDebugElement(UIElement& element) {
     }
 
     if (ImGui::TreeNode("Vertex")) {
-        for (size_t i = 0; i < element.m_Vertices.size(); i++) {
+        for (size_t i = 0; i < element.m_Vertices.GetSize(); i++) {
             const auto& vertex = element.m_Vertices[i];
             ImGui::Text("Color:");
             ImGui::SameLine();

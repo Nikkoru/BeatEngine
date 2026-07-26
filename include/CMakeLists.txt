@@ -43,7 +43,6 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Windows/GLFW/Window.h"
 
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Renderer.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/RendererData.hpp"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Swapchain.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/AllocatedImage.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Core.h"
@@ -53,11 +52,8 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/ImageCache.hpp"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/ImmediateExecutor.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Instance.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/DescriptorBuilder.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/DescriptorAllocator.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/UninitQueue.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Boilerplate.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/PipelineManager.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Texture.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Shader.h"
 

@@ -70,40 +70,24 @@ void Game::Run() {
 
 	while (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
-            if (event->Is<GameExitingEvent>()){
+            if (event->Is<GameExitingEvent>()) {
                 m_Running = false;
                 break;
             }
-            if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
-		    	m_GlobalLayers.OnEvent(event);
-            }
-            else {
+            m_GlobalLayers.OnEvent(event);
+            if (!m_State.GetViewMgr().OnEvent(event)) {
                 m_Running = false;
                 break;
             }
-            if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
-			    if (!m_State.GetViewMgr().OnEvent(event)) {
-                    m_State.GetGraphicsMgr().Close();
-                m_Running = false;
-				    break;
-			    }
-            }
-            else {
-                m_State.GetGraphicsMgr().Close();
-                m_Running = false;
-                break;
-            }
-		}
-        if (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
-		    this->Update();
-		    this->Draw();
-		    this->Display();
         }
-        else {
-            Uninit();
-            break;
-        }
+        if (!m_Running) break;
+
+        this->Update();
+
+        this->Draw();
+        this->Display();
 	}
+    Uninit();
 }
 
 void Game::Init() {
@@ -127,11 +111,11 @@ void Game::Uninit() {
 
     // m_State->KeybindsMgr->Uninit();
     m_State.GetViewMgr().Uninit();
-    // m_State->UIMgr->Uninit();
-    m_State.GetGraphicsMgr().Close();
+    m_State.GetUIMgr().Uninit();
+    m_State.GetAssetMgr().Uninit();
     m_State.GetSystemMgr().StopSystems();
-    // m_AssetMgr->Uninit();
     m_State.GetAudioMgr().Uninit();
+    m_State.GetGraphicsMgr().Close();
     // m_SettingsMgr->Uninit();
     m_Running = false;
 }
@@ -400,8 +384,7 @@ void Game::Draw() {
 
     }
 
-	if (!m_State.GetViewMgr().OnDraw())
-		Uninit();
+	m_Running = m_State.GetViewMgr().OnDraw();
 
 	m_GlobalLayers.Draw(m_State.GetGraphicsMgr());
     m_State.GetUIMgr().OnDraw();
@@ -493,6 +476,7 @@ void Game::InitWindow() {
 	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
 
     m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
+    m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
     m_State.GetGraphicsMgr().Init();
 
     if (gameSettings->WindowFullScreen) {
@@ -563,7 +547,7 @@ void Game::SubscribeToGameSignals() {
 
     SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal>) {
         EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
-        Uninit();
+        m_Running = false;
     });
 
     // SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {

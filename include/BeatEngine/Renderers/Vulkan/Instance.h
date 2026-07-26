@@ -46,8 +46,13 @@ private:
 public:
     Instance() : m_ImageCache(*this) {}
 
-    void Init(GameContext* context, std::string appName, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
+    void Init(GameContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
     void Uninit();
+
+    void AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset = { 0, 0 }, Vector2u extent = { 0, 0 }, uint32_t layer = 0);
+    void AttachImageData(AllocatedImage& texture, const void* pixelData, Vector2u offset = { 0, 0 }, Vector2u extent = { 0, 0 }, uint32_t layer = 0);
+
+    const AllocatedImage& GetImageFromID(ImageID id) { return m_ImageCache.GetImage(id); }
 
     uint16_t GetImageAllocations() { return m_ImageAllocs; }
     uint16_t GetBufferAllocations() { return m_BufferAllocs; }
@@ -56,7 +61,9 @@ public:
     void EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage);
     void ClearImage(VkCommandBuffer cmd, VkClearColorValue clearColor, VkImageSubresourceRange imageRange);
 
-    AllocatedImage CreateImage(VkImageCreateInfo info, void* pixelData);
+    AllocatedImage CreateImage(VkImageCreateInfo info, const void* pixelData, bool cache = true);
+    void CopyImageToImage(ImageID srcID, ImageID dstID);
+    void DestroyImage(const ImageID imageID);
     void DestroyImage(const AllocatedImage& image);
     AllocatedImage CreateDrawImage(Vector2u size);
 
@@ -79,9 +86,9 @@ public:
     size_t GetSwapchainImagesSize() { return m_Swapchain.GetImagesSize(); }
     VkImage& GetSwapchainImage() { return m_Swapchain.GetImage(GetCurrentFrameIndex()); }
     VkImageView& GetSwapchainImageView() { return m_Swapchain.GetImageView(GetCurrentFrameIndex()); }
-    void RecreateSwapchain(Vector2u size);
+    void RecreateSwapchain(std::shared_ptr<BaseWindow> window, Vector2u size);
 
-    ImageID AddImageToCache(AllocatedImage image);
+    ImageID AddImageToCache(AllocatedImage& image);
 
     GPUBuffer CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO);
     void DestroyBuffer(const GPUBuffer& buffer);
@@ -91,7 +98,7 @@ public:
 private:
     friend class VulkanRenderer;
 
-    void InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName);
+    void InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex);
     void InitImGui(std::shared_ptr<BaseWindow> window);
 
     AllocatedImage CreateImageRaw(
@@ -99,7 +106,6 @@ private:
         std::optional<VmaAllocationCreateInfo> customAllocInfo = std::nullopt
     );
 
-    void AttachImageData(AllocatedImage& texture, void* pixelData, uint32_t layer = 0);
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT severity,

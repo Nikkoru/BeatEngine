@@ -3,6 +3,8 @@
 #include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/Graphics/RectShape.hpp"
+#include "BeatEngine/Graphics/TextElement.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
@@ -26,6 +28,10 @@ private:
 	std::shared_ptr<Font> m_Font = nullptr;
 
 	bool m_buttonActive = false;
+
+    RectShape m_Shape{};
+    RectShape m_FunnyShape{};
+    TextElement m_Text{};
 
 	float progress = 0;
 public:

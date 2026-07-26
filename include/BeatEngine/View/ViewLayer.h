@@ -53,7 +53,7 @@ public:
 	virtual void OnAttach() {} 
 	virtual void OnDetach() {}
 	virtual void OnEvent(Optional<Base::Event> event) = 0;
-    virtual void OnDraw(GraphicsManager& mgr) = 0;
+    virtual void OnDraw(GraphicsManager& mgr, RenderState state) = 0;
 
 	inline Vector2f GetSize() const { return m_Size; }
 	inline float GetCameraZoom() const { return m_Camera.GetZoom(); };

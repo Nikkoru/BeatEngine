@@ -16,13 +16,13 @@ layout (location = 0) out vec4 outColor;
 #define TEXT_SHADER_ID   1
 
 void main() {
-//    vec4 texColor = sampleTexture2DNearest(textureID, inUV);
-//    if (shaderID == TEXT_SHADER_ID) {
-//        texColor = vec4(1.0, 1.0, 1.0, texColor.r);
-//    }
+    vec4 texColor = sampleTexture2DNearest(textureID, inUV);
+    if (shaderID == TEXT_SHADER_ID) {
+        texColor = vec4(1.0, 1.0, 1.0, inColor.z);
+    }
 
-//    if (texColor.a < 0.1) {
-//        discard;
-//    }
-    outColor = inColor;
+    if (texColor.a < 0.1) {
+        discard;
+    }
+    outColor = inColor * texColor;
 }

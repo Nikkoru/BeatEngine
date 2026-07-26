@@ -2,6 +2,7 @@
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Events/GameEvent.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
@@ -107,8 +108,7 @@ void GraphicsManager::SetWindowSize(Vector2u size) {
 }
 
 void GraphicsManager::SetFramerateLimit(unsigned int fps) {
-    (void)fps;
-    // TODO: need a way to limit the renderer fps, probably hold the fps limit data to the window 
+    m_Renderer->SetFramerateLimit(fps);
 }
 
 void GraphicsManager::Render() {
@@ -127,18 +127,22 @@ void GraphicsManager::Clear() {
     m_Renderer->Clear();
 }
 
-void GraphicsManager::DrawElement(GraphicalElement& element) {
-    if (!element.Data->IsInitialized())
-        InitElement(element);
-    m_Renderer->DrawElement(element);
+void GraphicsManager::DrawElement(GraphicalElement& element, RenderState state) {
+    if (!element.m_Initialized)
+        InitElement(element, state);
+    DrawVertices(element.m_Vertices, state);
 }
 
-void GraphicsManager::InitElement(GraphicalElement& element) {
-    m_Renderer->InitElement(element);
+void GraphicsManager::DrawVertices(VertexArray& vertices, RenderState state) {
+    m_Renderer->DrawVertices(vertices, state);
+}
+
+void GraphicsManager::InitElement(GraphicalElement& element, RenderState state) {
+    m_Renderer->InitVertices(element.m_Vertices, state);
 }
 
 void GraphicsManager::UninitElement(GraphicalElement& element) {
-    m_Renderer->UninitElement(element);
+    m_Renderer->UninitVertices(element.m_Vertices);
 }
 
 std::shared_ptr<Renderer> GraphicsManager::GetRenderer() {
@@ -147,6 +151,35 @@ std::shared_ptr<Renderer> GraphicsManager::GetRenderer() {
 
 std::shared_ptr<Texture> GraphicsManager::CreateTexture(const std::filesystem::path& path) {
     return m_Renderer->CreateTexture(path);
+}
+
+std::shared_ptr<Texture> GraphicsManager::CreateTexture(const uint8_t* pixelData, Vector2u size) {
+    return m_Renderer->CreateTexture(pixelData, size);
+}
+
+std::shared_ptr<Texture> GraphicsManager::CreateEmptyTexture(Vector2u size) {
+    return m_Renderer->CreateEmptyTexture(size);
+}
+
+void GraphicsManager::UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData, Vector2u size, Vector2u dest) {
+    m_Renderer->UpdateTexture(texture, pixelData, size, dest);
+}
+
+void GraphicsManager::UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) {
+    m_Renderer->UpdateTexture(texture, pixelData);
+}
+
+void GraphicsManager::UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) {
+    m_Renderer->UpdateTexture(dstTexture, srcTexture);
+}
+
+void GraphicsManager::DestroyTexture(std::shared_ptr<Texture> texture) {
+    m_Renderer->DestroyTexture(texture);
+}
+
+
+unsigned int GraphicsManager::GetMaxTextureSize() {
+    return m_Renderer->GetMaxTextureSize();
 }
 
 std::shared_ptr<Font> GraphicsManager::CreateFont(const std::filesystem::path& path) {
@@ -164,6 +197,10 @@ std::shared_ptr<BaseWindow> GraphicsManager::GetWindow() {
 Optional<Base::Event> GraphicsManager::PollEvent() {
     auto event = m_Renderer->PollEvent();
     m_Renderer->ProcessEvent(event);
+    
+    if (event.HasValue())
+        if (auto data = event->GetIf<GameResizedEvent>(event))
+            m_UICamera.SetSize(Vector2f{ data->Size });
 
     return event;
 }
