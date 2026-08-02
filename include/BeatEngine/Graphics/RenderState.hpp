@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef _MSC_VER
+#include <compare>
+#endif
+
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/DrawCommand.hpp"
@@ -25,7 +29,13 @@ struct RenderState {
     std::shared_ptr<PushConstants> _PushConstants{};
     size_t PushConstantsSize{ sizeof(PushConstants) };
 
+    bool DrawInGlobal{ false };
+
     static const RenderState Default;
 
+#ifndef _MSC_VER
     bool operator<=>(const RenderState& other) const = default;
+#else
+    std::partial_ordering operator<=>(const RenderState& other) const = default;
+#endif
 };

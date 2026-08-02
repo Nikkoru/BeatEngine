@@ -3,6 +3,8 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include <filesystem>
 
+#undef LoadImage
+
 struct ImageData {
     ImageData() = default;
     ~ImageData();

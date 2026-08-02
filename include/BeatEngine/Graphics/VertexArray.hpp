@@ -4,8 +4,6 @@
 #include "BeatEngine/Graphics/Vertex.hpp"
 #include <vector>
 
-// using VertexArray = std::vector<Vertex>;
-
 /// @brief Wrapper class to `std::vector<Vertex>` with some additional data
 ///
 /// This class is essentially for redusing arguments for functions that also needs
@@ -23,7 +21,7 @@ private:
     // if this id is the max of uint32_t that means that there is no highlights
     // if the VertexArray is a highlight, then this id is encoded, which that encode contains the source VertexArray ID
     // and the internal arrayID for the renderer
-    uint32_t m_HighlightID{ std::numeric_limits<uint32_t>::max() };
+    uint32_t m_HighlightID{ (std::numeric_limits<uint32_t>::max)() };
     // also we need to know if it is already initialized so we can know if the requested id
     // needs to be freed or not, this overrides whatever it was in that id without questions
     bool m_Initialized{ false };

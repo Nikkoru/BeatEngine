@@ -2,6 +2,17 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 include(FetchContent)
 
+if(MSVC)
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+endif()
+FetchContent_Declare(googletest
+    GIT_REPOSITORY https://github.com/google/googletest
+    GIT_TAG main
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(googletest)
+
 # Fetch ImGui
 FetchContent_Declare(ImGui
         GIT_REPOSITORY https://github.com/ocornut/imgui
@@ -193,14 +204,19 @@ FetchContent_Declare(samplerate
     SYSTEM)
 FetchContent_MakeAvailable(samplerate)
 
-set(BUILD_TESTING OFF)
-set(BUILD_SHARED_LIBS ON)
-set(ENABLE_COMPATIBLE_LIBSNDFILE_NAME ON)
+# FetchContent_Declare(mpg123
+#     GIT_REPOSITORY https://
+# )
+
 FetchContent_Declare(libsndfile
     GIT_REPOSITORY https://github.com/libsndfile/libsndfile
     GIT_SHALLOW ON
     EXCLUDE_FROM_ALL
     SYSTEM)
+set(ENABLE_MPEG ON CACHE BOOL "Enable MPEG codecs" FORCE)
+set(BUILD_TESTING OFF CACHE BOOL "Disable libsndfile tests" FORCE)
+set(BUILD_TESTING OFF)
+set(ENABLE_COMPATIBLE_LIBSNDFILE_NAME ON)
 FetchContent_MakeAvailable(libsndfile)
 
 # Fetch TagLib

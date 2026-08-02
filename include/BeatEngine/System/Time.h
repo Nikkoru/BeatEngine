@@ -2,6 +2,11 @@
 
 #include <chrono>
 #include <cstdint>
+
+#ifdef _MSC_VER
+#include <compare>
+#endif
+
 class Time {
 private:
     std::chrono::microseconds m_Duration{};
@@ -24,8 +29,11 @@ public:
     static constexpr Time FromSeconds(float seconds);
     static constexpr Time FromMilliseconds(int32_t milliseconds);
     static constexpr Time FromMicroseconds(int64_t microseconds);
-
+#ifndef _MSC_VER
     constexpr bool operator<=>(const Time& right) const = default;
+#else
+	constexpr std::partial_ordering operator<=>(const Time& right) const = default;
+#endif
 };
 
 #include "BeatEngine/System/Time.inl"

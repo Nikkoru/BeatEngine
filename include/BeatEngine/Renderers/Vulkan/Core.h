@@ -7,7 +7,11 @@
 
 template<typename... Args>
 inline void AddVulkanLog(std::string fmt, Args&&... elms) {
+#ifndef _WIN32
     Logger::AddLog("\e[0;41mVulkan\033[0m", "", fmt, elms...);
+#else
+    Logger::AddLog("\x1b[0;41mVulkan\033[0m", "", fmt, elms...);
+#endif
 }
 
 namespace VK {

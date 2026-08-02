@@ -1,9 +1,12 @@
 #include "BeatEngine/Graphics/Transform.hpp"
 
+#include <array>
+
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-constexpr Transform Transform::Identity{};
+// inline is not needed, but MSVC is angry if inline is not here
+inline constexpr Transform Transform::Identity{};
 
 constexpr Transform::Transform(glm::mat3 matrix3x3)
     : m_Matrix(

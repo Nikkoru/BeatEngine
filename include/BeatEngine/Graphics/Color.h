@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstdint>
+#ifdef _MSC_VER
+#include <compare>
+#endif
+
 struct RGBColor {
     uint8_t R{};
     uint8_t G{};
@@ -27,6 +31,9 @@ struct LinearColor {
 
     static LinearColor White() { return { 1.f, 1.f, 1.f }; }
     static LinearColor Black() { return { .0f, .0f, .0f}; }
-
+#ifndef _MSC_VER
     bool operator<=>(const LinearColor& other) const = default;
+#else
+	std::partial_ordering operator<=>(const LinearColor& other) const = default;
+#endif
 };

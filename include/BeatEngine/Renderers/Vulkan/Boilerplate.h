@@ -7,7 +7,7 @@
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vk_enum_string_helper.h>
 
-constexpr auto NO_TIMEOUT = std::numeric_limits<unsigned long>::max();
+constexpr auto NO_TIMEOUT{ (std::numeric_limits<unsigned long>::max)() };
 
 void VK_CHECK_SOURCE(VkResult result, const std::source_location location);
 #define VK_CHECK(err) VK_CHECK_SOURCE(err, std::source_location::current()) 

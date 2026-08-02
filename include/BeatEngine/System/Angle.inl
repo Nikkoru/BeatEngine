@@ -9,7 +9,8 @@ constexpr float positiveRemainer(float a, float b) {
     return val >= 0.f ? val : val + b;
 } 
 }
-constexpr Angle Angle::Zero{};
+// why
+inline constexpr Angle Angle::Zero{};
 
 constexpr float Angle::AsDegrees() const {
     return m_Radians * (180.f / PI);

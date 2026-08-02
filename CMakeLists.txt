@@ -9,6 +9,7 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 project("BeatEngine")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 
 include(TargetShaders)
@@ -63,6 +64,11 @@ target_include_directories(BeatEngine PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 23)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_23)
 
+if(MSVC)
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/utf-8>")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:/utf-8>")
+endif()
+
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_DEBUG)
 endif()
@@ -115,19 +121,25 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
     target_compile_definitions(${PROJECT_NAME} PRIVATE IMGUI_IMPL_VULKAN_USE_VOLK)
 
     if(NOT CROSS_BUILDING)
-        find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined glslang)
+        find_package(Vulkan REQUIRED COMPONENTS volk shaderc_combined glslang SPIRV-Tools)
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}/volk")
         target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
+        if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+			target_link_libraries(${PROJECT_NAME}
+                PUBLIC
+                    Vulkan::Vulkan
+            )
+        endif()
+
         target_link_libraries(${PROJECT_NAME}
             PUBLIC 
-                Vulkan::Vulkan
                 Vulkan::volk
                 Vulkan::shaderc_combined
                 Vulkan::glslang
-                SPIRV-Tools 
-                SPIRV-Tools-opt
+                Vulkan::SPIRV-Tools 
+                # SPIRV-Tools-opt
         )
     else()
         target_include_directories(${PROJECT_NAME} PRIVATE "${VULKAN_HEADERS_SOURCE_DIR}/include")
@@ -210,5 +222,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 if (BUILD_TESTS)
+    message(STATUS "Adding tests")
     add_subdirectory("test")
 endif()

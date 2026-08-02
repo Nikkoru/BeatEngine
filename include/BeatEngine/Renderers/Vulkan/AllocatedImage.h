@@ -6,7 +6,7 @@
 #include <vk_mem_alloc.h>
 
 using ImageID = uint32_t;
-static constexpr ImageID NULL_IMAGE_ID = std::numeric_limits<uint32_t>::max();
+static constexpr ImageID NULL_IMAGE_ID{ (std::numeric_limits<uint32_t>::max)() };
 
 struct AllocatedImage {
     VkImage Image{ VK_NULL_HANDLE };
