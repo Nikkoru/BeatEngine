@@ -15,6 +15,8 @@
 #include <cstdint>
 #include <mutex>
 
+#include "BeatEngine/System/String.hpp"
+
 struct AudioStreamMetadata {
 private:
     friend class AudioStream;
@@ -31,7 +33,7 @@ class AudioStream : public Base::Asset {
 private:
     friend class AudioManager;
 
-	std::string m_Name = "";
+	String m_Name = "";
 
     TagLib::FileRef m_MetadataReference;
     AudioStreamMetadata m_Metadata;
@@ -78,7 +80,7 @@ private:
 	void FillBuffers();
     void AsyncFillBuffers();
 public:
-	AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds = -1, uint64_t totalFrames = -1);
+	AudioStream(String name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds = -1, uint64_t totalFrames = -1);
 	AudioStream(AudioStream& other) : 
         m_Name(other.m_Name), 
         m_MetadataReference(other.m_MetadataReference), 
@@ -111,7 +113,7 @@ public:
     void AddReadFrames(uint64_t frames);
     void ResetReadFrames();
 
-	std::string GetName() const;
+	String GetName() const;
 	float GetVolume() const;
 	bool IsLooping() const;
 	bool IsPlaying() const;

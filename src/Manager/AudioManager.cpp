@@ -222,16 +222,16 @@ AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(co
 					StopStream(stream);
 			}
 
-			PlayStream(audioStream);
+			AddStream(audioStream);
 		}
-		else if (!audioSignal->AudioStreamName.empty()) {
+		else if (!audioSignal->AudioStreamName.IsEmpty()) {
             if (m_State->GetAssetMgr().Has(audioSignal->AudioStreamName)) {
                 auto audioStream = m_State->GetAssetMgr().Get<AudioStream>(audioSignal->AudioStreamName).Get(); 
                 for (const auto& stream : m_Streams) {
                     if (audioStream->GetName() == stream->GetName())
                         StopStream(stream);
                 }
-                PlayStream(audioStream);
+                AddStream(audioStream);
             }
 		}
         else
@@ -268,7 +268,7 @@ AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(co
 	SignalManager::GetInstance()->RegisterCallback<PlaySoundSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlaySoundSignal>(sig);
 
-		PlaySound(audioSignal->SoundToPlay);
+		AddSound(audioSignal->SoundToPlay);
 	});
 }
 
@@ -329,7 +329,8 @@ void AudioManager::Init() {
         auto device = Pa_GetDeviceInfo(i);
         if (!device)
             Logger::AddWarning(typeid(AudioManager), "Invalid index : {}", i);
-        Logger::AddLog(LogType::DebugTarget, typeid(AudioManager), device->name);
+        else
+			Logger::AddLog(LogType::DebugTarget, typeid(AudioManager), device->name);
     }
 
     m_StreamParameters = outputParams;
@@ -346,7 +347,7 @@ void AudioManager::Uninit() {
     m_Sounds.clear();
 }
 
-void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
+void AudioManager::AddSound(std::shared_ptr<Sound> sound) {
     EventManager::GetInstance()->Send(std::make_shared<EventSoundStarted>(sound->GetName()));
 
 	int write = m_SoundWriteIndex.load();
@@ -359,7 +360,7 @@ void AudioManager::PlaySound(std::shared_ptr<Sound> sound) {
 	}
 }
 
-void AudioManager::PlayStream(std::shared_ptr<AudioStream> stream) {
+void AudioManager::AddStream(std::shared_ptr<AudioStream> stream) {
     if (auto it = std::ranges::find(m_Streams, stream); it != m_Streams.end()) {
         Logger::AddInfo(typeid(AudioManager), "Stream \"{}\" is already playing. Replaying", stream->GetName());
         (*it)->Stop();
@@ -411,7 +412,7 @@ void AudioManager::StopStream(std::shared_ptr<AudioStream> stream) {
 	}
 }
 
-void AudioManager::StopStream(std::string streamName) {
+void AudioManager::StopStream(String streamName) {
 	for (const auto& stream : m_Streams) {
 		if (stream->GetName() == streamName) {
 			StopStream(stream);
@@ -425,7 +426,7 @@ bool AudioManager::IsStreamPlaying(std::shared_ptr<AudioStream> stream) {
     return IsStreamPlaying(streamName);
 }
 
-bool AudioManager::IsStreamPlaying(std::string streamName) {
+bool AudioManager::IsStreamPlaying(String streamName) {
     for (const auto& stream : m_Streams) {
         if (stream->GetName() == streamName)
             return true;
@@ -473,7 +474,7 @@ player:
     if (ImGui::Button("Play")) {
         if (m_State->GetAssetMgr().Has(buf)) {
             auto stream = m_State->GetAssetMgr().Get<AudioStream>(buf);
-            PlayStream(stream.Get());
+            AddStream(stream.Get());
         }
     }
     ImGui::SameLine();
@@ -489,7 +490,7 @@ player:
                 ImGui::PushStyleColor(ImGuiCol_Text, { .0f, 1.0f, .0f, 1.0f });
             else
                 ImGui::PushStyleColor(ImGuiCol_Text, { 1.0f, 1.0f, .0f, 1.0f });
-            if (ImGui::TreeNode(stream->GetName().c_str())) {
+            if (ImGui::TreeNode(stream->GetName().ToCString(true))) {
                 ImGui::PopStyleColor();
                 auto metadata = stream->GetMetadata();
                 
@@ -534,7 +535,7 @@ player:
 
 
                 if (ImGui::Button("Replay")) {
-                    PlayStream(stream);
+                    AddStream(stream);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Stop")) {

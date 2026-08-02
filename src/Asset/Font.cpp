@@ -1,4 +1,7 @@
 #include "BeatEngine/Asset/Font.h"
+
+#include <array>
+
 #include "BeatEngine/Graphics/Glyph.hpp"
 #include "BeatEngine/Graphics/Rect.hpp"
 #include "BeatEngine/Logger.h"
@@ -277,7 +280,7 @@ bool Font::SetFontSize(unsigned int size) const {
         if (result == FT_Err_Invalid_Pixel_Size) {
             if (!FT_IS_SCALABLE(face)) {
                 Logger::AddWarning("", "Failed to resize font, font is not scalable and the requested size isn't available");
-                Logger::AddInfo("Available sizes:");
+                Logger::AddInfo("", "Available sizes:");
                 for (int i = 0; i < face->num_fixed_sizes; ++i)
                 {
                     const long availSize = (face->available_sizes[i].y_ppem + 32) >> 6;

@@ -18,27 +18,27 @@ public:
 class PlayAudioStreamSignal : public Base::Signal {
 public:
 	Base::AssetHandle<AudioStream> AudioStreamHandle;
-    std::string AudioStreamName;
+    String AudioStreamName;
 public:
 	PlayAudioStreamSignal(std::shared_ptr<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound), AudioStreamName(sound->GetName()) {}
 	PlayAudioStreamSignal(Base::AssetHandle<AudioStream> sound) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(sound), AudioStreamName() {}
-	PlayAudioStreamSignal(std::string name) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(), AudioStreamName(name) {}
+	PlayAudioStreamSignal(String name) : Base::Signal(typeid(PlayAudioStreamSignal)), AudioStreamHandle(), AudioStreamName(name) {}
 };
 
 class PauseAudioStreamSignal : public Base::Signal {
 public:
-	std::string AudioStreamName;
+	String AudioStreamName;
 public:
-	PauseAudioStreamSignal(std::string name) : Base::Signal(typeid(PauseAudioStreamSignal)), AudioStreamName(name) {}
+	PauseAudioStreamSignal(String name) : Base::Signal(typeid(PauseAudioStreamSignal)), AudioStreamName(name) {}
 	PauseAudioStreamSignal(std::shared_ptr<AudioStream> sound) : Base::Signal(typeid(PauseAudioStreamSignal)), AudioStreamName(sound->GetName()) {}
 	PauseAudioStreamSignal(Base::AssetHandle<AudioStream> sound) : Base::Signal(typeid(PauseAudioStreamSignal)), AudioStreamName(sound.Get()->GetName()) {}
 };
 
 class StopAudioStreamSignal : public Base::Signal {
 public:
-	std::string AudioStreamName;
+	String AudioStreamName;
 public:
-	StopAudioStreamSignal(std::string name) : Base::Signal(typeid(StopAudioStreamSignal)), AudioStreamName(name) {}
+	StopAudioStreamSignal(String name) : Base::Signal(typeid(StopAudioStreamSignal)), AudioStreamName(name) {}
 	StopAudioStreamSignal(std::shared_ptr<AudioStream> sound) : Base::Signal(typeid(StopAudioStreamSignal)), AudioStreamName(sound->GetName()) {}
 	StopAudioStreamSignal(Base::AssetHandle<AudioStream> sound) : Base::Signal(typeid(StopAudioStreamSignal)), AudioStreamName(sound.Get()->GetName()) {}
 };

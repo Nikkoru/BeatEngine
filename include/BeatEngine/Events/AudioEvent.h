@@ -5,29 +5,29 @@
 
 class EventAudioStreamStoped : public Base::Event {
 public:
-    std::string Name;
+    String Name;
 public:
-    EventAudioStreamStoped(std::string name) : Base::Event(typeid(EventAudioStreamStoped)), Name(name) {}
+    EventAudioStreamStoped(String name) : Base::Event(typeid(EventAudioStreamStoped)), Name(name) {}
 };
 
 class EventAudioStreamStarted : public Base::Event {
 public:
-    std::string Name;
+    String Name;
 public:
-    EventAudioStreamStarted(std::string name) : Base::Event(typeid(EventAudioStreamStarted)), Name(name) {}
+    EventAudioStreamStarted(String name) : Base::Event(typeid(EventAudioStreamStarted)), Name(name) {}
 };
 
 class EventSoundStarted : public Base::Event {
 public:
-    std::string Name;
+    String Name;
 public:
-    EventSoundStarted(std::string name) : Base::Event(typeid(EventSoundStarted)), Name(name) {}
+    EventSoundStarted(String name) : Base::Event(typeid(EventSoundStarted)), Name(name) {}
 };
 
 class EventSoundStoped : public Base::Event {
 public:
-    std::string Name;
+    String Name;
 public:
-    EventSoundStoped(std::string name) : Base::Event(typeid(EventSoundStoped)), Name(name) {}
+    EventSoundStoped(String name) : Base::Event(typeid(EventSoundStoped)), Name(name) {}
 };
 

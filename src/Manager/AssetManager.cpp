@@ -1,8 +1,10 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
+#include <Windows.h>
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstdio>
 #include <filesystem>
 #include <freetype/freetype.h>
 #include <freetype/ftstroke.h>
@@ -211,8 +213,11 @@ template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& p
 }
 template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const fs::path& path, std::type_index viewID) {
 	if (fs::exists(path)) {
-		std::string name = path.stem().string();
-		std::string fullpath = path.string();
+		String name = path.stem().c_str();
+		String fullpath = path.c_str();
+
+        name.CheckRealType();
+        fullpath.CheckRealType();
 
 		Base::AssetHandle<AudioStream> handle;
 
@@ -237,31 +242,61 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			ma_decoder decoder;
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
 
-			SF_INFO sfInfo;
+			SF_INFO sfInfo{};
             TagLib::FileRef ref;
 
 			sf_count_t totalFrames = -1;
             
             float seconds = -1;
 
-			auto sndFile = sf_open(fullpath.c_str(), SFM_READ, &sfInfo);
+			SNDFILE* sndFile = nullptr;
+
+            
+
+            // result = ma_decoder_init_file_w(path.c_str(), &config, &decoder);
+
+            if (fullpath.IsType(String::UTF16))
+                result = ma_decoder_init_file_w(fullpath.ToCWString(), &config, &decoder);
+#ifdef _WIN32
+            else if (fullpath.IsType(String::UTF8))
+                result = ma_decoder_init_file_w(fullpath.ToCWString(), &config, &decoder);
+#endif
+            else
+				result = ma_decoder_init_file(fullpath.ToCString(true), &config, &decoder);
+
+			if (result != MA_SUCCESS) {
+                auto str = ma_result_description(result);
+                std::string msg = std::format("Failed to load \"{}\": {}", fullpath, str);
+                Logger::AddCritical(typeid(AssetManager), "{}", msg);
+				ma_decoder_uninit(&decoder);
+				THROW_RUNTIME_ERROR(msg);
+			}
+
+#ifdef _WIN32
+				sndFile = sf_wchar_open(path.c_str(), SFM_READ, &sfInfo);
+#else
+				sndFile = sf_open(fullpath.ToCString(true), SFM_READ, &sfInfo);
+#endif
+
 			if (sndFile) {
 				totalFrames = sfInfo.frames;
-                seconds = static_cast<float>(totalFrames) / sfInfo.samplerate;
+                 seconds = static_cast<float>(totalFrames) / sfInfo.samplerate;
 			}
 			else {
-                Logger::AddError(typeid(AssetManager), "Failed to retreive frame count data of \"{}\"", name);
+             Logger::AddError(typeid(AssetManager), "Failed to retreive frame count data of \"{}\", reason: {}", name, sf_strerror(sndFile));
+
 			}
 			sf_close(sndFile);
 
-            ref = TagLib::FileRef(fullpath.c_str());
-			
-			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
 
-			if (result != MA_SUCCESS) {
-				THROW_RUNTIME_ERROR("failed");
-				ma_decoder_uninit(&decoder);
-			}
+            if (fullpath.IsType(String::UTF16))
+                ref = TagLib::FileRef(fullpath.ToCWString());
+#ifdef _WIN32
+            else if (fullpath.IsType(String::UTF8))
+                ref = TagLib::FileRef(fullpath.ToCWString());
+#endif
+            else
+                ref = TagLib::FileRef(fullpath.ToCString(true));
 
 			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, ref, seconds, static_cast<uint64_t>(totalFrames));
 
@@ -484,7 +519,7 @@ void AssetManager::Init() {
     Logger::AddDebug(typeid(AssetManager), "Loaded {} assets", totalAssetLoaded);
 }
 
-bool AssetManager::Has(std::string name, const std::type_index viewID) {
+bool AssetManager::Has(const String& name, const std::type_index viewID) {
 	bool global = viewID == typeid(nullptr);
 
 	if (global)
@@ -602,7 +637,15 @@ void AssetManager::ShowImGuiDebugWindow() {
         ImGui::Separator();
         if (ImGui::Button("Yes")) {
             ImGui::CloseCurrentPopup();
-            m_ViewAssets.clear();
+            for (auto it = m_ViewAssets.begin(); it != m_ViewAssets.end();) {
+                auto map = it->second;
+                for (auto innerIt = map.begin(); innerIt != map.end();) {
+                    innerIt->second.Asset.reset();
+                    innerIt = map.erase(innerIt);
+                }
+
+                it = m_ViewAssets.erase(it);
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("No")) {
@@ -615,7 +658,10 @@ void AssetManager::ShowImGuiDebugWindow() {
         ImGui::Separator();
         if (ImGui::Button("Yes")) {
             ImGui::CloseCurrentPopup();
-            m_GlobalAssets.clear();
+            for (auto it = m_GlobalAssets.begin(); it != m_GlobalAssets.end();) {
+                it->second.Asset.reset();
+                it = m_GlobalAssets.erase(it);
+            }
         }
         ImGui::SameLine();
         if (ImGui::Button("No")) {
@@ -689,7 +735,7 @@ void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids
 void AssetManager::ShowAssetBrowser() {
     Profiler::StartProfile({ typeid(AssetManager), "ShowAssetBrowser" }, IM_COL32(150, 0, 100, 255));
     std::vector<Slot> totalAssets;
-    std::vector<std::string> assetNames;
+    std::vector<String> assetNames;
     static std::vector<UID> selectedIds;
     static std::vector<int> assetDetail;
 
@@ -761,7 +807,7 @@ void AssetManager::ShowAssetBrowser() {
                     auto assetData = totalAssets[itemIndex].Handle;
                     auto assetType = totalAssets[itemIndex].Type;
                     auto assetName = assetNames[itemIndex];
-                    const bool displayLabel = (size.x >= ImGui::CalcTextSize(assetName.c_str()).x);
+                    const bool displayLabel = (size.x >= ImGui::CalcTextSize(assetName.ToCString(true)).x);
                     ImGui::PushID(assetData.GetID());
 
                     auto pos = ImVec2{startPos.x + (itemIndex % columnCount) * itemStep.x, startPos.y + lineIndex * itemStep.y };
@@ -833,10 +879,10 @@ void AssetManager::ShowAssetBrowser() {
                         drawList->AddText({ boxMax.x - ImGui::CalcTextSize(typeLabel.c_str()).x, boxMin.y }, labelCol, typeLabel.c_str());
 
                         if (displayLabel) {
-                            drawList->AddText(ImVec2(boxMin.x, boxMax.y - ImGui::GetFontSize()), labelCol, assetName.c_str());
+                            drawList->AddText(ImVec2(boxMin.x, boxMax.y - ImGui::GetFontSize()), labelCol, assetName.ToCString(true));
                         }
                         else {
-                            auto trunName = assetName.substr(0, 4);
+                            auto trunName = assetName.SubString(0, 4);
                             drawList->AddText(ImVec2(boxMin.x, boxMax.y - ImGui::GetFontSize()), labelCol, std::format("{}...", trunName).c_str());
                         }
 

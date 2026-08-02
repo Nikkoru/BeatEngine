@@ -13,7 +13,7 @@ void Shape::UpdateVertex() {
 
     if (vertexCount < 3) {
         m_Vertices.Clear();
-        Logger::AddWarning("Shape requires more than 2 vertices!");
+        Logger::AddWarning("", "Shape requires more than 2 vertices!");
         return;
     }
 

@@ -119,7 +119,7 @@ public:
 		}
 
 		std::string msg = "Element \"" + name + "\" doesn't exists in container";
-		Logger::AddCritical(msg);
+		Logger::AddCritical("", msg);
 		THROW_RUNTIME_ERROR(msg);
 	}
 };

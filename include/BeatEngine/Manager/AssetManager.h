@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <vector>
 
+#include "BeatEngine/System/String.hpp"
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Enum/AssetType.h"
@@ -31,12 +32,15 @@ public:
     AssetManager(GameContext* context, GameState* state);
     ~AssetManager();
 public:
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
     void Init();
     void Uninit();
 private:
     std::unordered_map<AssetType, fs::path> m_AssetsToLoad;
-	std::unordered_map<std::string, Slot> m_GlobalAssets;
-	std::unordered_map<std::type_index, std::unordered_map<std::string, Slot>> m_ViewAssets;
+	std::unordered_map<String, Slot> m_GlobalAssets;
+	std::unordered_map<std::type_index, std::unordered_map<String, Slot>> m_ViewAssets;
 private:
 	uint64_t m_AudioSampleRate = 48000;
     bool m_ShowAssetBrowser{ false };
@@ -50,8 +54,8 @@ public:
     Base::AssetHandle<Shader> LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID = typeid(nullptr));
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)
-	Base::AssetHandle<TAsset> Get(const std::string assetName, const std::type_index viewID = typeid(nullptr));
-    bool Has(std::string name, const std::type_index viewID = typeid(nullptr));
+	Base::AssetHandle<TAsset> Get(const String& assetName, const std::type_index viewID = typeid(nullptr));
+    bool Has(const String& name, const std::type_index viewID = typeid(nullptr));
 
     bool Preload(AssetType type, const fs::path& path, const std::type_index viewID = typeid(nullptr));
 

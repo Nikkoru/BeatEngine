@@ -14,6 +14,7 @@
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
 #include <volk.h>
+#include <BeatEngine/System/String.hpp>
 
 bool VulkanShader::GetFileContents(const std::filesystem::path path) {
     if (!std::filesystem::exists(path)) {
@@ -70,8 +71,10 @@ bool VulkanShader::Compile(VkDevice device, std::filesystem::path path) {
     opts.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
     opts.SetTargetSpirv(shaderc_spirv_version_1_6);
     opts.SetOptimizationLevel(shaderc_optimization_level_performance);
+
+	String filenameStr = path.filename().wstring();
     
-    shaderc::CompilationResult result = compiler.CompileGlslToSpv(data->Buffer.data(), kind, path.filename().c_str(), opts);
+    shaderc::CompilationResult result = compiler.CompileGlslToSpv(data->Buffer.data(), kind, filenameStr.ToCString(true), opts);
     
     if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
         Logger::AddError("", "Shader Compilation Error: {}", result.GetErrorMessage());

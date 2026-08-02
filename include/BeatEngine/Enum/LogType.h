@@ -1,7 +1,7 @@
 #pragma once
 
+#include "BeatEngine/System/String.hpp"
 #include <cstdint>
-#include <string>
 #include <map>
 
 enum class LogType : uint8_t {
@@ -19,11 +19,11 @@ enum class LogType : uint8_t {
 
 class LogTypeUtils {
 public:
-	static std::string TypeToString(const LogType type);
-	static LogType StringToType(const std::string& str);
-	static std::map<LogType, std::string> GetTypeStringMap() { return _TypeString; }
+	static String TypeToString(const LogType type);
+	static LogType StringToType(const String& str);
+	static std::map<LogType, String> GetTypeStringMap() { return _TypeString; }
 private:
-	static inline const std::map<LogType, std::string> _TypeString = {
+	static inline const std::map<LogType, String> _TypeString = {
         { LogType::All, "All" },
         { LogType::Debug, "Debug" },
         { LogType::Info, "Info" },

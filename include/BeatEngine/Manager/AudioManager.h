@@ -22,7 +22,7 @@ private:
 	uint64_t m_SampleRate{ 48000 };
 
 	std::vector<std::shared_ptr<Sound>> m_Sounds;
-    std::map<std::string, std::array<float, 1024>> m_SoundFrames;
+    // std::map<std::string, std::array<float, 1024>> m_SoundFrames;
 	std::vector<std::shared_ptr<AudioStream>> m_Streams;
 
 	static constexpr int MAX_PENDING_SOUNDS{ 64 };
@@ -90,19 +90,22 @@ public:
         return *this;
     }
 public:
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
     void Init();
     void Uninit();
 
-	void PlaySound(std::shared_ptr<Sound> sound);
-	void PlayStream(std::shared_ptr<AudioStream> stream);
+	void AddSound(std::shared_ptr<Sound> sound);
+	void AddStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::shared_ptr<AudioStream> stream);
-	void StopStream(std::string streamName);
+	void StopStream(String streamName);
 
     bool IsStreamPlaying(std::shared_ptr<AudioStream> stream);
-    bool IsStreamPlaying(std::string streamName);
+    bool IsStreamPlaying(String streamName);
 
     bool IsSoundPlaying(std::shared_ptr<Sound> stream);
-    bool IsSoundPlaying(std::string sound);
+    bool IsSoundPlaying(String sound);
 
 	bool AllSoundsDone() const;
 

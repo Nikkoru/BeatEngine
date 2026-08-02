@@ -5,12 +5,12 @@
 
 template <typename TAsset>
     requires(std::is_base_of_v<Base::Asset, TAsset>)
-Base::AssetHandle<TAsset> AssetManager::Get(const std::string assetName, const std::type_index viewID) {
+Base::AssetHandle<TAsset> AssetManager::Get(const String& assetName, const std::type_index viewID) {
     if (viewID == typeid(nullptr)) {
         if (m_GlobalAssets.contains(assetName))
             return Base::AssetHandle<TAsset>::Cast(m_GlobalAssets.at(assetName).Handle);
         else {
-            std::string msg = "Asset not found: \"" + assetName + "\"";
+            std::string msg = "Asset not found: \"" + assetName.ToString(true) + "\"";
             Logger::AddCritical(typeid(AssetManager), msg);
             THROW_RUNTIME_ERROR(msg);
         }
@@ -20,7 +20,7 @@ Base::AssetHandle<TAsset> AssetManager::Get(const std::string assetName, const s
             if (m_ViewAssets.at(viewID).contains(assetName))
                 return Base::AssetHandle<TAsset>::Cast(m_ViewAssets.at(viewID).at(assetName).Handle);
             else {
-                std::string msg = "Asset not found: \"" + assetName + "\"";
+                std::string msg = "Asset not found: \"" + assetName.ToString(true) + "\"";
                 Logger::AddCritical(typeid(AssetManager), msg);
                 THROW_RUNTIME_ERROR(msg);
             }

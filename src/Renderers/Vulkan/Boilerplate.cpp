@@ -34,8 +34,7 @@ void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle
 bool VK_CHECK_SWAPCHAIN_SOURCE(VkResult result,
                                const std::source_location location) {
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-    Logger::AddLog("\e[0;41mVulkan\033[0m", "",
-                   "Swapchain out of date. Requesting update");
+    AddVulkanLog("Swapchain out of date. Requesting update");
     return true;
   } else {
     VK_CHECK_SOURCE(result, location);
@@ -85,7 +84,7 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, std::vector<VkEx
     uint32_t devCount{};
 
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, nullptr));
-    Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Available devices: {}", devCount);
+    AddVulkanLog("Loggervailable devices: {}", devCount);
     std::vector<VkPhysicalDevice> devices(devCount);
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, devices.data()));
 
@@ -96,12 +95,12 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, std::vector<VkEx
         .properties{}
     };
     if (deviceIndex >= devices.size()) {
-        Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Not a valid index. autoselecting index 0");
+        AddVulkanLog("Not a valid index. autoselecting index 0");
         deviceIndex = 0;
     }
 
     vkGetPhysicalDeviceProperties2(devices[deviceIndex], &devProperties);
-    Logger::AddLog("\e[0;41mVulkan\033[0m", "", "Selected device: {}", devProperties.properties.deviceName);
+    AddVulkanLog("Selected device: {}", devProperties.properties.deviceName);
     if (prop)
         *prop = std::move(devProperties.properties);
 

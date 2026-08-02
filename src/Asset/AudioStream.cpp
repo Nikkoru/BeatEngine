@@ -101,7 +101,7 @@ void AudioStream::AsyncFillBuffers() {
     }
 }
 
-AudioStream::AudioStream(std::string name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds, uint64_t totalFrames)
+AudioStream::AudioStream(String name, ma_decoder decoder, uint64_t defaultSampleRate, uint64_t targetSampleRate, TagLib::FileRef fileRef, float totalSeconds, uint64_t totalFrames)
     : m_Name(name), m_MetadataReference(fileRef), m_Decoder(decoder), m_DefaultSampleRate(defaultSampleRate), m_TargetSampleRate(targetSampleRate), m_TotalSeconds(totalSeconds), m_TotalFrames(totalFrames) {
 
     m_SrcRatio = static_cast<double>(m_TargetSampleRate)  / static_cast<double>(m_DefaultSampleRate);
@@ -273,7 +273,7 @@ void AudioStream::ResetReadFrames() {
     this->m_TotalReadFrames = 0;
 }
 
-std::string AudioStream::GetName() const {
+String AudioStream::GetName() const {
     return m_Name;
 }
 
@@ -377,7 +377,7 @@ bool AudioStream::Erase() const {
 }
 
 void AudioStream::ShowImGuiDetails(bool* open) {
-    ImGui::Begin(m_Name.c_str(), open);
+    ImGui::Begin(m_Name.ToCString(true), open);
     ImGui::Text("Title: %s", m_Metadata.Title.toCString(true));
     ImGui::Text("Duration: %s", Humanize::FromSeconds(static_cast<int>(m_TotalSeconds)).c_str());
     if (ImGui::Button("Play")) {
