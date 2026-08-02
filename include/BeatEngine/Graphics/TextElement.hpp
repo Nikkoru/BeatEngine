@@ -1,6 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Asset/Font.h"
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Glyph.hpp"
 #include "BeatEngine/Graphics/Rect.hpp"
@@ -64,7 +65,7 @@ private:
     struct ShaperImpl;
 private:
     String m_Text{};
-    std::shared_ptr<Font> m_Font{ nullptr };
+    Base::AssetHandle<Font> m_Font{ nullptr };
     uint32_t m_FontTextureID{};
     unsigned int m_CharacterSize{ 30 };
     float m_LetterSpacingFactor{ 1.f };
@@ -83,12 +84,12 @@ private:
     mutable std::shared_ptr<ShaperImpl> m_Shaper;
     mutable VertexArray m_OutlineVertices;
 public:
-    TextElement() : TextElement(nullptr) {}
-    TextElement(std::shared_ptr<Font> font, String str = "", unsigned int charSize = 30);
+    TextElement() : TextElement(Base::AssetHandle<Font>{}) {}
+    TextElement(Base::AssetHandle<Font> font, String str = "", unsigned int charSize = 30);
     ~TextElement() override = default;
 
     void SetString(const String str);
-    void SetFont(const std::shared_ptr<Font> font);
+    void SetFont(const Base::AssetHandle<Font>& font);
     void SetCharacterSize(unsigned int charSize);
     void SetLetterSpacing(float spacingFactor);
     void SetStyle(uint32_t style);
@@ -97,7 +98,7 @@ public:
     void SetLineAlignment(LineAlignment alignment);
 
     String GetText() { return m_Text; }
-    std::shared_ptr<Font> GetFont() { return m_Font; }
+    Base::AssetHandle<Font>& GetFont() { return m_Font; }
     unsigned int GetCharacterSize() { return m_CharacterSize; }
     float GetLetterSpacing() { return m_LetterSpacingFactor; }
     LinearColor GetColor() { return m_Color; }

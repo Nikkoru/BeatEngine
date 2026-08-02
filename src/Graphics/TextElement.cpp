@@ -1,4 +1,5 @@
 #include "BeatEngine/Graphics/TextElement.hpp"
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/System/Angle.hpp"
 
@@ -321,7 +322,7 @@ struct TextElement::ShaperImpl {
     std::unique_ptr<hb_buffer_t, ShaperBufferDeleter> ShapingBuffer;
 };
 
-TextElement::TextElement(std::shared_ptr<Font> font, String str, unsigned int charSize)
+TextElement::TextElement(Base::AssetHandle<Font> font, String str, unsigned int charSize)
  : m_Text(str), m_Font(font), m_CharacterSize(charSize) {
     m_PrimitiveType = PrimitiveType::TriangleList;
 }
@@ -333,8 +334,8 @@ void TextElement::SetString(const String str) {
     m_UpdateGeometry = true;
 }
 
-void TextElement::SetFont(const std::shared_ptr<Font> font) {
-    if (m_Font && (m_Font->m_ID == font->m_ID)) return;
+void TextElement::SetFont(const Base::AssetHandle<Font>& font) {
+    if (m_Font && (m_Font.Get()->m_ID == font.Get()->m_ID)) return;
 
     m_Font = font;
     m_UpdateGeometry = true;
@@ -416,9 +417,11 @@ void TextElement::Draw(GraphicsManager& mgr, RenderState state) {
 }
 
 void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
-    if (!m_UpdateGeometry && m_Font->GetTexture(mgr, m_CharacterSize)->m_CacheID == m_FontTextureID) return;
+    auto font = m_Font.Get();
 
-    m_FontTextureID = m_Font->GetTexture(mgr, m_CharacterSize)->m_CacheID;
+    if (!m_UpdateGeometry && font->GetTexture(mgr, m_CharacterSize)->m_CacheID == m_FontTextureID) return;
+
+    m_FontTextureID = font->GetTexture(mgr, m_CharacterSize)->m_CacheID;
 
     m_UpdateGeometry = false;
 
@@ -429,20 +432,20 @@ void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
 
     if (m_Text.IsEmpty()) return;
 
-    const Vector2u textureSize = m_Font->GetTexture(mgr, m_CharacterSize)->m_Size;
+    const Vector2u textureSize = font->GetTexture(mgr, m_CharacterSize)->m_Size;
 
     const bool isBold = m_Style & Bold;
     const bool isUnderlined = m_Style & Underlined;
     const bool isStrikeThrough = m_Style & StrikeThrough;
 
-    const float underlineOffset = m_Font->GetUnderlinePosition(m_CharacterSize);
-    const float underlineThickness = m_Font->GetUnderlineThickness(m_CharacterSize);
+    const float underlineOffset = font->GetUnderlinePosition(m_CharacterSize);
+    const float underlineThickness = font->GetUnderlineThickness(m_CharacterSize);
 
-    const float strikeThroughOffset = m_Font->GetGlyph(mgr, U'x', m_CharacterSize, isBold).Bounds.GetCenter().Y;
+    const float strikeThroughOffset = font->GetGlyph(mgr, U'x', m_CharacterSize, isBold).Bounds.GetCenter().Y;
 
-    const float whitespaceWidth = m_Font->GetGlyph(mgr, U' ', m_CharacterSize, isBold).Advance;
+    const float whitespaceWidth = font->GetGlyph(mgr, U' ', m_CharacterSize, isBold).Advance;
     const float letterSpacing = (whitespaceWidth / 3.0f) * (m_LetterSpacingFactor - 1.0f);
-    const float lineSpacing = m_Font->GetLineSpacing(m_CharacterSize) * m_LineSpacingFactor;
+    const float lineSpacing = font->GetLineSpacing(m_CharacterSize) * m_LineSpacingFactor;
     float x = 0.f;
     float y = (m_TextOrientation == TextOrientation::Default) ? static_cast<float>(m_CharacterSize) : 0.f;
 
@@ -451,12 +454,12 @@ void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
     auto maxX = 0.f;
     auto maxY = 0.f;
 
-    const auto fontID = m_Font->m_ID;
-    auto* const fontHandle = m_Font->GetFontHandle();
+    const auto fontID = font->m_ID;
+    auto* const fontHandle = font->GetFontHandle();
 
     assert(fontID && fontHandle && "Font not usable for shaping text");
 
-    if (!m_Font->SetFontSize(m_CharacterSize)) {
+    if (!font->SetFontSize(m_CharacterSize)) {
         THROW_RUNTIME_ERROR("Failed to set font size");
     }
 
@@ -505,7 +508,7 @@ void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
                 continue;
             }
 
-            const Glyph& glyph = m_Font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, isBold);
+            const Glyph& glyph = font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, isBold);
 
             auto& glyphEntry = m_Glyphs.emplace_back(ShapedGlyph{glyph, {}, {}, {}, {}, {}, {}});
             glyphEntry.Cluster = shapeGlyph.Cluster;
@@ -556,13 +559,13 @@ void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
                italicShear = (style & Italic) ? Angle::FromDegrees(12).AsRadians() : 0.f;
 
                if (outlineThickness != 0) {
-                   const Glyph& outlineGlyph = m_Font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, style & Bold, outlineThickness);
+                   const Glyph& outlineGlyph = font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, style & Bold, outlineThickness);
 
                    addGlyphQuad(m_OutlineVertices, glyphEntry.Position, outlineColor, outlineGlyph, textureSize, italicShear);
                }
 
                glyphEntry.VertexOffset = m_Vertices.GetSize();
-               const Glyph& fillGlyph = m_Font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, style & Bold);
+               const Glyph& fillGlyph = font->GetGlyphByID(mgr, shapeGlyph.ID, m_CharacterSize, style & Bold);
                addGlyphQuad(m_Vertices, glyphEntry.Position, fillColor, fillGlyph, textureSize, italicShear);
 
                glyphEntry.VertexCount = m_Vertices.GetSize() - glyphEntry.VertexOffset;
@@ -744,7 +747,7 @@ void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
                     outputLine();
 
                 auto& glyph = m_Glyphs.emplace_back(
-                    ShapedGlyph{m_Font->GetGlyph(mgr, '\n', m_CharacterSize, isBold), {}, {}, {}, {}, {}, {}}
+                    ShapedGlyph{font->GetGlyph(mgr, '\n', m_CharacterSize, isBold), {}, {}, {}, {}, {}, {}}
                 );
 
                 glyph._Glyph.Bounds.Size = {};

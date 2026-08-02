@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/TextElement.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
@@ -12,7 +13,7 @@ namespace UI {
 	class Button : public UIClickeable {
 	private:
 		std::string m_Text = "Button";
-        std::shared_ptr<Font> m_Font{ nullptr };
+        Base::AssetHandle<Font> m_Font{};
 		float m_FontSize = 30;
 
 		TextElement m_TextElement;
@@ -27,8 +28,8 @@ namespace UI {
 		RGBColor m_Color = m_NormalColor;
 		RGBColor m_TextColor = m_TextNormalColor;
 	public:
-		Button() : Button(nullptr, "Button") {};
-        Button(std::shared_ptr<Font> font, std::string text, float fontSize = 30);
+		Button() : Button({}, "Button") {};
+        Button(Base::AssetHandle<Font> font, std::string text, float fontSize = 30);
 
 		void SetText(const std::string& text);
         void SetNormalColor(RGBColor color) { m_NormalColor = color; }
@@ -39,7 +40,7 @@ namespace UI {
         void SetTextActiveColor(RGBColor color) { m_TextActiveColor = color; }
 
 		void SetFontSize(float size);
-		void SetFont(std::shared_ptr<Font> font);
+		void SetFont(const Base::AssetHandle<Font>& font);
 
 		std::string GetText();
 		float GetFontSize() const;

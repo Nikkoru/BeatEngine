@@ -59,7 +59,7 @@ namespace Base {
 			return asset;
 		}
 		explicit operator bool() {
-			return m_AssetID != 0;
+			return (m_AssetID != 0) && !m_Ptr.expired();
 		}
 	public:
 		static AssetHandle<T> Cast(const AssetHandle<void>& base) {
@@ -68,7 +68,7 @@ namespace Base {
 
 			return newAsset;
 		}
-		inline std::shared_ptr<T> Get() {
+		std::shared_ptr<T> Get() const {
 			return m_Ptr.lock();
 		}
 	};

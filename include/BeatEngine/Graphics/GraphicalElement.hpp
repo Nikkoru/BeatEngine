@@ -25,15 +25,16 @@ protected:
     Vector2f m_Padding{};
     VertexArray m_Vertices{};
     PrimitiveType m_PrimitiveType{};
-    std::shared_ptr<Texture> m_Texture;
+    Base::AssetHandle<Texture> m_Texture{};
 public:
+    GraphicalElement() = default;
     virtual ~GraphicalElement() = default;
 
     virtual void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) { BaseDraw(mgr, state); };
     void BaseDraw(GraphicsManager& mgr, RenderState state);
     virtual void UninitGraphics(GraphicsManager& mgr);
 
-    void SetTexture(std::shared_ptr<Texture> texture);
+    void SetTexture(Base::AssetHandle<Texture> texture);
 
     virtual void DrawImGuiDrawData() { BaseDrawImGuiDrawData(); };
     void DrawWindowImGuiDrawData();

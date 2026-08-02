@@ -1,10 +1,11 @@
 #include "BeatEngine/UI/Elements/Button.h"
 // #include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/Alignment.h"
 #include "imgui.h"
 
-UI::Button::Button(std::shared_ptr<Font> font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize) , m_TextElement(font, text, m_FontSize) {
+UI::Button::Button(Base::AssetHandle<Font> font, std::string text, float fontSize) : UIClickeable(typeid(Button)), m_Text(text), m_Font(font), m_FontSize(fontSize) , m_TextElement(font, text, m_FontSize) {
 	SetOnHover([&]() {
 		m_Color = m_HoverColor;
 		m_TextColor = m_TextHoverColor;
@@ -44,7 +45,7 @@ void UI::Button::SetFontSize(float size) {
 	this->m_FontSize = size;
 }
 
-void UI::Button::SetFont(std::shared_ptr<Font> font) {
+void UI::Button::SetFont(const Base::AssetHandle<Font>& font) {
 	this->m_Font = font;
 	m_TextElement.SetFont(font);
 }
