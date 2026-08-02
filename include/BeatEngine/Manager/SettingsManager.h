@@ -32,6 +32,9 @@ private:
 	void ReadConfig(fs::path path);
 	void WriteConfig(fs::path path);
 public:
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
 	void RegisterSettingsData(); 

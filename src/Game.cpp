@@ -40,7 +40,7 @@ Game::Game() : Game("BeatEngine Game") {
 }
 
 Game::Game(const std::string name): m_Context(name) {
-    m_State.CreateManagers(&m_Context);
+    m_State.PrepareManagers(&m_Context);
 #ifdef BEATENGINE_DEBUG
     // Logger::PrintDebug(true);
     Logger::AddInfo("", "Debug Build");
@@ -330,7 +330,7 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
         auto vecSize = vecPath.size();
         for (const auto& path : vecPath) {
             if (!m_State.GetAssetMgr().Preload(type, path))
-            vecSize--;
+				vecSize--;
         }
         assets += vecSize;
 	}

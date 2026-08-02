@@ -11,16 +11,16 @@
 class GameContext;
 class GameState {
 private:
-    ViewManager ViewMgr;
-	SystemManager SystemMgr;
-	AssetManager AssetMgr;
-	SettingsManager SettingsMgr;
-	AudioManager AudioMgr;
-	UIManager UIMgr;
-    GraphicsManager GraphicsMgr;
+    ViewManager ViewMgr{};
+	SystemManager SystemMgr{};
+	AssetManager AssetMgr{};
+	SettingsManager SettingsMgr{};
+	AudioManager AudioMgr{};
+	UIManager UIMgr{};
+    GraphicsManager GraphicsMgr{};
 public:
     GameState() = default;
-    void CreateManagers(GameContext* context);
+    void PrepareManagers(GameContext* context);
 public:
     ViewManager& GetViewMgr();
     SystemManager& GetSystemMgr();

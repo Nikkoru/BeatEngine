@@ -31,6 +31,9 @@ public:
 	ViewManager(GameContext* context, GameState* state);
 	~ViewManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(ViewManager)); };
 public:
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
     void Init();
     void Uninit();
 public:

@@ -1,17 +1,20 @@
 #include "BeatEngine/GameState.h"
 #include "BeatEngine/Manager/AudioManager.h"
-#include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Manager/EventManager.h"
 
-void GameState::CreateManagers(GameContext* context) {
-    // SignalManager::GetInstance()->ClearCallbacks();
-    // EventManager::GetInstance()->ClearCallbacks();
-    ViewMgr = ViewManager(context, this);
-    SystemMgr = SystemManager(context, this);
-    AssetMgr = AssetManager(context, this);
-    SettingsMgr = SettingsManager(context, this);
-    UIMgr = UIManager(context, this);
-    AudioMgr = AudioManager(context, this);
+void GameState::PrepareManagers(GameContext* context) {
+    ViewMgr.SetContext(context);
+    ViewMgr.SetState(this);
+    SystemMgr.SetContext(context);
+    SystemMgr.SetState(this);
+    AssetMgr.SetContext(context);
+    AssetMgr.SetState(this);
+    SettingsMgr.SetContext(context);
+    SettingsMgr.SetState(this);
+    UIMgr.SetContext(context);
+    UIMgr.SetState(this);
+    AudioMgr.SetContext(context);
+    AudioMgr.SetState(this);
+
     GraphicsMgr = GraphicsManager(context, this);
 }
 

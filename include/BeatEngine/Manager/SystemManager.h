@@ -20,6 +20,9 @@ public:
 	SystemManager(GameContext* context, GameState* state);
 	~SystemManager() = default;
 public:
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
 	template <typename TSystem>
 		requires(std::is_base_of_v<Base::System, TSystem>)
 	void RegisterSystem();

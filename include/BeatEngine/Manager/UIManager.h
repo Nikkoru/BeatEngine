@@ -25,6 +25,9 @@ public:
 	UIManager(GameContext* context, GameState* state);
 	~UIManager() = default;
 
+    void SetContext(GameContext* context) { m_Context = context; }
+    void SetState(GameState* state) { m_State = state; }
+
 	void OnEvent(Optional<Base::Event> event);
 
 	std::shared_ptr<UILayer> AddLayer(const std::string layerName, bool global = false);
