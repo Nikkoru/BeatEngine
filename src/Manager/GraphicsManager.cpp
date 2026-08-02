@@ -54,7 +54,7 @@ void GraphicsManager::Init() {
     if (m_WindowFullscreen)
         m_Renderer->Init(m_WindowTitle, { static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) });
     else
-        m_Renderer->Init(m_WindowTitle, m_WindowSize);
+        m_Renderer->Init(m_WindowTitle, m_WindowSize, VSyncMode::Disable);
 }
 
 void GraphicsManager::Update() {
@@ -161,6 +161,10 @@ std::shared_ptr<Texture> GraphicsManager::CreateEmptyTexture(Vector2u size) {
     return m_Renderer->CreateEmptyTexture(size);
 }
 
+std::shared_ptr<Texture> GraphicsManager::GetErrorTexture() {
+	return m_Renderer->GetErrorTexture();
+}
+
 void GraphicsManager::UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData, Vector2u size, Vector2u dest) {
     m_Renderer->UpdateTexture(texture, pixelData, size, dest);
 }
@@ -180,10 +184,6 @@ void GraphicsManager::DestroyTexture(std::shared_ptr<Texture> texture) {
 
 unsigned int GraphicsManager::GetMaxTextureSize() {
     return m_Renderer->GetMaxTextureSize();
-}
-
-std::shared_ptr<Font> GraphicsManager::CreateFont(const std::filesystem::path& path) {
-    return m_Renderer->CreateFont(path);
 }
 
 std::shared_ptr<Shader> GraphicsManager::CreateShader(const std::filesystem::path& path, Shader::Type type) {

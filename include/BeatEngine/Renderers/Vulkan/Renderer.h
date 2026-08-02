@@ -55,8 +55,8 @@ private:
 private:
     bool m_StopRendering{ false };
 private:
-    VulkanTexture& GetErrorTexture() { return m_Instance.GetErrorTexture(); }
-    VulkanTexture& GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
+    std::shared_ptr<Texture> GetErrorTexture() override { return m_Instance.GetErrorTexture(); }
+    std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
 public:
     void Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync = VSyncMode::Disable) override;
     void Uninit() override;
@@ -82,8 +82,6 @@ public:
     void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) override { UpdateTexture(texture, pixelData, texture->GetSize(), { 0, 0 }); };
     void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) override;
     void DestroyTexture(std::shared_ptr<Texture> texture) override;
-    std::shared_ptr<Font> CreateFont(const std::filesystem::path& path) override;
-    void DestroyFont(std::shared_ptr<Font> font) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
 
     const AllocatedImage& GetImageFromID(ImageID id) { return m_Instance.GetImageFromID(id); }

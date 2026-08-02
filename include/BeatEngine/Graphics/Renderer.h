@@ -35,12 +35,9 @@ public:
 
     virtual void SetGlobalShader(std::shared_ptr<Shader> shader) = 0;
 
-    // virtual void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) = 0;
     virtual void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) = 0;
     virtual void InitVertices(VertexArray& vertices, RenderState state) = 0;
     virtual void UninitVertices(VertexArray& vertices) = 0;
-    // virtual void InitElement(GraphicalElement& element) = 0;
-    // virtual void UninitElement(GraphicalElement& element) = 0;
 
     virtual void ProcessEvent(Optional<Base::Event> event) = 0;
 
@@ -48,12 +45,11 @@ public:
     virtual std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) = 0;
     virtual std::shared_ptr<Texture> CreateTexture(const uint8_t* pixelData, Vector2u size) = 0;
     virtual std::shared_ptr<Texture> CreateEmptyTexture(Vector2u size) = 0;
+    virtual std::shared_ptr<Texture> GetErrorTexture() = 0;
     virtual void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData, Vector2u size, Vector2u dest) = 0;
     virtual void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) = 0;
     virtual void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) = 0;
     virtual void DestroyTexture(std::shared_ptr<Texture> texture) = 0;
-    virtual std::shared_ptr<Font> CreateFont(const std::filesystem::path& path) = 0;
-    virtual void DestroyFont(std::shared_ptr<Font> font) = 0;
     virtual std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) = 0;
 
     virtual void ShowImGuiRenderTabContent() {}

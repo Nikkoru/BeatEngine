@@ -70,12 +70,12 @@ public:
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path);
     std::shared_ptr<Texture> CreateTexture(const uint8_t* pixelData, Vector2u size);
     std::shared_ptr<Texture> CreateEmptyTexture(Vector2u size);
+    std::shared_ptr<Texture> GetErrorTexture();
     void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData, Vector2u size, Vector2u dest);
     void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData);
     void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture);
     void DestroyTexture(std::shared_ptr<Texture> texture);
     unsigned int GetMaxTextureSize();
-    std::shared_ptr<Font> CreateFont(const std::filesystem::path& path);
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type);
 
     std::shared_ptr<BaseWindow> GetWindow();

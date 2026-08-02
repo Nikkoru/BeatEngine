@@ -3,9 +3,6 @@
 #include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/Graphics/BaseWindow.h"
-#include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
-#include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
@@ -19,11 +16,11 @@ void GraphicalElement::BaseDraw(GraphicsManager& mgr, RenderState state) {
         .projection = transform,
         .transform = glm::mat4{ 1.f },
         .padding = m_Padding.ToGLMVec2(),
-        .textureID = NULL_IMAGE_ID,
+        .textureID = Texture::NULL_ID,
         .shaderID = 0,
     };
     if (m_Texture)
-        cmd.textureID = m_Texture->GetID();
+        cmd.textureID = m_Texture.Get()->GetID();
 
     state._DrawCommand = std::make_shared<DrawCommand>(cmd);
     state.DrawCommandSize = sizeof(DrawCommand);
@@ -37,7 +34,7 @@ void GraphicalElement::UninitGraphics(GraphicsManager& mgr) {
     mgr.UninitElement(*this);
 }
 
-void GraphicalElement::SetTexture(std::shared_ptr<Texture> texture) {
+void GraphicalElement::SetTexture(Base::AssetHandle<Texture> texture) {
     m_Texture = texture;
 }
 

@@ -22,7 +22,6 @@ public:
     void SetGlobalShader(std::shared_ptr<Shader> shader) override;
 
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;
-    std::shared_ptr<Font> CreateFont(const std::filesystem::path& path) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
 
     Optional<Base::Event> PollEvent() const override;

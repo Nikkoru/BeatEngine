@@ -31,8 +31,8 @@ private:
 
     UninitQueue m_Uninitializers{};
 
-    VulkanTexture m_ErrorTexture{};
-    VulkanTexture m_WhiteTexture{};
+    std::shared_ptr<VulkanTexture> m_ErrorTexture{};
+    std::shared_ptr<VulkanTexture> m_WhiteTexture{};
 
     float m_MaxSamplerAnisotropy{};
 
@@ -73,8 +73,8 @@ public:
     uint32_t GetCurrentFrameIndex() const { return m_FrameNumber % FRAME_OVERLAP; }
     uint32_t GetCurrentFrameNumber() const { return m_FrameNumber; }
 
-    VulkanTexture& GetErrorTexture() { return m_ErrorTexture; }
-    VulkanTexture& GetWhiteTexture() { return m_WhiteTexture; }
+    std::shared_ptr<VulkanTexture> GetErrorTexture() { return m_ErrorTexture; }
+    std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_WhiteTexture; }
 
     void CheckDeviceCapabilities();
 

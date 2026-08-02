@@ -47,11 +47,6 @@ std::shared_ptr<Texture> OpenGLRenderer::CreateTexture(const std::filesystem::pa
     return {};
 }
 
-std::shared_ptr<Font> OpenGLRenderer::CreateFont(const std::filesystem::path& path) {
-    (void)path;
-    return {};
-}
-
 std::shared_ptr<Shader> OpenGLRenderer::CreateShader(const std::filesystem::path& path, Shader::Type type) {
     (void)path;
     (void)type;

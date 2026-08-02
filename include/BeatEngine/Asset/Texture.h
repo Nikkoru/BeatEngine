@@ -1,17 +1,19 @@
 #pragma once
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include "imgui.h"
+#include <limits>
 #include <utility>
 
 class GraphicsManager;
 class Texture : public Base::Asset {
+public:
+    inline static uint32_t NULL_ID{ (std::numeric_limits<uint32_t>::max)() };
 private:
     friend class TextElement;
 protected:
     Vector2u m_Size{};
-    uint32_t m_CacheID{ NULL_IMAGE_ID };
+    uint32_t m_CacheID{ NULL_ID };
 public:
 	Texture() = default;
     Texture(uint32_t id, Vector2u size = {}) : m_Size(size), m_CacheID(id) {};

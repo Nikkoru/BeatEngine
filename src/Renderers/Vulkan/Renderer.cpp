@@ -188,7 +188,7 @@ std::shared_ptr<Texture> VulkanRenderer::CreateTexture(const std::filesystem::pa
     auto data = ImageData::LoadImage(path);
     if (!data.PixelData && !data.HDRPixelData) {
         Logger::AddError(typeid(VulkanRenderer), "Failed to create texture from {}", path.string());
-        return std::make_shared<VulkanTexture>(m_Instance.GetErrorTexture());
+        return m_Instance.GetErrorTexture();
     }
 
     auto extent = VkExtent3D{
@@ -250,13 +250,6 @@ void VulkanRenderer::DestroyTexture(std::shared_ptr<Texture> texture) {
     m_Instance.DestroyImage(vulkanTexture->m_CacheID);
 }
 
-std::shared_ptr<Font> VulkanRenderer::CreateFont(const std::filesystem::path& path) {
-    (void)path;
-
-    // TODO: use freetype for font loading
-   
-    return nullptr;
-}
 
 std::shared_ptr<Shader> VulkanRenderer::CreateShader(const std::filesystem::path& path, Shader::Type type) {
     std::shared_ptr<VulkanShader> shader = std::make_shared<VulkanShader>();
@@ -269,11 +262,6 @@ std::shared_ptr<Shader> VulkanRenderer::CreateShader(const std::filesystem::path
     }
 
     return shader;
-}
-
-void VulkanRenderer::DestroyFont(std::shared_ptr<Font> font) {
-    (void)font;
-    // TODO: i mean the function name says it all
 }
 
 void VulkanRenderer::ShowImGuiRenderTabContent() {
@@ -321,11 +309,14 @@ void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
 void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (vertices.GetSize() <= 0) return;
 
-    auto& drawDatas = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas;
-    if (!drawDatas.contains(m_Context->ActiveView))
-        drawDatas[m_Context->ActiveView] = {};
-    if (!m_Layouts.contains(m_Context->ActiveView))
-        m_Layouts[m_Context->ActiveView] = {};
+	auto& drawDatas = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas;
+
+	auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
+
+	if (!drawDatas.contains(viewID))
+		drawDatas[viewID] = {};
+	if (!m_Layouts.contains(viewID))
+		m_Layouts[viewID] = {};
 
     if (!IsVertexArrayInitialized(vertices)) {
         InitVertices(vertices, state);
@@ -334,16 +325,14 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vertexID = GetVertexArrayID(vertices);
 
-
-    auto& cmdBuffer = drawDatas.at(m_Context->ActiveView).at(vertexID).DrawCommandBuffer;
-    auto& vertexBuffer = drawDatas.at(m_Context->ActiveView).at(vertexID).VertexBuffer;
-
+    auto& cmdBuffer = drawDatas.at(viewID).at(vertexID).DrawCommandBuffer;
+    auto& vertexBuffer = drawDatas.at(viewID).at(vertexID).VertexBuffer;
     
-    auto pipelineLayout = m_Layouts.at(m_Context->ActiveView).at(vertexID);
+    auto pipelineLayout = m_Layouts.at(viewID).at(vertexID);
 
     if (vertices.GetSize() * sizeof(Vertex) != vertexBuffer.BufferSize && vertices.GetSize() > 0) {
-        for (unsigned int i = 0; 1 < FRAME_OVERLAP; ++i) {
-            auto& buffer = m_RenderFramesData[i].DrawDatas.at(m_Context->ActiveView).at(vertexID).VertexBuffer;
+        for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
+            auto& buffer = m_RenderFramesData[i].DrawDatas.at(viewID).at(vertexID).VertexBuffer;
             
             m_Instance.DestroyBuffer(buffer);
 
@@ -645,8 +634,9 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     if ((m_Context->GFlags & GameFlags_ImGui) && (m_Context->EFlags & EnvFlags_Debug)) {
         ImGui::Begin("Rendered elements so far");
-        if (ImGui::TreeNode(IsVertexArrayHighlight(vertices) ? std::format("VertexArrayHighlight_Of{}_ArrayID{}_ID{}", GetVertexArrayHighlightSourceID(vertices), GetVertexArrayHighlightID(vertices) ,GetVertexArrayID(vertices)).c_str() : std::format("VertexArray_ID{}", GetVertexArrayID(vertices)).c_str())) {
+        if (ImGui::TreeNode(IsVertexArrayHighlight(vertices) ? std::format("VertexArrayHighlight_Of{}_ArrayID{}_ID{}_In_{}", GetVertexArrayHighlightSourceID(vertices), GetVertexArrayHighlightID(vertices), GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str() : std::format("VertexArray_ID{}_In_{}", GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str())) {
             ImGui::Text("PrimitiveType : %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str()); 
+            ImGui::Text("View drawing to: %s", state.DrawInGlobal ? "Global" : viewID.name());
             ImGui::Text("Size: %zu", vertices.GetSize());
             ImGui::SeparatorText("Vertex");
             for (size_t i = 0; i < vertices.GetSize(); i++) {
@@ -671,7 +661,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
         VertexArray* highlightVertices = nullptr;
         
         if (
-            GetVertexArrayHighlightID(vertices) != std::numeric_limits<uint32_t>::max() &&
+            GetVertexArrayHighlightID(vertices) != (std::numeric_limits<uint32_t>::max)() &&
             GetVertexArrayHighlightID(vertices) < m_Highlights.at(m_Context->ActiveView).size()
         ) {
             highlightVertices = &m_Highlights.at(m_Context->ActiveView).at(GetVertexArrayHighlightID(vertices));
@@ -710,10 +700,12 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
     uint32_t vertexID{};
 
+    auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
+
     if (IsVertexArrayHighlight(vertices))
-        vertexID = GetFreeHighlightIndex(m_Context->ActiveView);
+        vertexID = GetFreeHighlightIndex(viewID);
     else
-        vertexID = GetFreeBufferIndex(m_Context->ActiveView);
+        vertexID = GetFreeBufferIndex(viewID);
 
     SetVertexArrayID(vertices, vertexID);
     SetVertexArrayInitializedStatus(vertices, true);
@@ -734,12 +726,12 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
         };
         pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
 
-        m_Layouts.at(m_Context->ActiveView).emplace(m_Layouts.at(m_Context->ActiveView).begin() + vertexID, pipelineLayout);
+        m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
     }
     
     for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
-        if (!m_RenderFramesData.at(i).DrawDatas.contains(m_Context->ActiveView))
-            m_RenderFramesData.at(i).DrawDatas[m_Context->ActiveView] = {};
+        if (!m_RenderFramesData.at(i).DrawDatas.contains(viewID))
+            m_RenderFramesData.at(i).DrawDatas[viewID] = {};
 
         DrawData drawData{};
          
@@ -759,7 +751,7 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
                 VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
             );
 
-        m_RenderFramesData.at(i).DrawDatas.at(m_Context->ActiveView).emplace(m_RenderFramesData.at(i).DrawDatas.at(m_Context->ActiveView).begin() + vertexID, drawData);
+        m_RenderFramesData.at(i).DrawDatas.at(viewID).emplace(m_RenderFramesData.at(i).DrawDatas.at(viewID).begin() + vertexID, drawData);
     }
 }
 

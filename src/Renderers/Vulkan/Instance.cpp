@@ -41,7 +41,7 @@ void VK::Instance::Init(GameContext* context, std::string appName, uint32_t devi
         const auto magenta = 0xFFFF00FF;
 
         std::array<uint32_t, 4> pixels{ black, magenta, magenta, black };
-        m_ErrorTexture = CreateImage(
+        m_ErrorTexture = std::make_shared<VulkanTexture>(CreateImage(
             {
                 .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
                 .pNext = nullptr,
@@ -60,13 +60,13 @@ void VK::Instance::Init(GameContext* context, std::string appName, uint32_t devi
                 .initialLayout{}
             },
             pixels.data()
-        );
-        m_ImageCache.SetMissingImageID(m_ErrorTexture.m_CacheID);
+        ));
+        m_ImageCache.SetMissingImageID(m_ErrorTexture->m_CacheID);
     }
 
     {
         uint32_t pixel = 0xFFFFFFFF;
-        m_WhiteTexture = CreateImage(
+        m_WhiteTexture = std::make_shared<VulkanTexture>(CreateImage(
             {
                 .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
                 .pNext = nullptr,
@@ -85,15 +85,15 @@ void VK::Instance::Init(GameContext* context, std::string appName, uint32_t devi
                 .initialLayout{}
             },
             &pixel
-        );
+        ));
     }
 
     if (m_Context->GFlags & GameFlags_ImGui)
         InitImGui(window);
 
     m_Uninitializers.AddCallback([&]() {
-        DestroyImage(m_ErrorTexture.m_CacheID);
-        DestroyImage(m_WhiteTexture.m_CacheID);
+        DestroyImage(m_ErrorTexture->m_CacheID);
+        DestroyImage(m_WhiteTexture->m_CacheID);
 
         if (m_ImageAllocs > 0)
             THROW_RUNTIME_ERROR("Images are still being allocated. Did you forget to destroy a image?");
@@ -451,7 +451,7 @@ AllocatedImage VK::Instance::CreateImageRaw(
     }
 
     if (info.mipLevels < 1) {
-        Logger::AddWarning("Invalid mip levels");
+        Logger::AddWarning(typeid(VulkanRenderer), "Invalid mip levels");
     }
 
     static const auto defaultAllocInfo = VmaAllocationCreateInfo{
@@ -782,16 +782,27 @@ VKAPI_ATTR VkBool32 VKAPI_CALL VK::Instance::DebugCallback(
 ) {
     (void)pUserData;
 
+#ifndef _WIN32
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "{}", pCallbackData->pMessage);
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "    Type = {}", GetDebugTypeStr(type));
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "    Severity = {}{}\033[0m", GetDebugSeverityColorStr(severity), GetDebugSeverityStr(severity));
     Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "    Objects: {}", pCallbackData->objectCount);
+#else
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "{}", pCallbackData->pMessage);
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Type = {}", GetDebugTypeStr(type));
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Severity = {}{}\033[0m", GetDebugSeverityColorStr(severity), GetDebugSeverityStr(severity));
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Objects: {}", pCallbackData->objectCount);
+#endif
     for (uint32_t i = 0; i < pCallbackData->objectCount; i++) {
         auto name = "No name available";
         if (pCallbackData->pObjects[i].pObjectName)
             name = pCallbackData->pObjects[i].pObjectName;
 
+#ifndef _WIN32
         Logger::AddLog("\e[0;41mVulkan Debug\033[0m", "", "        {:#x} ({})", pCallbackData->pObjects[i].objectHandle, name);
+#else
+        Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "        {:#x} ({})", pCallbackData->pObjects[i].objectHandle, name);
+#endif
 
     }
 
