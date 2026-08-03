@@ -140,7 +140,7 @@ void TestView::Init() {
 			musicHandle = b_mState->GetAssetMgr().Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
         
         if (musicHandle)
-            b_mState->GetAudioMgr().PlayStream(musicHandle.Get());
+            b_mState->GetAudioMgr().AddStream(musicHandle.Get());
 	});
 	stopBtn->SetOnLClick([&]() {
 		Base::AssetHandle<AudioStream> musicHandle;
@@ -162,16 +162,28 @@ void TestView::Init() {
     auto texture = b_mState->GetAssetMgr().Load<Texture>("assets/textures/texture.png", typeid(TestView));
     auto funnyTexture = b_mState->GetAssetMgr().Load<Texture>("assets/textures/four.jpeg", typeid(TestView));
 
-    m_Shape.SetTexture(texture.Get());
-    m_Shape.SetSize(Vector2f{ texture.Get()->GetSize() });
-    m_Shape.SetPosition({ size.X / 2 - m_Shape.GetSize().X / 2, size.Y / 2 - m_Shape.GetSize().Y / 2 - 100 });
+    if (texture) {
+		m_Shape.SetTexture(texture);
+		m_Shape.SetSize(Vector2f{ texture.Get()->GetSize() });
+    }
+    else {
+        m_Shape.SetTexture(b_mState->GetGraphicsMgr().GetErrorTexture());
+        m_Shape.SetSize(Vector2f{ 100.f, 100.f });
+    }
 
+	m_Shape.SetPosition({ size.X / 2 - m_Shape.GetSize().X / 2, size.Y / 2 - m_Shape.GetSize().Y / 2 - 100 });
     m_Shape.SetColor(LinearColor::White());
 
-    m_FunnyShape.SetTexture(funnyTexture.Get());
-    m_FunnyShape.SetSize(Vector2f{ funnyTexture.Get()->GetSize() });
-    m_FunnyShape.SetPosition({ size.X / 2 - m_FunnyShape.GetSize().X / 2, size.Y / 2 - m_FunnyShape.GetSize().Y / 2 + m_Shape.GetSize().Y + 5 - 100 });
+    if (funnyTexture) {
+		m_FunnyShape.SetTexture(funnyTexture);
+		m_FunnyShape.SetSize(Vector2f{ funnyTexture.Get()->GetSize() });
+    }
+    else {
+        m_FunnyShape.SetTexture(b_mState->GetGraphicsMgr().GetErrorTexture());
+        m_FunnyShape.SetSize(Vector2f{ 100.f, 100.f });
+    }
 
+	m_FunnyShape.SetPosition({ size.X / 2 - m_FunnyShape.GetSize().X / 2, size.Y / 2 - m_FunnyShape.GetSize().Y / 2 + m_Shape.GetSize().Y + 5 - 100 });
     m_FunnyShape.SetColor(LinearColor::White());
 
     m_Text = TextElement{ m_Font, "Test", 30 };

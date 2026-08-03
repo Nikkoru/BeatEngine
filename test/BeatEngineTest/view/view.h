@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/GameContext.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
@@ -25,7 +26,7 @@ private:
 	std::wstring m_MusicYearText;
 
 	float m_Timer = 0;
-	std::shared_ptr<Font> m_Font = nullptr;
+    Base::AssetHandle<Font> m_Font{};
 
 	bool m_buttonActive = false;
 

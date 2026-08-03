@@ -146,7 +146,8 @@ void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr, RenderState state) {
 	//
 	// target.draw(fpsText);
 	// target.draw(deltaText);
-	m_HUD->Draw(mgr, state);
+	// state.DrawInGlobal = true;
+	// m_HUD->Draw(mgr, state);
     DrawImGuiDebug();
 }
 

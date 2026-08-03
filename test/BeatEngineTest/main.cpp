@@ -7,7 +7,6 @@
 // #include <BeatEngine/Renderers/OpenGL/Renderer.h>
 #include <BeatEngine/Game.h>
 #include <BeatEngine/Enum/AssetType.h>
-#include <BeatEngine/Settings/GameSettings.h>
 #include <BeatEngine/Renderers/Vulkan/Renderer.h>
 #include <BeatEngine/Windows/SDL/Window.h>
 #include <string>
@@ -46,6 +45,7 @@ int main(int argc, char** argv) {
         }
     }
     else {
+#ifndef _WIN32
         paths = {
             "assets/music/audio.mp3", 
             "assets/music/eurobeat.mp3", 
@@ -57,6 +57,19 @@ int main(int argc, char** argv) {
             "assets/music/audio.mp3",
             "assets/music/abstraction.mp3"
         };
+#else
+        paths = {
+            "assets\\music\\audio.mp3", 
+            "assets\\music\\eurobeat.mp3", 
+            "assets\\music\\kiby-aqua.mp3", 
+            "assets\\music\\kiby-star.mp3", 
+            "assets\\music\\remix7.mp3", 
+            "assets\\music\\reverse-mountain.mp3", 
+            "assets\\music\\test-music.mp3", 
+            "assets\\music\\audio.mp3",
+            "assets\\music\\abstraction.mp3"
+        };
+#endif
     }
 
 	Game game;
@@ -102,12 +115,6 @@ int main(int argc, char** argv) {
         //     AssetType::VertexShader,
         //     {
         //         "assets/shaders/shader.vert"
-        //     }
-        // }
-        // {
-        //     AssetType::ComputeShader,
-        //     {
-        //         "/home/niko/Projects/BeatEngine/assets/shaders/gradient.comp"
         //     }
         // }
 	});
