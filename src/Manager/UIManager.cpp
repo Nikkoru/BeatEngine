@@ -96,7 +96,9 @@ void UIManager::OnDraw() {
         layer->Draw(m_State->GetGraphicsMgr());
 	}
 	for (const auto& [name, layer] : m_GlobalLayers) {
-        layer->Draw(m_State->GetGraphicsMgr());
+        auto state = RenderState::Default;
+        state.DrawInGlobal = true;
+        layer->Draw(m_State->GetGraphicsMgr(), state);
 	}
 }
 

@@ -199,12 +199,13 @@ int AudioManager::SoundCallback(
                 }
                 stream->CalcTranscurredSeconds();
             }
+
             it++;
 		}
 	}
 
 	for (size_t i = 0; i < framesPerBuffer * 2; i++)
-		out[i] = static_cast<int16_t>(std::clamp<float>(mixBuffer[i], -1.0, 1.0) * _this->m_SampleRate);
+		out[i] = static_cast<int16_t>(std::clamp<float>(mixBuffer[i], -1.0, 1.0) * (_this->m_SampleRate));
 
     Profiler::EndProfile({ typeid(AudioStream), "SoundCallback" });
 	return paContinue;

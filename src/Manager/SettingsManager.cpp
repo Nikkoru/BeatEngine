@@ -34,16 +34,17 @@ void SettingsManager::ReadConfig(fs::path path) {
 	if (iniData != NULL) {
 		size_t iniSize = strlen(iniData);
 
-		char* const buf = (char*)malloc(iniSize);
-		char* const bufEnd = buf + iniSize;
+
+		std::string buf = iniData;
+		char* const bufEnd = buf.data() + iniSize;
 
         std::shared_ptr<Base::Settings> settings = nullptr;
 
-		memcpy(buf, iniData, iniSize);
+		// memcpy(buf, iniData, iniSize);
 
 		char* endLine = NULL;
 
-		for (char* line = buf; line < bufEnd; line = endLine + 1) {
+		for (char* line = buf.data(); line < bufEnd; line = endLine + 1) {
 			while (*line == '\n' || *line == '\r')
 				line++;
 			endLine = line;
@@ -57,8 +58,6 @@ void SettingsManager::ReadConfig(fs::path path) {
 				settings->Read(line);
 			}
 		}
-
-		free(buf);
 	}
 	else {
 		Logger::AddWarning(typeid(SettingsManager), "File doesn't exist, creating file");
