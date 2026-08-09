@@ -5,6 +5,7 @@ include(FetchContent)
 if(MSVC)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 endif()
+
 FetchContent_Declare(googletest
     GIT_REPOSITORY https://github.com/google/googletest
     GIT_TAG main
@@ -178,12 +179,43 @@ add_library(stb::image ALIAS stb_image)
 #    ${stb_SOURCE_DIR}/stb_image.h
 #)
 
+# Fetch Ogg
+FetchContent_Declare(libogg
+    GIT_REPOSITORY https://github.com/xiph/ogg
+    GIT_TAG origin/main
+    GIT_PROGRESS ON
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(libogg)
+
+# Fetch Vorbis
+FetchContent_Declare(libvorbis
+    GIT_REPOSITORY https://gitlab.xiph.org/xiph/vorbis.git
+    GIT_TAG origin/main 
+    GIT_PROGRESS ON
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(libvorbis)
+
+# Fetch Opus
+FetchContent_Declare(opus
+    GIT_REPOSITORY https://gitlab.xiph.org/xiph/opus
+    GIT_TAG origin/main
+    GIT_PROGRESS ON
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+FetchContent_MakeAvailable(opus)
+
 # Fetch miniaudio
 FetchContent_Declare(miniaudio
-        GIT_REPOSITORY https://github.com/mackron/miniaudio
-        GIT_SHALLOW ON
-        EXCLUDE_FROM_ALL
-        SYSTEM)
+    GIT_REPOSITORY https://github.com/mackron/miniaudio
+    GIT_SHALLOW ON
+    EXCLUDE_FROM_ALL
+    SYSTEM)
+set(MINIAUDIO_NO_LIBVORBIS OFF CACHE BOOL "Disable miniaudio_libvorbis" FORCE)
 FetchContent_MakeAvailable(miniaudio)
 
 # Fetch PortAudio

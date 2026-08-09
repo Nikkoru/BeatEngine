@@ -10,6 +10,8 @@
 #include <freetype/ftstroke.h>
 #include <memory>
 #include <miniaudio.h>
+#include <extras/decoders/libopus/miniaudio_libopus.h>
+#include <extras/decoders/libvorbis/miniaudio_libvorbis.h>
 #include <sndfile.h>
 #include <taglib/tag.h>
 #include <typeindex>
@@ -242,6 +244,16 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 			ma_decoder decoder;
 			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
 
+            {
+                ma_decoding_backend_vtable* customBackendVTable[] {
+                    ma_decoding_backend_libvorbis
+                };
+
+                config.pCustomBackendUserData = nullptr;
+                config.ppCustomBackendVTables = customBackendVTable;
+                config.customBackendCount = sizeof(customBackendVTable) / sizeof(customBackendVTable[0]);
+            }
+
 			SF_INFO sfInfo{};
             TagLib::FileRef ref;
 
@@ -251,9 +263,6 @@ template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const
 
 			SNDFILE* sndFile = nullptr;
 
-            
-
-            // result = ma_decoder_init_file_w(path.c_str(), &config, &decoder);
 
             if (fullpath.IsType(String::UTF16))
                 result = ma_decoder_init_file_w(fullpath.ToCWString(), &config, &decoder);

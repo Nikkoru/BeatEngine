@@ -190,11 +190,15 @@ endif()
 target_compile_definitions(${PROJECT_NAME} PRIVATE FT_CONFIG_OPTION_ERROR_STRINGS)
 
 target_link_libraries(${PROJECT_NAME} 
-    PUBLIC 
+    PUBLIC
+        Opus::opus
+        Vorbis::vorbis
+        Vorbis::vorbisfile
         glm::glm
         freetype
 		portaudio
 		miniaudio
+        miniaudio_libvorbis
 		sndfile
 		samplerate
         tag
@@ -210,7 +214,6 @@ target_include_directories(${PROJECT_NAME} PRIVATE "${samplerate_SOURCE_DIR}/inc
 target_include_directories(${PROJECT_NAME} PRIVATE "${miniaudio_SOURCE_DIR}/")
 target_include_directories(${PROJECT_NAME} PRIVATE "${stb_SOURCE_DIR}/")
 target_include_directories(${PROJECT_NAME} PRIVATE "${harfbuzz_SOURCE_DIR}/src")
-
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${taglib_SOURCE_DIR})
 
