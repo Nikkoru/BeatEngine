@@ -48,7 +48,7 @@ TEST(StringTest, HandleEscapeCodes) {
 
 TEST(StringTest, HandleRealType) {
     {
-        String strFromNarrow{ "abc123"};
+        String strFromNarrow{ "abc123" };
         String strFromWide{ L"abc123" };
 
         EXPECT_TRUE(strFromNarrow.IsType(String::Latin1)) << "Check of real type failed from Narrow using Latin1 characters, reported type: " << String::TypeToString(strFromNarrow.m_Type);

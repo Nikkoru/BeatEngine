@@ -1,4 +1,4 @@
-set(MAKE_TEST_BUILD ON PARENT_SCOPE)
+# set(MAKE_TEST_BUILD ON PARENT_SCOPE)
 
 add_executable(BeatEngineTest 
 	"main.cpp"
@@ -17,7 +17,10 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_options(BeatEngineTest PRIVATE "$<$<CONFIG:Debug>:/DEBUG>") 
 endif()
 
-file(COPY "${CMAKE_SOURCE_DIR}/assets" DESTINATION "${PROJECT_BINARY_DIR}/../bin")
+file(
+    COPY "${CMAKE_SOURCE_DIR}/assets" 
+    DESTINATION "${PROJECT_BINARY_DIR}/${CMAKE_PRESET_NAME}/bin"
+)
 
 set_property(TARGET BeatEngineTest PROPERTY CXX_STANDARD 23)
 target_compile_features(BeatEngineTest PRIVATE cxx_std_23)
