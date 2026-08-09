@@ -307,11 +307,11 @@ void TestView::OnDraw(GraphicsManager& mgr) {
 	// window->draw(count);
 
     // b_mState->GetGraphicsMgr().GetRenderer()->SetGlobalShader(b_mState->GetAssetMgr().Get<Shader>("gradient").Get());
-    b_mState->GetGraphicsMgr().ShowImGuiDebugWindow();
-    b_mState->GetSettingsMgr().ShowImGuiDebugWindow();
-    b_mState->GetAssetMgr().ShowImGuiDebugWindow();
-    b_mState->GetAudioMgr().ShowImGuiDebugWindow();
-    b_mState->GetUIMgr().ShowImGuiDebugWindow();
+//     b_mState->GetGraphicsMgr().ShowImGuiDebugWindow();
+//     b_mState->GetSettingsMgr().ShowImGuiDebugWindow();
+//     b_mState->GetAssetMgr().ShowImGuiDebugWindow();
+//     b_mState->GetAudioMgr().ShowImGuiDebugWindow();
+//     b_mState->GetUIMgr().ShowImGuiDebugWindow();
 }
 
 void TestView::OnEvent(Optional<Base::Event> event) {

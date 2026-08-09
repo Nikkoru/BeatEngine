@@ -176,6 +176,16 @@ void Game::DrawImGuiDebug() {
     static bool editFlags = false;
     static bool profWindow = false;
 
+    static bool drawAudioMgr = false;
+    static bool drawAssetMgr = false;
+    static bool drawEntityMgr = false;
+    static bool drawEventMgr = false;
+    static bool drawGraphicsMgr = false;
+    static bool drawSettingsMgr = false;
+    static bool drawSignalMgr = false;
+    static bool drawSystemMgr = false;
+    static bool drawUIMgr = false;
+    static bool drawViewMgr = false;
 
     ImGui::Begin("BeatEngine Game Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
 
@@ -191,6 +201,29 @@ void Game::DrawImGuiDebug() {
         if (ImGui::BeginMenu("Behaviour")) {
             if (ImGui::MenuItem("Profiler Window", NULL, profWindow))
                 profWindow = !profWindow;
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Managers")) {
+            if (ImGui::MenuItem("AudioManager window", NULL, drawAudioMgr))
+                drawAudioMgr = !drawAudioMgr;
+            if (ImGui::MenuItem("AssetManager window", NULL, drawAssetMgr))
+                drawAssetMgr = !drawAssetMgr;
+            if (ImGui::MenuItem("EntityManager window", NULL, drawEntityMgr))
+                drawEntityMgr = !drawEntityMgr;
+            if (ImGui::MenuItem("EventManager window", NULL, drawEventMgr))
+                drawEventMgr = !drawEventMgr;
+            if (ImGui::MenuItem("GraphicsManager window", NULL, drawGraphicsMgr))
+                drawGraphicsMgr = !drawGraphicsMgr;
+            if (ImGui::MenuItem("SettingsManager window", NULL, drawSettingsMgr))
+                drawSettingsMgr = !drawSettingsMgr;
+            if (ImGui::MenuItem("SignalManager window", NULL, drawSignalMgr))
+                drawSignalMgr = !drawSignalMgr;
+            if (ImGui::MenuItem("SystemManager window", NULL, drawSystemMgr))
+                drawSystemMgr = !drawSystemMgr;
+            if (ImGui::MenuItem("UIManager window", NULL, drawUIMgr))
+                drawUIMgr = !drawUIMgr;
+            if (ImGui::MenuItem("ViewManager window", NULL, drawViewMgr))
+                drawViewMgr = !drawViewMgr;
             ImGui::EndMenu();
         }
 
@@ -320,6 +353,27 @@ void Game::DrawImGuiDebug() {
         ImGui::EndTabBar();
     }
     ImGui::End();
+
+    if (drawAudioMgr)
+        m_State.GetAudioMgr().ShowImGuiDebugWindow();
+    if (drawAssetMgr)
+        m_State.GetAssetMgr().ShowImGuiDebugWindow();
+    // if (drawEntityMgr)
+    //     m_State.GetEntityMgr().ShowImGuiDebugWindow();
+    // if (drawEventMgr)
+    //     EventManager::GetInstance()->ShowImGuiDebugWindow();
+    if (drawGraphicsMgr)
+        m_State.GetGraphicsMgr().ShowImGuiDebugWindow();
+    if (drawSettingsMgr)
+        m_State.GetSettingsMgr().ShowImGuiDebugWindow();
+    // if (drawSignalMgr)
+    //     SignalManager::GetInstance()->ShowImGuiDebugWindow();
+    // if (drawSystemMgr)
+    //     m_State.GetSystemMgr().ShowImGuiDebugWindow();
+    if (drawUIMgr)
+        m_State.GetUIMgr().ShowImGuiDebugWindow();
+    if (drawViewMgr)
+        m_State.GetViewMgr().ShowImGuiDebugWindow();
 }
 
 void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
