@@ -7,6 +7,7 @@
 #include "BeatEngine/Graphics/RectShape.hpp"
 #include "BeatEngine/Graphics/TextElement.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/UI/UILayer.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
 #include <BeatEngine/UI/Elements/Button.h>

@@ -1,7 +1,7 @@
 # set(MAKE_TEST_BUILD ON PARENT_SCOPE)
 
 add_executable(BeatEngineTest 
-	"main.cpp"
+	"main.cpp" "game.hpp" "game.cpp"
  	"view/view.cpp"			"view/view.h"
     "view/gameView.cpp"     "view/gameView.h"
 	"system/system.cpp"		"system/system.h"

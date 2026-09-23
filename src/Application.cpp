@@ -1,108 +1,48 @@
 #include "BeatEngine/Application.hpp"
 
-#include <algorithm>
-#include <cstddef>
-#include <cstdlib>
-#include <imgui.h>
-#include <imgui_internal.h>
-#include <limits>
-#include <memory>
+#include "BeatEngine/Events/AppEvent.hpp"
 
-#include "BeatEngine/Base/Signal.h"
-#include "BeatEngine/Enum/AssetType.h"
-#include "BeatEngine/Enum/EnvFlags.h"
-#include "BeatEngine/Enum/ViewFlags.h"
-#include "BeatEngine/Logger.h"
+#include "BeatEngine/Graphics/BaseWindow.h"
 
-#include "BeatEngine/Manager/EventManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/Manager/SettingsManager.h"
-#include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Manager/UIManager.h"
-#include "BeatEngine/Manager/ViewManager.h"
-
-#include "BeatEngine/Settings/AppSettings.hpp"
 #include "BeatEngine/Settings/AppDebugSettings.hpp"
+#include "BeatEngine/Settings/AppSettings.hpp"
 
 #include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Signals/ViewSignals.h"
-
-#include "BeatEngine/Events/AppEvent.hpp"
-#include "BeatEngine/System/Time.h"
-
-#include "BeatEngine/Util/CountedArray.h"
 #include "BeatEngine/Util/Profiler.h"
 
-#include "version.h"
+#include "BeatEngine/Manager/EventManager.h"
+#include "BeatEngine/Manager/SignalManager.h"
 
-Application::Application() : Application("BeatEngine Game") {
-}
-
-Application::Application(const std::string name): m_Context(name) {
+Application::Application(const std::string& name): m_Context(name) {
     m_State.PrepareManagers(&m_Context);
 #ifdef BEATENGINE_DEBUG
     // Logger::PrintDebug(true);
     Logger::AddInfo("", "Debug Build");
     m_Context.EFlags |= EnvFlags_Debug;
-#endif
+#endif // BEATENGINE_DEBUG
 #ifdef BEATENGINE_TEST
     Logger::AddInfo("", "This is a Test Build");
-    m_Context->EFlags |= EnvFlags_TestBuild;
-#endif
-}
-
-Application::~Application() {
-}
-
-void Application::Run() {
-    m_Running = true;
-	Logger::AddInfo(typeid(Application), "Application started!");
-
-	if (!m_State.GetViewMgr().HasActiveViews())
-		m_State.GetViewMgr().Push(m_State.GetViewMgr().MainView);
-
-
-	if (m_Context.GFlags & AppFlags_Preload) {
-		m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
-		ApplyBaseSettings();
-	}
-
-	while (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
-		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
-            if (event->Is<AppExitingEvent>()) {
-                m_Running = false;
-                break;
-            }
-            m_GlobalLayers.OnEvent(event);
-            if (!m_State.GetViewMgr().OnEvent(event)) {
-                m_Running = false;
-                break;
-            }
-        }
-        if (!m_Running) break;
-
-        this->Update();
-
-        this->Draw();
-        this->Display();
-	}
-    Uninit();
+    m_MainContext->EFlags |= EnvFlags_TestBuild;
+#endif // BEATENGINE_TEST
 }
 
 void Application::Init() {
     Logger::AddInfo(typeid(Application), "Initializing Application");
+    
+    CustomInit();
 
-    InitSettings();
-	InitAudio();
-	InitSystems();
-	InitWindow();
-	InitAssets();
-	InitUI();
-	InitViews();
-	InitKeybinds();
+    _InitSettings();
+	_InitAudio();
+	_InitSystems();
+	_InitGraphics();
+	_InitAssets();
+	_InitUI();
+	_InitViews();
+	_InitKeybinds();
 
-	SubscribeToApplicationEvent();
-	SubscribeToApplicationSignals();
+	_SubscribeToAppEvent();
+	_SubscribeToAppSignals();
 }
 
 void Application::Uninit() {
@@ -116,285 +56,72 @@ void Application::Uninit() {
     m_State.GetAudioMgr().Uninit();
     m_State.GetGraphicsMgr().Close();
     // m_SettingsMgr->Uninit();
-    m_Running = false;
+
+    CustomUninit();
 }
 
-void Application::SetRenderer(std::shared_ptr<Renderer> renderer) {
-    m_State.GetGraphicsMgr().MakeRenderer(renderer);
-}
+void Application::Run() {
+	Logger::AddInfo(typeid(Application), "Application started!");
+    auto& viewMgr = m_State.GetViewMgr();
+    auto& graphicsMgr = m_State.GetGraphicsMgr();
 
-void Application::UseImGui(bool show) {
-    if (show)
-        m_Context.GFlags |= AppFlags_ImGui;
-    else
-        m_Context.GFlags &= ~AppFlags_ImGui;
-}
+    if (!viewMgr.HasActiveViews())
+        viewMgr.Push(viewMgr.MainView);
 
-void Application::UseImGuiDocking(bool docking) {
-    if (docking)
-        m_Context.GFlags |= AppFlags_ImGuiDocking;
-    else
-        m_Context.GFlags &= ~AppFlags_ImGuiDocking;
-}
-
-void Application::SetWindowSize(Vector2u size) {
-    if (m_State.GetSettingsMgr().HasSettings<AppSettings>()) {
-        auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
-        settings->WindowSize = size;
-    }
-    m_State.GetGraphicsMgr().SetWindowSize(size);
-}
-
-void Application::SetWindowTitle(std::string title) {
-    m_State.GetGraphicsMgr().SetWindowTitle(title);
-}
-
-void Application::PreloadSettings() {
-    m_Context.GFlags |= AppFlags_Preload;
-
-	m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
-}
-
-void Application::SaveSettings() {
-	m_State.GetSettingsMgr().WriteConfig(m_SettingsPath);
-}
-
-void Application::SetConfigPath(std::filesystem::path path) {
-	this->m_SettingsPath = path;
-}
-
-void Application::SetFlags(AppFlags flags) {
-    this->m_Context.GFlags |= flags;
-}
-
-void Application::RemoveFlags(AppFlags flags) {
-    this->m_Context.GFlags &= ~flags;
-}
-
-void Application::DrawImGuiDebug() {
-    static bool editFlags = false;
-    static bool profWindow = false;
-
-    static bool drawAudioMgr = false;
-    static bool drawAssetMgr = false;
-    static bool drawEntityMgr = false;
-    static bool drawEventMgr = false;
-    static bool drawGraphicsMgr = false;
-    static bool drawSettingsMgr = false;
-    static bool drawSignalMgr = false;
-    static bool drawSystemMgr = false;
-    static bool drawUIMgr = false;
-    static bool drawViewMgr = false;
-
-    ImGui::Begin("BeatEngine Application Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
-
-    if (ImGui::BeginMenuBar()) {
-        if (ImGui::BeginMenu("Environment")) {
-            bool dockingStatus = (m_Context.GFlags & AppFlags_DebugDock);
-            if (ImGui::MenuItem("Enable Docking", NULL, dockingStatus)) {
-                !dockingStatus ? m_Context.GFlags |= AppFlags_DebugDock :
-                            m_Context.GFlags &= ~AppFlags_DebugDock;
+    while (graphicsMgr.IsOpen()) {
+        while (auto event = graphicsMgr.PollEvent()) {
+         if (event->Is<AppExitingEvent>()) {
+                graphicsMgr.Close();
+                break;
             }
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Behaviour")) {
-            if (ImGui::MenuItem("Profiler Window", NULL, profWindow))
-                profWindow = !profWindow;
-            ImGui::EndMenu();
-        }
-        if (ImGui::BeginMenu("Managers")) {
-            if (ImGui::MenuItem("AudioManager window", NULL, drawAudioMgr))
-                drawAudioMgr = !drawAudioMgr;
-            if (ImGui::MenuItem("AssetManager window", NULL, drawAssetMgr))
-                drawAssetMgr = !drawAssetMgr;
-            if (ImGui::MenuItem("EntityManager window", NULL, drawEntityMgr))
-                drawEntityMgr = !drawEntityMgr;
-            if (ImGui::MenuItem("EventManager window", NULL, drawEventMgr))
-                drawEventMgr = !drawEventMgr;
-            if (ImGui::MenuItem("GraphicsManager window", NULL, drawGraphicsMgr))
-                drawGraphicsMgr = !drawGraphicsMgr;
-            if (ImGui::MenuItem("SettingsManager window", NULL, drawSettingsMgr))
-                drawSettingsMgr = !drawSettingsMgr;
-            if (ImGui::MenuItem("SignalManager window", NULL, drawSignalMgr))
-                drawSignalMgr = !drawSignalMgr;
-            if (ImGui::MenuItem("SystemManager window", NULL, drawSystemMgr))
-                drawSystemMgr = !drawSystemMgr;
-            if (ImGui::MenuItem("UIManager window", NULL, drawUIMgr))
-                drawUIMgr = !drawUIMgr;
-            if (ImGui::MenuItem("ViewManager window", NULL, drawViewMgr))
-                drawViewMgr = !drawViewMgr;
-            ImGui::EndMenu();
+            m_GlobalLayers.OnEvent(event);
+            if (viewMgr.OnEvent(event)) {
+                break;
+            }
         }
 
-        ImGui::EndMenuBar();
+        Update();
+        Draw();
+        Display();
     }
 
-    if (ImGui::BeginTabBar("AppActionBar")) {
-        if (ImGui::BeginTabItem("Flags")) {
-            bool imguiToggle = m_Context.GFlags & AppFlags_ImGui;
-            bool imguiDockingToggle = m_Context.GFlags & AppFlags_ImGuiDocking;
-            bool runningToggle = m_Context.GFlags & AppFlags_Running;
-            bool preloadToggle = m_Context.GFlags & AppFlags_Preload;
-            bool fullscreenToggle = m_Context.GFlags & AppFlags_Fullscreen;
-            bool cursorChangedToggle = m_Context.GFlags & AppFlags_CursorChanged;
-            bool disableKeysToggle = m_Context.GFlags & AppFlags_DisableKeyPressEvents;
-            bool drawDebugToggle = m_Context.GFlags & AppFlags_DrawDebugInfo;
-            bool drawDockToggle = m_Context.GFlags & AppFlags_DebugDock;
-
-            bool viewDisableKeyToggle = m_Context.VFlags & ViewFlags_DisableKeys;
-
-            bool envDebugToggle = m_Context.EFlags & EnvFlags_Debug;
-            bool envTestToggle = m_Context.EFlags & EnvFlags_TestBuild;
-            
-            ImGui::Text("AppFlags: %#.8x", m_Context.GFlags);
-            if (!editFlags)
-                ImGui::BeginDisabled();
-            ImGui::Checkbox("AppFlags_ImGui", &imguiToggle);
-            ImGui::Checkbox("AppFlags_ImGuiDocking", &imguiDockingToggle);
-            ImGui::Checkbox("AppFlags_Running", &runningToggle);
-            ImGui::Checkbox("AppFlags_Preload", &preloadToggle);
-            ImGui::Checkbox("AppFlags_Fullscreen", &fullscreenToggle);
-            ImGui::Checkbox("AppFlags_CursorChanged", &cursorChangedToggle);
-            ImGui::Checkbox("AppFlags_DisableKeyPressEvents", &disableKeysToggle);
-            ImGui::Checkbox("AppFlags_DrawDebugInfo", &drawDebugToggle);
-            ImGui::Checkbox("AppFlags_DebugDock", &drawDockToggle);
-            if (!editFlags)
-                ImGui::EndDisabled();
-            ImGui::NewLine();
-            ImGui::Text("ViewFlags: %#.8x", m_Context.VFlags);
-            if (!editFlags)
-                ImGui::BeginDisabled();
-            ImGui::Checkbox("ViewFlags_DisableKeys", &viewDisableKeyToggle);
-            if (!editFlags)
-                ImGui::EndDisabled();
-            ImGui::NewLine();
-            ImGui::Text("EnvFlags: %#.8x", m_Context.EFlags);
-            if (!editFlags)
-                ImGui::BeginDisabled();
-            ImGui::Checkbox("EnvFlags_Debug", &envDebugToggle);
-            ImGui::Checkbox("EnvFlags_TestBuild", &envTestToggle);
-            if (!editFlags)
-                ImGui::EndDisabled();
-
-            if (!imguiToggle && m_Context.GFlags & AppFlags_ImGui)
-                m_Context.GFlags &= AppFlags_ImGui;
-            else if (imguiToggle && !(m_Context.GFlags &AppFlags_ImGui))
-                m_Context.GFlags |= ~AppFlags_ImGui;
-
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Actions")) {
-            if (ImGui::Button("Exit"))
-                SignalManager::GetInstance()->Send(std::make_shared<AppExitSignal>());
-            ImGui::Checkbox("Allow editing flags", &editFlags);
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Status")) {
-            static CountedArray<float, 50> deltas;
-            if (deltas.Full()) {
-                auto data = deltas.Data();
-                std::move(data + 1, data + 50, data);
-                data[50 - 1] = LastDelta;
-            }
-            else deltas.Add(LastDelta);
-            
-            float avgDelta{};
-            float minDelta{ std::numeric_limits<float>::max() };
-            float maxDelta{ std::numeric_limits<float>::min() };
-            for (const auto& delta : deltas) {
-                avgDelta += delta;
-                if (delta < minDelta)
-                    minDelta = delta;
-                if (delta > maxDelta)
-                    maxDelta = delta;
-            }
-            avgDelta /= deltas.UsedSize();
-
-            ImGui::Text("Raw Delta: %.3f (%.1f ms)", LastDelta, LastDelta * 1000);
-            ImGui::SameLine();
-            ImGui::Text("Raw FPS: %.2f", 1 / LastDelta);
-            ImGui::Text("Avg Delta: %.3f (%.1f ms)", avgDelta, avgDelta * 1000);
-            ImGui::SameLine();
-            ImGui::Text("Avg FPS: %.2f", 1 / avgDelta);
-            ImGui::Text("Min Delta: %.3f (%.1f ms)", minDelta, minDelta * 1000);
-            ImGui::SameLine();
-            ImGui::Text("Max FPS: %.2f", 1 / minDelta);
-            ImGui::Text("Max Delta: %.3f (%.1f ms)", maxDelta, maxDelta * 1000);
-            ImGui::SameLine();
-            ImGui::Text("Min FPS: %.2f", 1 / maxDelta);
-
-            ImGui::Separator();
-
-            ImGui::Text("Build date: %s", __DATE__);
-            ImGui::Text("Build time: %s", __TIME__);
-            ImGui::Text("Build commit: %s", BEATENGINE_COMMIT_ID_BUILD);
-
-            ImGui::EndTabItem();
-        }
-        if (profWindow) {
-            ImGui::Begin("Profiler", &profWindow);
-            Profiler::DrawHistogram(ImGui::GetContentRegionAvail());
-            ImGui::End();
-        }
-        else if (ImGui::BeginTabItem("Profiler")) {
-            Profiler::DrawHistogram(ImGui::GetContentRegionAvail());
-
-            ImGui::EndTabItem();
-        }
-        if (ImGui::BeginTabItem("Context")) {
-            auto size = m_Context.WindowSize;
-            ImGui::Text("WindowSize: (X: %u Y: %u)", size.X, size.Y);
-            ImGui::Text("ActiveView: %s", m_Context.ActiveView.name());
-            ImGui::Text("ProgramName: %s", m_Context.ProgramName.c_str());
-
-            ImGui::EndTabItem();
-        }
-        ImGui::EndTabBar();
-    }
-    ImGui::End();
-
-    if (drawAudioMgr)
-        m_State.GetAudioMgr().ShowImGuiDebugWindow();
-    if (drawAssetMgr)
-        m_State.GetAssetMgr().ShowImGuiDebugWindow();
-    // if (drawEntityMgr)
-    //     m_State.GetEntityMgr().ShowImGuiDebugWindow();
-    // if (drawEventMgr)
-    //     EventManager::GetInstance()->ShowImGuiDebugWindow();
-    if (drawGraphicsMgr)
-        m_State.GetGraphicsMgr().ShowImGuiDebugWindow();
-    if (drawSettingsMgr)
-        m_State.GetSettingsMgr().ShowImGuiDebugWindow();
-    // if (drawSignalMgr)
-    //     SignalManager::GetInstance()->ShowImGuiDebugWindow();
-    // if (drawSystemMgr)
-    //     m_State.GetSystemMgr().ShowImGuiDebugWindow();
-    if (drawUIMgr)
-        m_State.GetUIMgr().ShowImGuiDebugWindow();
-    if (drawViewMgr)
-        m_State.GetViewMgr().ShowImGuiDebugWindow();
+    Uninit();
 }
 
-void Application::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
-	if (globalAssets.empty())
+void Application::Update() {
+    Profiler::StartProfile({ typeid(Application), "Update" }, { .0f, 1.0f, .0f, 1.0f });
+    auto& graphicsMgr = m_State.GetGraphicsMgr();
+
+    m_Context.WindowSize = graphicsMgr.GetWindow()->GetSize();
+    //
+    // if (m_Context->GFlags & ApplicationFlags_CursorChanged) {
+    //     m_Window->setMouseCursor(m_Cursor);
+    //     m_Context->GFlags &= ~ApplicationFlags_CursorChanged;
+    // }
+
+	auto sfDelta = m_MainClock.GetAndReset();
+	auto deltaTime = sfDelta.AsSeconds();
+
+	if (!this->m_State.GetViewMgr().OnUpdate(deltaTime)) {
+        Uninit();
 		return;
-    size_t assets{};
-	for (const auto& [type, vecPath] : globalAssets) {
-        auto vecSize = vecPath.size();
-        for (const auto& path : vecPath) {
-            if (!m_State.GetAssetMgr().Preload(type, path))
-				vecSize--;
-        }
-        assets += vecSize;
 	}
 
-    Logger::AddDebug(typeid(Application), "Preloaded {} assets", assets);
+    graphicsMgr.Update();
+	
+    m_State.GetSystemMgr().Update(deltaTime);
+	m_GlobalLayers.OnUpdate(deltaTime);
+    m_State.GetUIMgr().Update(deltaTime);
+
+    m_LastDelta = deltaTime;
+
+    Profiler::EndProfile({ typeid(Application), "Update" });
 }
 
 void Application::Display() {
     Profiler::StartProfile({ typeid(Application), "Display" }, { 1.0f, .0f, .0f, 1.0f });
     if (m_Context.GFlags & AppFlags_ImGui && m_Context.GFlags & AppFlags_DrawDebugInfo) {
-        DrawImGuiDebug();
+        // DrawImGuiDebug();
     }
 
     m_State.GetGraphicsMgr().Clear();
@@ -418,9 +145,10 @@ void Application::Draw() {
 		ImGui::SetNextWindowSize(viewport->WorkSize);
 		ImGui::SetNextWindowViewport(viewport->ID);
 
-        
-        ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoDocking;
+        // ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiWindowFlags_NoDocking;
+        ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode;
         ImGuiWindowFlags windowFlags = ImGuiWindowFlags_NoDecoration |
+            ImGuiWindowFlags_NoDocking |
             ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoResize |
             ImGuiWindowFlags_NoMove |
@@ -436,8 +164,7 @@ void Application::Draw() {
         ImGui::End();
 
     }
-
-	m_Running = m_State.GetViewMgr().OnDraw();
+	// m_Running = m_State.GetViewMgr().OnDraw();
 
 	m_GlobalLayers.Draw(m_State.GetGraphicsMgr());
     m_State.GetUIMgr().OnDraw();
@@ -445,50 +172,11 @@ void Application::Draw() {
     Profiler::EndProfile({ typeid(Application), "Draw" });
 }
 
-void Application::Update() {
-    Profiler::StartProfile({ typeid(Application), "Update" }, { .0f, 1.0f, .0f, 1.0f });
-    m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
-    //
-    // if (m_Context->GFlags & ApplicationFlags_CursorChanged) {
-    //     m_Window->setMouseCursor(m_Cursor);
-    //     m_Context->GFlags &= ~ApplicationFlags_CursorChanged;
-    // }
-
-	auto sfDelta = m_Clock.GetAndReset();
-	auto deltaTime = sfDelta.AsSeconds();
-
-	if (!this->m_State.GetViewMgr().OnUpdate(deltaTime)) {
-        Uninit();
-		return;
-	}
-
-    m_State.GetGraphicsMgr().Update();
-	
-    this->m_State.GetSystemMgr().Update(deltaTime);
-	m_GlobalLayers.OnUpdate(deltaTime);
-    m_State.GetUIMgr().Update(deltaTime);
-
-    LastDelta = deltaTime;
-
-    Profiler::EndProfile({ typeid(Application), "Update" });
-}
-
-void Application::ApplyBaseSettings() {
-	auto gameSettings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
-    auto window = m_State.GetGraphicsMgr().GetWindow();
-
-    m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
-
-	window->SetSize(gameSettings->WindowSize);
-	if (gameSettings->WindowPosition != Vector2i(-1, -1))
-		window->SetPosition(gameSettings->WindowPosition);
-}
-
-void Application::InitSettings() {
+void Application::_InitSettings() {
 	Logger::AddDebug(typeid(Application), "Initializing settings...");
     
 	m_State.GetSettingsMgr().RegisterSettingsData<AppSettings>();
-    m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
+    // m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
 
 #ifdef BEATENGINE_DEBUG
     m_State.GetSettingsMgr().RegisterSettingsData<AppDebugSettings>();
@@ -496,33 +184,33 @@ void Application::InitSettings() {
 #endif
 }
 
-void Application::InitUI() {
+void Application::_InitUI() {
 	Logger::AddDebug(typeid(Application), "Initializing UI...");
 }
 
-void Application::InitAudio() {
+void Application::_InitAudio() {
 	Logger::AddDebug(typeid(Application), "Initializing audio...");
 
     m_State.GetAudioMgr().Init();
 }
 
-void Application::InitViews() {
+void Application::_InitViews() {
 	Logger::AddDebug(typeid(Application), "Initializing views...");
 
     m_State.GetViewMgr().Init();
 }
 
-void Application::InitSystems() {
+void Application::_InitSystems() {
     Logger::AddDebug(typeid(Application), "Initializing systems...");
 }
 
-void Application::InitAssets() {
+void Application::_InitAssets() {
 	Logger::AddDebug(typeid(Application), "Initializing assets...");
 
     m_State.GetAssetMgr().Init();
 }
 
-void Application::InitWindow() {
+void Application::_InitGraphics() {
 	Logger::AddDebug(typeid(Application), "Initializing window...");
 
 	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(AppSettings));
@@ -539,11 +227,11 @@ void Application::InitWindow() {
     m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
 }
 
-void Application::InitKeybinds() {
+void Application::_InitKeybinds() {
 	Logger::AddDebug(typeid(Application), "Initializing keybinds... (not really)");
 }
 
-void Application::SubscribeToApplicationEvent() {
+void Application::_SubscribeToAppEvent() {
 	Logger::AddDebug(typeid(Application), "Subscribing to game events...");
 
     EventManager::GetInstance()->Subscribe<AppSettingsChangedEvent>([this](std::shared_ptr<Base::Event>) {
@@ -588,7 +276,7 @@ void Application::SubscribeToApplicationEvent() {
 
 }
 
-void Application::SubscribeToApplicationSignals() {
+void Application::_SubscribeToAppSignals() {
 	Logger::AddDebug(typeid(Application), "Subscribing to game signals...");
 
 	SignalManager::GetInstance()->RegisterCallback<ViewAddGlobalLayerSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -600,7 +288,7 @@ void Application::SubscribeToApplicationSignals() {
 
     SignalManager::GetInstance()->RegisterCallback<AppExitSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
         EventManager::GetInstance()->Send(std::make_shared<AppExitingEvent>());
-        m_Running = false;
+        // m_Running = false;
     });
 
     // SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -619,12 +307,12 @@ void Application::SubscribeToApplicationSignals() {
 
     SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppAddFlags>(sig);
-        this->SetFlags(gameSig->Flags);
+        // this->SetFlags(gameSig->Flags);
     });
 
     SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppRemoveFlags>(sig);
-        this->RemoveFlags(gameSig->Flags);
+        // this->RemoveFlags(gameSig->Flags);
     });
 
     SignalManager::GetInstance()->RegisterCallback<ViewAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {

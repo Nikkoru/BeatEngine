@@ -201,7 +201,7 @@ bool SDLWindow::IsCursorVisible() const {
 Optional<Base::Event> SDLWindow::PollEvent() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        ImGui_ImplSDL3_ProcessEvent(&e);
+        // ImGui_ImplSDL3_ProcessEvent(&e);
         switch (e.type) {
             case SDL_EVENT_QUIT:
                 return AppExitingEvent();
