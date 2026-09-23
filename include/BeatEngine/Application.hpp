@@ -21,10 +21,8 @@ public:
     Application(const std::string& name = "BeatEngine Program");
     virtual ~Application() = default;
 public:
-    void Init();
-    virtual void CustomInit() = 0;
-    void Uninit();
-    virtual void CustomUninit() {}
+    virtual void Init();
+    virtual void Uninit();
     virtual void Run();
 
     virtual void Update();

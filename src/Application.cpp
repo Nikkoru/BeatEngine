@@ -30,8 +30,6 @@ Application::Application(const std::string& name): m_Context(name) {
 void Application::Init() {
     Logger::AddInfo(typeid(Application), "Initializing Application");
     
-    CustomInit();
-
     _InitSettings();
 	_InitAudio();
 	_InitSystems();
@@ -56,8 +54,6 @@ void Application::Uninit() {
     m_State.GetAudioMgr().Uninit();
     m_State.GetGraphicsMgr().Close();
     // m_SettingsMgr->Uninit();
-
-    CustomUninit();
 }
 
 void Application::Run() {
@@ -94,9 +90,9 @@ void Application::Update() {
 
     m_Context.WindowSize = graphicsMgr.GetWindow()->GetSize();
     //
-    // if (m_Context->GFlags & ApplicationFlags_CursorChanged) {
+    // if (m_Context->AFlags & ApplicationFlags_CursorChanged) {
     //     m_Window->setMouseCursor(m_Cursor);
-    //     m_Context->GFlags &= ~ApplicationFlags_CursorChanged;
+    //     m_Context->AFlags &= ~ApplicationFlags_CursorChanged;
     // }
 
 	auto sfDelta = m_MainClock.GetAndReset();
@@ -120,7 +116,7 @@ void Application::Update() {
 
 void Application::Display() {
     Profiler::StartProfile({ typeid(Application), "Display" }, { 1.0f, .0f, .0f, 1.0f });
-    if (m_Context.GFlags & AppFlags_ImGui && m_Context.GFlags & AppFlags_DrawDebugInfo) {
+    if (m_Context.AFlags & AppFlags_ImGui && m_Context.AFlags & AppFlags_DrawDebugInfo) {
         // DrawImGuiDebug();
     }
 
@@ -134,10 +130,10 @@ void Application::Draw() {
     Profiler::StartProfile({ typeid(Application), "Draw" }, { .0f, .0f, 1.0f, 1.0f });
     m_State.GetGraphicsMgr().Render();
 
-    if (m_Context.GFlags & AppFlags_DebugDock && 
-        m_Context.GFlags & AppFlags_ImGui &&
-        m_Context.GFlags & AppFlags_ImGuiDocking &&
-        m_Context.GFlags & AppFlags_DrawDebugInfo) {
+    if (m_Context.AFlags & AppFlags_DebugDock && 
+        m_Context.AFlags & AppFlags_ImGui &&
+        m_Context.AFlags & AppFlags_ImGuiDocking &&
+        m_Context.AFlags & AppFlags_DrawDebugInfo) {
         auto io = ImGui::GetIO();
         auto viewport = ImGui::GetMainViewport();
 
@@ -221,7 +217,7 @@ void Application::_InitGraphics() {
     m_State.GetGraphicsMgr().Init();
 
     if (gameSettings->WindowFullScreen) {
-        m_Context.GFlags |= AppFlags_Fullscreen;
+        m_Context.AFlags |= AppFlags_Fullscreen;
     }
 
     m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
@@ -238,7 +234,7 @@ void Application::_SubscribeToAppEvent() {
         
         auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
         
-        bool curFullscreen = m_Context.GFlags & AppFlags_Fullscreen;
+        bool curFullscreen = m_Context.AFlags & AppFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
             // m_Window->close();
@@ -260,9 +256,9 @@ void Application::_SubscribeToAppEvent() {
             // }
 
             if (settings->WindowFullScreen)
-                m_Context.GFlags |= AppFlags_Fullscreen;
-            else if (m_Context.GFlags & AppFlags_Fullscreen)
-                m_Context.GFlags &= ~AppFlags_Fullscreen;
+                m_Context.AFlags |= AppFlags_Fullscreen;
+            else if (m_Context.AFlags & AppFlags_Fullscreen)
+                m_Context.AFlags &= ~AppFlags_Fullscreen;
         //     m_Window->display();
         }
 
@@ -294,15 +290,15 @@ void Application::_SubscribeToAppSignals() {
     // SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
     //     auto gameSig = std::static_pointer_cast<AppChangeCursorSignal>(sig);
     //     // m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
-    //     m_Context->GFlags |= AppFlags_CursorChanged;
+    //     m_Context->AFlags |= AppFlags_CursorChanged;
     // });
 
     SignalManager::GetInstance()->RegisterCallback<AppToggleImGui>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppToggleImGui>(sig);
-        if (m_Context.GFlags & AppFlags_ImGui)
-            m_Context.GFlags &= ~AppFlags_ImGui;
+        if (m_Context.AFlags & AppFlags_ImGui)
+            m_Context.AFlags &= ~AppFlags_ImGui;
         else
-            m_Context.GFlags |= AppFlags_ImGui;
+            m_Context.AFlags |= AppFlags_ImGui;
     });
 
     SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
@@ -326,9 +322,9 @@ void Application::_SubscribeToAppSignals() {
     });
 
     SignalManager::GetInstance()->RegisterCallback<AppToggleDrawingDebugInfo>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
-            if (m_Context.GFlags & AppFlags_DrawDebugInfo)
-                m_Context.GFlags &= ~AppFlags_DrawDebugInfo;
+            if (m_Context.AFlags & AppFlags_DrawDebugInfo)
+                m_Context.AFlags &= ~AppFlags_DrawDebugInfo;
             else
-                m_Context.GFlags |= AppFlags_DrawDebugInfo;
+                m_Context.AFlags |= AppFlags_DrawDebugInfo;
     });
 }

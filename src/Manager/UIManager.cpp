@@ -113,7 +113,7 @@ void UIManager::Update(float dt) {
 
 
 void UIManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
+    if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("UIManager Debug");
     if (ImGui::BeginTabBar("uiManagerTabBar")) {

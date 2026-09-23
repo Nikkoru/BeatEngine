@@ -137,7 +137,7 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
+    if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("SettingsManager Debug");
     static char path[50];

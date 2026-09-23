@@ -441,7 +441,7 @@ bool AudioManager::AllSoundsDone() const {
 }
 
 void AudioManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
+    if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("AudioManager Debug", nullptr, ImGuiWindowFlags_MenuBar);
     

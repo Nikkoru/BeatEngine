@@ -201,7 +201,9 @@ bool SDLWindow::IsCursorVisible() const {
 Optional<Base::Event> SDLWindow::PollEvent() {
     SDL_Event e;
     while (SDL_PollEvent(&e)) {
-        // ImGui_ImplSDL3_ProcessEvent(&e);
+        if (m_Context->ContainsAFlags(AppFlags_ImGui))
+            ImGui_ImplSDL3_ProcessEvent(&e);
+
         switch (e.type) {
             case SDL_EVENT_QUIT:
                 return AppExitingEvent();
@@ -271,7 +273,7 @@ Optional<Base::Event> SDLWindow::PollEvent() {
 
 void SDLWindow::OnRender() {
     Profiler::StartProfile({ typeid(SDLWindow), "OnRender" }, IM_COL32(0, 50, 255, 255));
-    if (m_Context->GFlags & AppFlags_ImGui) {
+    if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 

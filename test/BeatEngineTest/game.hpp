@@ -10,6 +10,5 @@ public:
     Game(int argc, char** argv);
     ~Game() override = default;
 public:
-    void CustomInit() override;
-    void CustomUninit() override;
+    void Init() override;
 };

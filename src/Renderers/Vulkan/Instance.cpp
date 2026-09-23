@@ -88,7 +88,7 @@ void VK::Instance::Init(AppContext* context, std::string appName, uint32_t devic
         ));
     }
 
-    if (m_Context->GFlags & AppFlags_ImGui)
+    if (m_Context->ContainsAFlags(AppFlags_ImGui))
         InitImGui(window);
 
     m_Uninitializers.AddCallback([&]() {
@@ -177,7 +177,7 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     std::vector<const char*> extensions = {};
     std::vector<const char*> layers = {};
 
-    if (m_Context->EFlags & EnvFlags_Debug) {
+    if (m_Context->ContainsEFlags(EnvFlags_Debug)) {
         extensions.emplace_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
         extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 
@@ -224,7 +224,7 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     };
     VK_CHECK(vmaCreateAllocator(&allocatorInfo, &m_Core.Allocator));
 
-    if (m_Context->EFlags & EnvFlags_Debug) {
+    if (m_Context->ContainsEFlags(EnvFlags_Debug)) {
         VkDebugUtilsMessengerCreateInfoEXT messengerInfo{
             .sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT,
             .pNext = nullptr,
@@ -296,7 +296,7 @@ void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
 
     ImGui::CreateContext();
     
-    if (m_Context->GFlags & AppFlags_ImGuiDocking)
+    if (m_Context->ContainsAFlags(AppFlags_ImGuiDocking))
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     GImGui->ItemUnclipByLog = true; 
 
@@ -552,7 +552,7 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     const auto [swapchainImage, swapchainImageIndex] = m_Swapchain.AcquireImage(m_Core.Device, GetCurrentFrameIndex());
 
     if (!swapchainImage || NeedsRecreateSwapchain()) {
-        if (m_Context->GFlags & AppFlags_ImGui) {
+        if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
             ImGui::Render();
             ImGui::EndFrame();
         }
@@ -607,7 +607,7 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     // vku::TransitionImage({}, cmd, drawImage.Image, swapchainLayout, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     // swapchainLayout = V_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     
-    if (m_Context->GFlags & AppFlags_ImGui) {
+    if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         ImGui::EndFrame();

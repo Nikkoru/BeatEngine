@@ -555,7 +555,7 @@ bool AssetManager::Has(const String& name, const std::type_index viewID) {
 }
 
 void AssetManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
+    if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("AssetManager Debug");
     ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());

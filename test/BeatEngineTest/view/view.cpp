@@ -244,7 +244,7 @@ void TestView::OnDraw(GraphicsManager& mgr) {
 	// auto percentage = sf::Text(*font, std::format("{:.0f}%", progressBar->GetPercentage() * 100), 15);
 	// percentage.setPosition({ 800 - percentage.getLocalBounds().size.x, count.getPosition().y + count.getLocalBounds().size.y + 1 });
 	//
-    if (b_mContext->GFlags & AppFlags_ImGui) {
+    if (b_mContext->ContainsAFlags(AppFlags_ImGui)) {
         {
             ImGui::Begin("Control for m_Shape"); 
             std::array size = { m_Shape.GetSize().X, m_Shape.GetSize().Y };
@@ -281,7 +281,7 @@ void TestView::OnDraw(GraphicsManager& mgr) {
     m_Shape.Draw(mgr);
     m_FunnyShape.Draw(mgr);
 
-    if (b_mContext->GFlags & AppFlags_ImGui)
+    if (b_mContext->ContainsAFlags(AppFlags_ImGui))
         m_Shape.DrawWindowImGuiDrawData();
 
     if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {

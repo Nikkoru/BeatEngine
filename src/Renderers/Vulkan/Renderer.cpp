@@ -120,7 +120,7 @@ void VulkanRenderer::Render() {
     // }
 
     Profiler::StartProfile({ typeid(VulkanRenderer), "Render" }, IM_COL32(255, 0, 35, 255));
-    if (m_Context->GFlags & AppFlags_ImGui)
+    if (m_Context->ContainsAFlags(AppFlags_ImGui))
         ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
 
@@ -632,7 +632,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vkCmdPipelineBarrier2(m_ActiveCmd, &presentDependencyInfo);
 
-    if ((m_Context->GFlags & AppFlags_ImGui) && (m_Context->EFlags & EnvFlags_Debug)) {
+    if (m_Context->ContainsAFlags(AppFlags_ImGui) && m_Context->ContainsEFlags(EnvFlags_Debug)) {
         ImGui::Begin("Rendered elements so far");
         if (ImGui::TreeNode(IsVertexArrayHighlight(vertices) ? std::format("VertexArrayHighlight_Of{}_ArrayID{}_ID{}_In_{}", GetVertexArrayHighlightSourceID(vertices), GetVertexArrayHighlightID(vertices), GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str() : std::format("VertexArray_ID{}_In_{}", GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str())) {
             ImGui::Text("PrimitiveType : %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str()); 

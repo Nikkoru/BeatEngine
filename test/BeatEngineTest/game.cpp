@@ -1,5 +1,6 @@
 #include "game.hpp"
 #include "BeatEngine/Application.hpp"
+#include "BeatEngine/Enum/AppFlags.hpp"
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Windows/SDL/Window.h"
@@ -13,7 +14,7 @@ Game::Game(int argc, char** argv)
     , m_Argv(argv)
     , Application("BeatEngineTest") {}
 
-void Game::CustomInit() {
+void Game::Init() {
     auto renderer = std::make_shared<VulkanRenderer>();
     auto window = std::make_shared<SDLWindow>();
     window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
@@ -99,14 +100,17 @@ void Game::CustomInit() {
         }
 	});
 
+    m_Context.AddAFlags(AppFlags_ImGui);
+    m_Context.AddAFlags(AppFlags_ImGuiDocking);
+
     m_State.GetGraphicsMgr().MakeRenderer(renderer);
     m_State.GetGraphicsMgr().SetWindowTitle("BE");
     m_State.GetGraphicsMgr().SetWindowSize({ 1280, 720 });
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
-	// m_GlobalLayers.AttachLayer<GlobalTestLayerUI>();
-}
+    
+    Application::Init();
 
-void Game::CustomUninit() {
+	m_GlobalLayers.AttachLayer<GlobalTestLayerUI>(&m_Context, &m_State);
 }

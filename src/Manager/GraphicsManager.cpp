@@ -67,7 +67,7 @@ void GraphicsManager::Close() {
 }
 
 void GraphicsManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
+    if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("GraphicsManager Debug");
     if (ImGui::BeginTabBar("SelectionTabBar")) {
