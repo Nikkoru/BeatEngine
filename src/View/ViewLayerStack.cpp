@@ -2,7 +2,6 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/View/ViewLayer.h"
 
-
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
     m_LayerCount++;
     layer->SetLayerIndex(m_LayerCount);

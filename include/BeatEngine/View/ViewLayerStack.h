@@ -9,18 +9,19 @@
 #include <memory>
 
 class GraphicsManager;
+class AppState;
+class AppContext;
 class ViewLayer;
 class ViewLayerStack : public GraphicalElement {
 private:
 	std::map<std::type_index, std::shared_ptr<ViewLayer>> m_Layers;
-
 	unsigned int m_LayerCount = 0;
 public:
-	ViewLayerStack() = default;
+    ViewLayerStack() = default;
 	
-	template <typename TLayer>
+	template <typename TLayer, class... Args>
 		requires(std::is_base_of_v<ViewLayer, TLayer>)
-	std::shared_ptr<TLayer> AttachLayer();
+	std::shared_ptr<TLayer> AttachLayer(Args&&... args);
 	
 	void AttachLayer(std::shared_ptr<ViewLayer> layer);
 

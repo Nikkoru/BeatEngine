@@ -36,8 +36,6 @@ private:
 	unsigned int m_LayerIndex = 0;
 	
     Camera m_Camera;
-
-    // sf::View m_MainView; 
 private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
