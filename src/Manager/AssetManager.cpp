@@ -425,6 +425,22 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 	}
 }
 
+void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID) {
+    if (assets.empty()) return; 
+    size_t loadedAssets{};
+    size_t assetsCount{};
+    for (const auto& [type, vecPath] : assets) {
+        assetsCount = vecPath.size();
+        loadedAssets = assetsCount;
+        for (const auto& path : vecPath) {
+            if (Preload(type, path))
+                loadedAssets--;
+        }
+    }
+
+    Logger::AddDebug(typeid(AssetManager), "Preloaded {}/{} assets", assetsCount, loadedAssets);
+}
+
 Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID) {
     if (!fs::exists(path)) {
 		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());

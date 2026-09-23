@@ -68,7 +68,40 @@ void Game::CustomInit() {
 #endif
     }
 
+    m_State.GetAssetMgr().BulkLoad({
+		{
+			AssetType::Font,
+			{
+				"assets/fonts/main-font.ttf"
+			}
+		},
+		{
+			AssetType::Sound,
+			{
+				"assets/sounds/test-sound.mp3"
+			}
+		},
+	       {
+	           AssetType::AudioStream,
+	           paths
+	       },
+        {
+            AssetType::FragmentShader,
+            {
+                "assets/shaders/shader.frag"
+            }
+        },
+        {
+            AssetType::VertexShader,
+            {
+                "assets/shaders/shader.vert"
+            }
+        }
+	});
+
     m_State.GetGraphicsMgr().MakeRenderer(renderer);
+    m_State.GetGraphicsMgr().SetWindowTitle("BE");
+    m_State.GetGraphicsMgr().SetWindowSize({ 1280, 720 });
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();

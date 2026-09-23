@@ -19,6 +19,7 @@ class AppContext;
 class AppState;
 class ImGuiMultiSelectIO;
 class AssetManager {
+private:
 	struct Slot {
 		Base::AssetHandle<void> Handle;
 		std::shared_ptr<Base::Asset> Asset;
@@ -27,6 +28,8 @@ class AssetManager {
 		Slot() = default;
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset, std::type_index type = typeid(nullptr)) : Handle(handle), Asset(asset), Type(type) {}
 	};
+public:
+    using Assets = std::unordered_map<AssetType, std::vector<std::filesystem::path>>;
 public:
     AssetManager() : AssetManager(nullptr, nullptr) {}
     AssetManager(AppContext* context, AppState* state);
@@ -51,6 +54,7 @@ public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset> && !std::is_base_of_v<Shader, TAsset>)
 	Base::AssetHandle<TAsset> Load(const fs::path& path, const std::type_index viewID = typeid(nullptr));
+    void BulkLoad(const Assets& assets, const std::type_index& viewID = typeid(nullptr));
     Base::AssetHandle<Shader> LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID = typeid(nullptr));
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)
