@@ -63,6 +63,7 @@ void GraphicsManager::Update() {
 
 void GraphicsManager::Close() {
     m_Renderer->Uninit();
+    m_Open = false;
 }
 
 void GraphicsManager::ShowImGuiDebugWindow() {
