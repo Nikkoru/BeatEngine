@@ -1,7 +1,7 @@
 #pragma once
 
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/View/ViewLayer.h"
 #include <memory>
 #include <optional>
@@ -11,7 +11,7 @@ public:
     GameLayer() :
         ViewLayer(typeid(GameLayer), nullptr, nullptr) {}
 
-    GameLayer(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state);
+    GameLayer(std::shared_ptr<AppContext> context, std::shared_ptr<AppState> state);
 public:
     void Init() override {}
 

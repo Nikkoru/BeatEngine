@@ -14,14 +14,14 @@
 #include <string>
 #include <type_traits>
 
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class BaseWindow;
 class Renderer;
 class GraphicsManager {
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
     std::shared_ptr<Renderer> m_Renderer{ nullptr };
     bool m_Open = true;
 
@@ -33,7 +33,7 @@ private:
     Camera m_UICamera{};
 public:
     GraphicsManager();
-    GraphicsManager(GameContext* context, GameState* state)
+    GraphicsManager(AppContext* context, AppState* state)
         : m_Context(context), m_State(state) {}
     ~GraphicsManager();
 public:

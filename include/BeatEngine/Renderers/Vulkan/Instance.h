@@ -15,13 +15,13 @@
 #include <vulkan/vk_platform.h>
 #include <vulkan/vulkan_core.h>
 
-class GameContext;
+class AppContext;
 class VulkanRenderer;
 namespace VK {
 class Instance {
 private:
     friend class VulkanRenderer;
-    GameContext* m_Context{ nullptr };
+    AppContext* m_Context{ nullptr };
     Core m_Core{};
     Swapchain m_Swapchain{};
 
@@ -46,7 +46,7 @@ private:
 public:
     Instance() : m_ImageCache(*this) {}
 
-    void Init(GameContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
+    void Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
     void Uninit();
 
     void AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset = { 0, 0 }, Vector2u extent = { 0, 0 }, uint32_t layer = 0);

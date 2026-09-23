@@ -14,10 +14,10 @@ enum class WindowDriver {
     Windows
 };
 
-class GameContext;
+class AppContext;
 class BaseWindow {
 protected:
-    GameContext* m_Context{ nullptr };
+    AppContext* m_Context{ nullptr };
     std::string m_RendererName{};
     WindowDriver m_WindowDriver{ WindowDriver::None };
 public:
@@ -25,7 +25,7 @@ public:
     virtual ~BaseWindow() = default;
 public:
     void PrepareInitFor(std::string renderer) { m_RendererName = renderer; }
-    virtual void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) = 0;
+    virtual void Init(AppContext* context = nullptr, std::string windowTitle = "BeatEngine App", Vector2u windowSize = { 1280, 720 }) = 0;
 
     virtual void Uninit() = 0;
 

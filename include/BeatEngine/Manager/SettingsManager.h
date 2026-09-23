@@ -14,26 +14,26 @@ namespace fs = std::filesystem;
 namespace Base {
     class Settings;
 };
-class Game;
-class GameContext;
-class GameState;
+class Application;
+class AppContext;
+class AppState;
 class SettingsManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::Settings>> m_Settings;
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
     SettingsManager() : SettingsManager(nullptr, nullptr) {}
-	SettingsManager(GameContext* context, GameState* state); 
+	SettingsManager(AppContext* context, AppState* state); 
 	~SettingsManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(SettingsManager)); };
 private:
-	friend class Game;
+	friend class Application;
 	void ReadConfig(fs::path path);
 	void WriteConfig(fs::path path);
 public:
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)

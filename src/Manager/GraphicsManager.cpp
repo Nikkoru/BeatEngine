@@ -1,16 +1,16 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Base/Signal.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Enum/AppFlags.hpp"
+#include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "imgui.h"
 
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 
 #ifdef BEATENGINE_VULKAN_RENDERER
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
@@ -23,8 +23,8 @@
 #include <string>
 
 GraphicsManager::GraphicsManager() {
-    SignalManager::GetInstance()->RegisterCallback<GameUninitGraphicsSignal>(typeid(GraphicsManager), [&](std::shared_ptr<Base::Signal> sig) {
-        auto uninitSignal = std::static_pointer_cast<GameUninitGraphicsSignal>(sig);
+    SignalManager::GetInstance()->RegisterCallback<AppUninitGraphicsSignal>(typeid(GraphicsManager), [&](std::shared_ptr<Base::Signal> sig) {
+        auto uninitSignal = std::static_pointer_cast<AppUninitGraphicsSignal>(sig);
 
         UninitElement(uninitSignal->Element);
     });
@@ -48,7 +48,7 @@ void GraphicsManager::Init() {
     if (m_Renderer == nullptr)
         MakeRenderer<OpenGLRenderer>();
 #else
-    assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or Game::SetRenderer<T>()")
+    assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or App::SetRenderer<T>()")
 #endif
     
     if (m_WindowFullscreen)
@@ -66,7 +66,7 @@ void GraphicsManager::Close() {
 }
 
 void GraphicsManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("GraphicsManager Debug");
     if (ImGui::BeginTabBar("SelectionTabBar")) {
@@ -199,7 +199,7 @@ Optional<Base::Event> GraphicsManager::PollEvent() {
     m_Renderer->ProcessEvent(event);
     
     if (event.HasValue())
-        if (auto data = event->GetIf<GameResizedEvent>(event))
+        if (auto data = event->GetIf<AppResizedEvent>(event))
             m_UICamera.SetSize(Vector2f{ data->Size });
 
     return event;

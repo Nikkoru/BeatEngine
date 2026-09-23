@@ -2,7 +2,7 @@
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Camera/Camera.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/RectShape.hpp"
 #include "BeatEngine/Graphics/TextElement.hpp"
@@ -36,7 +36,7 @@ private:
 
 	float progress = 0;
 public:
-	TestView(GameContext* context, GameState* state);
+	TestView(AppContext* context, AppState* state);
 	~TestView() override = default;
 public:
     void Init() override;

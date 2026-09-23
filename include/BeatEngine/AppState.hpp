@@ -8,8 +8,8 @@
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
-class GameContext;
-class GameState {
+class AppContext;
+class AppState {
 private:
     ViewManager ViewMgr{};
 	SystemManager SystemMgr{};
@@ -19,8 +19,8 @@ private:
 	UIManager UIMgr{};
     GraphicsManager GraphicsMgr{};
 public:
-    GameState() = default;
-    void PrepareManagers(GameContext* context);
+    AppState() = default;
+    void PrepareManagers(AppContext* context);
 public:
     ViewManager& GetViewMgr();
     SystemManager& GetSystemMgr();

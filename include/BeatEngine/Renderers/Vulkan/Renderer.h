@@ -18,7 +18,7 @@
 class VulkanRenderer : public Renderer {
 public: 
     VulkanRenderer() : VulkanRenderer(nullptr) {}
-    VulkanRenderer(GameContext* context) : Renderer(context) {}
+    VulkanRenderer(AppContext* context) : Renderer(context) {}
     ~VulkanRenderer() override = default;
 private:
     uint32_t m_DeviceIndex{};

@@ -1,9 +1,10 @@
 #pragma once
 
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/Camera/CameraMode.h"
 #include "BeatEngine/Camera/ShakeParams.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Manager/AudioManager.h"
 #include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/Manager/UIManager.h"
@@ -18,7 +19,7 @@ namespace Base {
 	class View;
 }
 
-class Game;
+class Application;
 class ViewLayerStack;
 class GraphicsManager;
 class ViewLayer {
@@ -28,8 +29,8 @@ private:
 	std::shared_ptr<Base::View> m_OwnerView = nullptr;
 	std::type_index m_ID = typeid(nullptr);
 protected:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 private:
 	Vector2f m_Size = { 0, 0 };
 	unsigned int m_LayerIndex = 0;
@@ -41,8 +42,8 @@ private:
 	void SetLayerIndex(unsigned int index) { m_LayerIndex = index; }
 public:
 	ViewLayer(std::type_index id,
-              GameContext* context = nullptr,
-              GameState* state = nullptr)
+              AppContext* context = nullptr,
+              AppState* state = nullptr)
 		: m_ID(id), m_Context(context), m_State(state) {}
 
 	virtual ~ViewLayer() = default;
@@ -70,8 +71,8 @@ public:
 	void StartCamera();
 	void StopCamera();
     
-    void SetGameContext(GameContext* context) { m_Context = context; }
-    void SetGameState(GameState* state) { m_State = state; }
+    void SetAppContext(AppContext* context) { m_Context = context; }
+    void SetAppState(AppState* state) { m_State = state; }
 private:
-	friend class Game;
+	friend class Application;
 };

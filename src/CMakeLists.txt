@@ -71,8 +71,8 @@
 	"${PROJECT_SOURCE_DIR}/src/UI/Elements/Button.cpp"
 	"${PROJECT_SOURCE_DIR}/src/UI/Elements/ProgressBar.cpp"
 
-	"${PROJECT_SOURCE_DIR}/src/Settings/GameSettings.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Settings/GameDebugSettings.cpp"
+	"${PROJECT_SOURCE_DIR}/src/Settings/AppSettings.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Settings/AppDebugSettings.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/System/Clock.cpp"
     "${PROJECT_SOURCE_DIR}/src/System/DataStream.cpp"
@@ -82,8 +82,8 @@
 	"${PROJECT_SOURCE_DIR}/src/Logger.cpp"
     "${PROJECT_SOURCE_DIR}/src/vma.cpp"
 
-    "${PROJECT_SOURCE_DIR}/src/GameState.cpp"
-	"${PROJECT_SOURCE_DIR}/src/Game.cpp"
+    "${PROJECT_SOURCE_DIR}/src/AppState.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Application.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/ImGui/MultiPlot.cpp"
 )

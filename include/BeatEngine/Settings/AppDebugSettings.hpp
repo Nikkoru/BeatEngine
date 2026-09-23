@@ -2,12 +2,12 @@
 
 #include "BeatEngine/Base/Settings.h"
 
-class GameDebugSettings : public Base::Settings {
+class AppDebugSettings : public Base::Settings {
 public:
     
 public:
-    GameDebugSettings() : Base::Settings(typeid(GameDebugSettings), "[Debug]") {}
-    ~GameDebugSettings() override = default;
+    AppDebugSettings() : Base::Settings(typeid(AppDebugSettings), "[Debug]") {}
+    ~AppDebugSettings() override = default;
 
     void Read(const char *line) override; 
     std::string Write() override;

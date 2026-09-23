@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BeatEngine/Asset/Font.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/View/ViewLayer.h"
 #include "BeatEngine/UI/UILayer.h"
 
@@ -17,7 +17,7 @@ private:
     bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();
-	GlobalTestLayerUI(GameContext* context, GameState* state);
+	GlobalTestLayerUI(AppContext* context, AppState* state);
 	~GlobalTestLayerUI() override = default;
 private:
 

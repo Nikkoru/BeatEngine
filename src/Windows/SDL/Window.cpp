@@ -1,13 +1,14 @@
 #include "BeatEngine/Windows/SDL/Window.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/Enum/AppFlags.hpp"
+#include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Events/MouseEvents.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Manager/EventManager.h"
-#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Windows/Mouse.hpp"
@@ -34,7 +35,7 @@ void AddSDLLog(std::string_view fmt, Args&&... elms) {
 #endif
 }
 
-void SDLWindow::Init(GameContext* context, std::string windowTitle, Vector2u windowSize) {
+void SDLWindow::Init(AppContext* context, std::string windowTitle, Vector2u windowSize) {
     if (m_InitFlags == 0)
         m_InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD;
     m_Context = context;
@@ -203,18 +204,18 @@ Optional<Base::Event> SDLWindow::PollEvent() {
         ImGui_ImplSDL3_ProcessEvent(&e);
         switch (e.type) {
             case SDL_EVENT_QUIT:
-                return GameExitingEvent();
+                return AppExitingEvent();
             case SDL_EVENT_WINDOW_RESIZED:
-                EventManager::GetInstance()->Send(std::make_shared<GameResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
-                return GameResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
+                EventManager::GetInstance()->Send(std::make_shared<AppResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
+                return AppResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
             case SDL_EVENT_KEY_DOWN:
                 if (e.key.key == SDLK_PIPE) {
-                        SignalManager::GetInstance()->Send(std::make_shared<GameToggleDrawingDebugInfo>());
+                        SignalManager::GetInstance()->Send(std::make_shared<AppToggleDrawingDebugInfo>());
                }
 
                 else if (e.key.key == SDLK_G)
                     if (e.key.mod & SDL_KMOD_CTRL || e.key.mod & SDL_KMOD_LCTRL || e.key.mod & SDL_KMOD_RCTRL) {
-                        SignalManager::GetInstance()->Send(std::make_shared<GameToggleImGui>());
+                        SignalManager::GetInstance()->Send(std::make_shared<AppToggleImGui>());
                     }
                 break;
             case SDL_EVENT_MOUSE_MOTION:
@@ -270,7 +271,7 @@ Optional<Base::Event> SDLWindow::PollEvent() {
 
 void SDLWindow::OnRender() {
     Profiler::StartProfile({ typeid(SDLWindow), "OnRender" }, IM_COL32(0, 50, 255, 255));
-    if (m_Context->GFlags & GameFlags_ImGui) {
+    if (m_Context->GFlags & AppFlags_ImGui) {
         ImGui_ImplSDL3_NewFrame();
         ImGui::NewFrame();
 

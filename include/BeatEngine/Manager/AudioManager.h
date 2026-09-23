@@ -9,8 +9,8 @@
 #include <vector>
 #include <cstdint>
 
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class AudioManager {
 private:
 	PaStream* m_AudioStream{ nullptr };
@@ -42,8 +42,8 @@ private:
     bool m_PlayerWindow{ false };
     bool m_CalculateRealSize{ true };
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
 	static int SoundCallback(
 		const void* inputBuffer, 
@@ -63,7 +63,7 @@ public:
 	);
 public:
     AudioManager() : AudioManager(nullptr, nullptr) {}
-	AudioManager(GameContext* context, GameState* state);
+	AudioManager(AppContext* context, AppState* state);
 	~AudioManager();
 
     AudioManager& operator=(const AudioManager& other) {
@@ -90,8 +90,8 @@ public:
         return *this;
     }
 public:
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
     void Init();
     void Uninit();

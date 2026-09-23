@@ -1,7 +1,7 @@
 #include "BeatEngine/Manager/SettingsManager.h"
 #include "BeatEngine/Base/Signal.h"
-#include "BeatEngine/Events/GameEvent.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/Events/AppEvent.hpp"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Manager/SignalManager.h"
@@ -12,14 +12,14 @@
 #include <fstream>
 #include <memory>
 
-SettingsManager::SettingsManager(GameContext* context, GameState* state) 
+SettingsManager::SettingsManager(AppContext* context, AppState* state) 
     : m_Context(context), m_State(state) {
     SignalManager::GetInstance()->RegisterCallback<SetSettingsSignal>(typeid(SettingsManager), [this](const std::shared_ptr<Base::Signal> signal) {
         auto setSignal = std::static_pointer_cast<SetSettingsSignal>(signal);
 
         SetSettings(setSignal->SettingsID, setSignal->Settings);
 
-        EventManager::GetInstance()->Send(std::make_shared<GameSettingsChangedEvent>());
+        EventManager::GetInstance()->Send(std::make_shared<AppSettingsChangedEvent>());
     });
 }
 
@@ -137,7 +137,7 @@ void SettingsManager::SetDefaults() {
 }
 
 void SettingsManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("SettingsManager Debug");
     static char path[50];

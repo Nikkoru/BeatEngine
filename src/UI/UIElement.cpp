@@ -2,7 +2,7 @@
 
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
-#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/UIHelper.h"
 #include <memory>
@@ -114,7 +114,7 @@ void UIElement::RemoveChild(const std::string& name) {
 	for (auto& [childName, element] : m_Childs) {
 		if (childName == name) {
 			auto it = m_Childs.find(childName);
-            SignalManager::GetInstance()->Send(std::make_shared<GameUninitGraphicsSignal>(*it->second));
+            SignalManager::GetInstance()->Send(std::make_shared<AppUninitGraphicsSignal>(*it->second));
 			m_Childs.erase(it);
 		}
 	}

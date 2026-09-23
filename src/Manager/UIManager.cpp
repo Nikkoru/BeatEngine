@@ -1,7 +1,7 @@
 #include "BeatEngine/Manager/UIManager.h"
 
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/VertexArray.hpp"
@@ -12,7 +12,7 @@
 #include <format>
 #include <memory>
 
-UIManager::UIManager(GameContext* context, GameState* state)
+UIManager::UIManager(AppContext* context, AppState* state)
     : m_Context(context), m_State(state) {}
 
 void UIManager::OnEvent(Optional<Base::Event> event) {
@@ -113,7 +113,7 @@ void UIManager::Update(float dt) {
 
 
 void UIManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("UIManager Debug");
     if (ImGui::BeginTabBar("uiManagerTabBar")) {

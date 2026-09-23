@@ -15,8 +15,8 @@
 
 namespace fs = std::filesystem;
 
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class ImGuiMultiSelectIO;
 class AssetManager {
 	struct Slot {
@@ -29,11 +29,11 @@ class AssetManager {
 	};
 public:
     AssetManager() : AssetManager(nullptr, nullptr) {}
-    AssetManager(GameContext* context, GameState* state);
+    AssetManager(AppContext* context, AppState* state);
     ~AssetManager();
 public:
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
     void Init();
     void Uninit();
@@ -45,8 +45,8 @@ private:
 	uint64_t m_AudioSampleRate = 48000;
     bool m_ShowAssetBrowser{ false };
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset> && !std::is_base_of_v<Shader, TAsset>)

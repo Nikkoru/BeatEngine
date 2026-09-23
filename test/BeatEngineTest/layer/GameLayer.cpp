@@ -2,6 +2,6 @@
 #include "BeatEngine/View/ViewLayer.h"
 #include <memory>
 
-GameLayer::GameLayer(std::shared_ptr<GameContext> context, std::shared_ptr<GameState> state)
+GameLayer::GameLayer(std::shared_ptr<AppContext> context, std::shared_ptr<AppState> state)
     : ViewLayer(typeid(GameLayer), context, state)
 {}

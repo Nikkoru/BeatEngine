@@ -3,8 +3,8 @@
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Enum/LogType.h"
 #include "BeatEngine/Events/AudioEvent.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AudioSignals.h"
@@ -211,7 +211,7 @@ int AudioManager::SoundCallback(
 	return paContinue;
 }
 
-AudioManager::AudioManager(GameContext* context, GameState* state): m_Context(context), m_State(state) {
+AudioManager::AudioManager(AppContext* context, AppState* state): m_Context(context), m_State(state) {
 	SignalManager::GetInstance()->RegisterCallback<PlayAudioStreamSignal>(typeid(AudioManager), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto audioSignal = std::static_pointer_cast<PlayAudioStreamSignal>(sig);
 
@@ -441,7 +441,7 @@ bool AudioManager::AllSoundsDone() const {
 }
 
 void AudioManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("AudioManager Debug", nullptr, ImGuiWindowFlags_MenuBar);
     

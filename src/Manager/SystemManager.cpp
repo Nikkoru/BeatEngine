@@ -1,8 +1,9 @@
 #include "BeatEngine/Manager/SystemManager.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Base/System.h"
 
-SystemManager::SystemManager(GameContext* context, GameState* state) 
+SystemManager::SystemManager(AppContext* context, AppState* state) 
     : m_Context(context), m_State(state) {}
 
 void SystemManager::StartSystems() {

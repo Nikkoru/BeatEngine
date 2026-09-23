@@ -20,7 +20,7 @@ public:
     SDLWindow() = default;
     ~SDLWindow() override = default;
 public:
-    void Init(GameContext* context = nullptr, std::string windowTitle = "BeatEngine Game", Vector2u windowSize = { 1280, 720 }) override;
+    void Init(AppContext* context = nullptr, std::string windowTitle = "BeatEngine App", Vector2u windowSize = { 1280, 720 }) override;
     void Uninit() override;
 
     void InitImGui() override;

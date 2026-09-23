@@ -1,7 +1,7 @@
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Manager/AudioManager.h"
 
-void GameState::PrepareManagers(GameContext* context) {
+void AppState::PrepareManagers(AppContext* context) {
     ViewMgr.SetContext(context);
     ViewMgr.SetState(this);
     SystemMgr.SetContext(context);
@@ -18,24 +18,24 @@ void GameState::PrepareManagers(GameContext* context) {
     GraphicsMgr = GraphicsManager(context, this);
 }
 
-ViewManager& GameState::GetViewMgr() {
+ViewManager& AppState::GetViewMgr() {
     return ViewMgr;
 }
-SystemManager& GameState::GetSystemMgr() {
+SystemManager& AppState::GetSystemMgr() {
     return SystemMgr;
 }
-AssetManager& GameState::GetAssetMgr() {
+AssetManager& AppState::GetAssetMgr() {
     return AssetMgr;
 }
-SettingsManager& GameState::GetSettingsMgr() {
+SettingsManager& AppState::GetSettingsMgr() {
     return SettingsMgr;
 }
-UIManager& GameState::GetUIMgr() {
+UIManager& AppState::GetUIMgr() {
     return UIMgr;
 }
-AudioManager& GameState::GetAudioMgr() {
+AudioManager& AppState::GetAudioMgr() {
     return AudioMgr;
 }
-GraphicsManager& GameState::GetGraphicsMgr() {
+GraphicsManager& AppState::GetGraphicsMgr() {
     return GraphicsMgr;
 }

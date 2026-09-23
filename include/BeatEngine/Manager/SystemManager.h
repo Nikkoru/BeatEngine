@@ -7,21 +7,21 @@
 namespace Base {
     class System;
 };
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class SystemManager {
 private:
 	std::map<std::type_index, std::shared_ptr<Base::System>> m_Systems;
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
     SystemManager() : SystemManager(nullptr, nullptr) {}
-	SystemManager(GameContext* context, GameState* state);
+	SystemManager(AppContext* context, AppState* state);
 	~SystemManager() = default;
 public:
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
 	template <typename TSystem>
 		requires(std::is_base_of_v<Base::System, TSystem>)

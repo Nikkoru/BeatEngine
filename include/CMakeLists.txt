@@ -74,12 +74,12 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/System/Time.inl"
 
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameSettings.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/GameDebugSettings.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/AppSettings.hpp"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Settings/AppDebugSettings.hpp"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/ViewEvent.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/WindowEvents.h"
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/GameEvent.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/AppEvent.hpp"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Events/AudioEvent.h"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Asset/Texture.h"
@@ -103,7 +103,7 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/EnvFlags.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/LogType.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AssetType.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/GameFlags.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Enum/AppFlags.hpp"
 
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/UILayer.inl"
@@ -115,9 +115,9 @@ list(APPEND HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/Button.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/UI/Elements/ProgressBar.h"
 
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Game.h"
-	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Game.inl"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/GameContext.h"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Application.hpp"
+	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Application.inl"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/AppContext.hpp"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Logger.inl"
 )

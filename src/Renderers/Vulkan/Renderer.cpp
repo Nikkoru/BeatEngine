@@ -22,8 +22,8 @@
 #include <vk_mem_alloc.h>
 #include <volk.h>
 
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Enum/AppFlags.hpp"
+#include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Logger.h"
@@ -34,7 +34,7 @@
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/System/Time.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Util/Graphics.hpp"
 
@@ -120,7 +120,7 @@ void VulkanRenderer::Render() {
     // }
 
     Profiler::StartProfile({ typeid(VulkanRenderer), "Render" }, IM_COL32(255, 0, 35, 255));
-    if (m_Context->GFlags & GameFlags_ImGui)
+    if (m_Context->GFlags & AppFlags_ImGui)
         ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
 
@@ -299,7 +299,7 @@ Optional<Base::Event> VulkanRenderer::PollEvent() const {
 
 void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
     if (!event.HasValue()) return;
-    if (auto resizedEvent = event->GetIf<GameResizedEvent>(event); resizedEvent && m_Window->GetWindowDriver() == WindowDriver::Wayland) {
+    if (auto resizedEvent = event->GetIf<AppResizedEvent>(event); resizedEvent && m_Window->GetWindowDriver() == WindowDriver::Wayland) {
         m_Instance.RecreateSwapchain(m_Window, resizedEvent->Size);
         m_Instance.DestroyImage(m_AllocatedDrawImage);
         m_AllocatedDrawImage = m_Instance.CreateDrawImage(resizedEvent->Size);
@@ -632,7 +632,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vkCmdPipelineBarrier2(m_ActiveCmd, &presentDependencyInfo);
 
-    if ((m_Context->GFlags & GameFlags_ImGui) && (m_Context->EFlags & EnvFlags_Debug)) {
+    if ((m_Context->GFlags & AppFlags_ImGui) && (m_Context->EFlags & EnvFlags_Debug)) {
         ImGui::Begin("Rendered elements so far");
         if (ImGui::TreeNode(IsVertexArrayHighlight(vertices) ? std::format("VertexArrayHighlight_Of{}_ArrayID{}_ID{}_In_{}", GetVertexArrayHighlightSourceID(vertices), GetVertexArrayHighlightID(vertices), GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str() : std::format("VertexArray_ID{}_In_{}", GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str())) {
             ImGui::Text("PrimitiveType : %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str()); 

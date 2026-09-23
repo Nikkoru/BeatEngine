@@ -2,12 +2,12 @@
 
 #include <memory>
 
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Base/System.h"
-#include "BeatEngine/Enum/GameFlags.h"
+#include "BeatEngine/Enum/AppFlags.hpp"
 
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/View/ViewLayerStack.h"
@@ -17,7 +17,7 @@
 /// <summary>
 /// The base game class from the engine. This is a high level API and its the easist method to deploy a game using this class.
 /// </summary>
-class Game {
+class Application {
 private:
 	Clock m_Clock{};
 
@@ -25,15 +25,15 @@ private:
 
 	ViewLayerStack m_GlobalLayers{};
     
-    GameContext m_Context{};
-    GameState m_State{};
+    AppContext m_Context{};
+    AppState m_State{};
     bool m_Running = false;
 private:
 	std::filesystem::path m_SettingsPath = "config.ini";
 public:
-	Game();
-	Game(const std::string name);
-	~Game();
+	Application();
+	Application(const std::string name);
+	~Application();
 public:
 	/// <summary>
 	/// Runs and updates the game.
@@ -90,8 +90,8 @@ public:
 	std::shared_ptr<TSettings> GetSettings();
 
 	void SetConfigPath(std::filesystem::path path);
-    void SetFlags(GameFlags flags);
-    void RemoveFlags(GameFlags flags);
+    void SetFlags(AppFlags flags);
+    void RemoveFlags(AppFlags flags);
 
     void DrawImGuiDebug();
 public:
@@ -144,11 +144,11 @@ private:
 	/// <summary>
 	/// Subscribes to the derivated game events.
 	/// </summary>
-	void SubscribeToGameEvent();
+	void SubscribeToApplicationEvent();
 	/// <summary>
 	/// Subscribes to the derivated game signals.
 	/// </summary>
-	void SubscribeToGameSignals();
+	void SubscribeToApplicationSignals();
 };
 
-#include "BeatEngine/Game.inl"
+#include "BeatEngine/Application.inl"

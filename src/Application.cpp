@@ -1,4 +1,4 @@
-#include "BeatEngine/Game.h"
+#include "BeatEngine/Application.hpp"
 
 #include <algorithm>
 #include <cstddef>
@@ -11,7 +11,6 @@
 #include "BeatEngine/Base/Signal.h"
 #include "BeatEngine/Enum/AssetType.h"
 #include "BeatEngine/Enum/EnvFlags.h"
-#include "BeatEngine/Enum/GameFlags.h"
 #include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Logger.h"
 
@@ -22,13 +21,13 @@
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Manager/ViewManager.h"
 
-#include "BeatEngine/Settings/GameSettings.h"
-#include "BeatEngine/Settings/GameDebugSettings.h"
+#include "BeatEngine/Settings/AppSettings.hpp"
+#include "BeatEngine/Settings/AppDebugSettings.hpp"
 
-#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Signals/ViewSignals.h"
 
-#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/System/Time.h"
 
 #include "BeatEngine/Util/CountedArray.h"
@@ -36,10 +35,10 @@
 
 #include "version.h"
 
-Game::Game() : Game("BeatEngine Game") {
+Application::Application() : Application("BeatEngine Game") {
 }
 
-Game::Game(const std::string name): m_Context(name) {
+Application::Application(const std::string name): m_Context(name) {
     m_State.PrepareManagers(&m_Context);
 #ifdef BEATENGINE_DEBUG
     // Logger::PrintDebug(true);
@@ -52,25 +51,25 @@ Game::Game(const std::string name): m_Context(name) {
 #endif
 }
 
-Game::~Game() {
+Application::~Application() {
 }
 
-void Game::Run() {
+void Application::Run() {
     m_Running = true;
-	Logger::AddInfo(typeid(Game), "Game started!");
+	Logger::AddInfo(typeid(Application), "Application started!");
 
 	if (!m_State.GetViewMgr().HasActiveViews())
 		m_State.GetViewMgr().Push(m_State.GetViewMgr().MainView);
 
 
-	if (m_Context.GFlags & GameFlags_Preload) {
+	if (m_Context.GFlags & AppFlags_Preload) {
 		m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
 		ApplyBaseSettings();
 	}
 
 	while (m_State.GetGraphicsMgr().IsOpen() && m_Running) {
 		while (auto event = m_State.GetGraphicsMgr().PollEvent()) {
-            if (event->Is<GameExitingEvent>()) {
+            if (event->Is<AppExitingEvent>()) {
                 m_Running = false;
                 break;
             }
@@ -90,8 +89,8 @@ void Game::Run() {
     Uninit();
 }
 
-void Game::Init() {
-    Logger::AddInfo(typeid(Game), "Initializing Game");
+void Application::Init() {
+    Logger::AddInfo(typeid(Application), "Initializing Application");
 
     InitSettings();
 	InitAudio();
@@ -102,12 +101,12 @@ void Game::Init() {
 	InitViews();
 	InitKeybinds();
 
-	SubscribeToGameEvent();
-	SubscribeToGameSignals();
+	SubscribeToApplicationEvent();
+	SubscribeToApplicationSignals();
 }
 
-void Game::Uninit() {
-    Logger::AddInfo(typeid(Game), "Game in shutdown");
+void Application::Uninit() {
+    Logger::AddInfo(typeid(Application), "Application in shutdown");
 
     // m_State->KeybindsMgr->Uninit();
     m_State.GetViewMgr().Uninit();
@@ -120,59 +119,59 @@ void Game::Uninit() {
     m_Running = false;
 }
 
-void Game::SetRenderer(std::shared_ptr<Renderer> renderer) {
+void Application::SetRenderer(std::shared_ptr<Renderer> renderer) {
     m_State.GetGraphicsMgr().MakeRenderer(renderer);
 }
 
-void Game::UseImGui(bool show) {
+void Application::UseImGui(bool show) {
     if (show)
-        m_Context.GFlags |= GameFlags_ImGui;
+        m_Context.GFlags |= AppFlags_ImGui;
     else
-        m_Context.GFlags &= ~GameFlags_ImGui;
+        m_Context.GFlags &= ~AppFlags_ImGui;
 }
 
-void Game::UseImGuiDocking(bool docking) {
+void Application::UseImGuiDocking(bool docking) {
     if (docking)
-        m_Context.GFlags |= GameFlags_ImGuiDocking;
+        m_Context.GFlags |= AppFlags_ImGuiDocking;
     else
-        m_Context.GFlags &= ~GameFlags_ImGuiDocking;
+        m_Context.GFlags &= ~AppFlags_ImGuiDocking;
 }
 
-void Game::SetWindowSize(Vector2u size) {
-    if (m_State.GetSettingsMgr().HasSettings<GameSettings>()) {
-        auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
+void Application::SetWindowSize(Vector2u size) {
+    if (m_State.GetSettingsMgr().HasSettings<AppSettings>()) {
+        auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
         settings->WindowSize = size;
     }
     m_State.GetGraphicsMgr().SetWindowSize(size);
 }
 
-void Game::SetWindowTitle(std::string title) {
+void Application::SetWindowTitle(std::string title) {
     m_State.GetGraphicsMgr().SetWindowTitle(title);
 }
 
-void Game::PreloadSettings() {
-    m_Context.GFlags |= GameFlags_Preload;
+void Application::PreloadSettings() {
+    m_Context.GFlags |= AppFlags_Preload;
 
 	m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
 }
 
-void Game::SaveSettings() {
+void Application::SaveSettings() {
 	m_State.GetSettingsMgr().WriteConfig(m_SettingsPath);
 }
 
-void Game::SetConfigPath(std::filesystem::path path) {
+void Application::SetConfigPath(std::filesystem::path path) {
 	this->m_SettingsPath = path;
 }
 
-void Game::SetFlags(GameFlags flags) {
+void Application::SetFlags(AppFlags flags) {
     this->m_Context.GFlags |= flags;
 }
 
-void Game::RemoveFlags(GameFlags flags) {
+void Application::RemoveFlags(AppFlags flags) {
     this->m_Context.GFlags &= ~flags;
 }
 
-void Game::DrawImGuiDebug() {
+void Application::DrawImGuiDebug() {
     static bool editFlags = false;
     static bool profWindow = false;
 
@@ -187,14 +186,14 @@ void Game::DrawImGuiDebug() {
     static bool drawUIMgr = false;
     static bool drawViewMgr = false;
 
-    ImGui::Begin("BeatEngine Game Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
+    ImGui::Begin("BeatEngine Application Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
 
     if (ImGui::BeginMenuBar()) {
         if (ImGui::BeginMenu("Environment")) {
-            bool dockingStatus = (m_Context.GFlags & GameFlags_DebugDock);
+            bool dockingStatus = (m_Context.GFlags & AppFlags_DebugDock);
             if (ImGui::MenuItem("Enable Docking", NULL, dockingStatus)) {
-                !dockingStatus ? m_Context.GFlags |= GameFlags_DebugDock :
-                            m_Context.GFlags &= ~GameFlags_DebugDock;
+                !dockingStatus ? m_Context.GFlags |= AppFlags_DebugDock :
+                            m_Context.GFlags &= ~AppFlags_DebugDock;
             }
             ImGui::EndMenu();
         }
@@ -230,35 +229,35 @@ void Game::DrawImGuiDebug() {
         ImGui::EndMenuBar();
     }
 
-    if (ImGui::BeginTabBar("GameActionBar")) {
+    if (ImGui::BeginTabBar("AppActionBar")) {
         if (ImGui::BeginTabItem("Flags")) {
-            bool imguiToggle = m_Context.GFlags & GameFlags_ImGui;
-            bool imguiDockingToggle = m_Context.GFlags & GameFlags_ImGuiDocking;
-            bool runningToggle = m_Context.GFlags & GameFlags_Running;
-            bool preloadToggle = m_Context.GFlags & GameFlags_Preload;
-            bool fullscreenToggle = m_Context.GFlags & GameFlags_Fullscreen;
-            bool cursorChangedToggle = m_Context.GFlags & GameFlags_CursorChanged;
-            bool disableKeysToggle = m_Context.GFlags & GameFlags_DisableKeyPressEvents;
-            bool drawDebugToggle = m_Context.GFlags & GameFlags_DrawDebugInfo;
-            bool drawDockToggle = m_Context.GFlags & GameFlags_DebugDock;
+            bool imguiToggle = m_Context.GFlags & AppFlags_ImGui;
+            bool imguiDockingToggle = m_Context.GFlags & AppFlags_ImGuiDocking;
+            bool runningToggle = m_Context.GFlags & AppFlags_Running;
+            bool preloadToggle = m_Context.GFlags & AppFlags_Preload;
+            bool fullscreenToggle = m_Context.GFlags & AppFlags_Fullscreen;
+            bool cursorChangedToggle = m_Context.GFlags & AppFlags_CursorChanged;
+            bool disableKeysToggle = m_Context.GFlags & AppFlags_DisableKeyPressEvents;
+            bool drawDebugToggle = m_Context.GFlags & AppFlags_DrawDebugInfo;
+            bool drawDockToggle = m_Context.GFlags & AppFlags_DebugDock;
 
             bool viewDisableKeyToggle = m_Context.VFlags & ViewFlags_DisableKeys;
 
             bool envDebugToggle = m_Context.EFlags & EnvFlags_Debug;
             bool envTestToggle = m_Context.EFlags & EnvFlags_TestBuild;
             
-            ImGui::Text("GameFlags: %#.8x", m_Context.GFlags);
+            ImGui::Text("AppFlags: %#.8x", m_Context.GFlags);
             if (!editFlags)
                 ImGui::BeginDisabled();
-            ImGui::Checkbox("GameFlags_ImGui", &imguiToggle);
-            ImGui::Checkbox("GameFlags_ImGuiDocking", &imguiDockingToggle);
-            ImGui::Checkbox("GameFlags_Running", &runningToggle);
-            ImGui::Checkbox("GameFlags_Preload", &preloadToggle);
-            ImGui::Checkbox("GameFlags_Fullscreen", &fullscreenToggle);
-            ImGui::Checkbox("GameFlags_CursorChanged", &cursorChangedToggle);
-            ImGui::Checkbox("GameFlags_DisableKeyPressEvents", &disableKeysToggle);
-            ImGui::Checkbox("GameFlags_DrawDebugInfo", &drawDebugToggle);
-            ImGui::Checkbox("GameFlags_DebugDock", &drawDockToggle);
+            ImGui::Checkbox("AppFlags_ImGui", &imguiToggle);
+            ImGui::Checkbox("AppFlags_ImGuiDocking", &imguiDockingToggle);
+            ImGui::Checkbox("AppFlags_Running", &runningToggle);
+            ImGui::Checkbox("AppFlags_Preload", &preloadToggle);
+            ImGui::Checkbox("AppFlags_Fullscreen", &fullscreenToggle);
+            ImGui::Checkbox("AppFlags_CursorChanged", &cursorChangedToggle);
+            ImGui::Checkbox("AppFlags_DisableKeyPressEvents", &disableKeysToggle);
+            ImGui::Checkbox("AppFlags_DrawDebugInfo", &drawDebugToggle);
+            ImGui::Checkbox("AppFlags_DebugDock", &drawDockToggle);
             if (!editFlags)
                 ImGui::EndDisabled();
             ImGui::NewLine();
@@ -277,16 +276,16 @@ void Game::DrawImGuiDebug() {
             if (!editFlags)
                 ImGui::EndDisabled();
 
-            if (!imguiToggle && m_Context.GFlags & GameFlags_ImGui)
-                m_Context.GFlags &= GameFlags_ImGui;
-            else if (imguiToggle && !(m_Context.GFlags &GameFlags_ImGui))
-                m_Context.GFlags |= ~GameFlags_ImGui;
+            if (!imguiToggle && m_Context.GFlags & AppFlags_ImGui)
+                m_Context.GFlags &= AppFlags_ImGui;
+            else if (imguiToggle && !(m_Context.GFlags &AppFlags_ImGui))
+                m_Context.GFlags |= ~AppFlags_ImGui;
 
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Actions")) {
             if (ImGui::Button("Exit"))
-                SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+                SignalManager::GetInstance()->Send(std::make_shared<AppExitSignal>());
             ImGui::Checkbox("Allow editing flags", &editFlags);
             ImGui::EndTabItem();
         }
@@ -376,7 +375,7 @@ void Game::DrawImGuiDebug() {
         m_State.GetViewMgr().ShowImGuiDebugWindow();
 }
 
-void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
+void Application::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::filesystem::path>> globalAssets) {
 	if (globalAssets.empty())
 		return;
     size_t assets{};
@@ -389,29 +388,29 @@ void Game::LoadGlobalAssets(std::unordered_map<AssetType, std::vector<std::files
         assets += vecSize;
 	}
 
-    Logger::AddDebug(typeid(Game), "Preloaded {} assets", assets);
+    Logger::AddDebug(typeid(Application), "Preloaded {} assets", assets);
 }
 
-void Game::Display() {
-    Profiler::StartProfile({ typeid(Game), "Display" }, { 1.0f, .0f, .0f, 1.0f });
-    if (m_Context.GFlags & GameFlags_ImGui && m_Context.GFlags & GameFlags_DrawDebugInfo) {
+void Application::Display() {
+    Profiler::StartProfile({ typeid(Application), "Display" }, { 1.0f, .0f, .0f, 1.0f });
+    if (m_Context.GFlags & AppFlags_ImGui && m_Context.GFlags & AppFlags_DrawDebugInfo) {
         DrawImGuiDebug();
     }
 
     m_State.GetGraphicsMgr().Clear();
 	m_State.GetGraphicsMgr().Display();
 
-    Profiler::EndProfile({ typeid(Game), "Display" });
+    Profiler::EndProfile({ typeid(Application), "Display" });
 }
 
-void Game::Draw() {
-    Profiler::StartProfile({ typeid(Game), "Draw" }, { .0f, .0f, 1.0f, 1.0f });
+void Application::Draw() {
+    Profiler::StartProfile({ typeid(Application), "Draw" }, { .0f, .0f, 1.0f, 1.0f });
     m_State.GetGraphicsMgr().Render();
 
-    if (m_Context.GFlags & GameFlags_DebugDock && 
-        m_Context.GFlags & GameFlags_ImGui &&
-        m_Context.GFlags & GameFlags_ImGuiDocking &&
-        m_Context.GFlags & GameFlags_DrawDebugInfo) {
+    if (m_Context.GFlags & AppFlags_DebugDock && 
+        m_Context.GFlags & AppFlags_ImGui &&
+        m_Context.GFlags & AppFlags_ImGuiDocking &&
+        m_Context.GFlags & AppFlags_DrawDebugInfo) {
         auto io = ImGui::GetIO();
         auto viewport = ImGui::GetMainViewport();
 
@@ -443,16 +442,16 @@ void Game::Draw() {
 	m_GlobalLayers.Draw(m_State.GetGraphicsMgr());
     m_State.GetUIMgr().OnDraw();
 
-    Profiler::EndProfile({ typeid(Game), "Draw" });
+    Profiler::EndProfile({ typeid(Application), "Draw" });
 }
 
-void Game::Update() {
-    Profiler::StartProfile({ typeid(Game), "Update" }, { .0f, 1.0f, .0f, 1.0f });
+void Application::Update() {
+    Profiler::StartProfile({ typeid(Application), "Update" }, { .0f, 1.0f, .0f, 1.0f });
     m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
     //
-    // if (m_Context->GFlags & GameFlags_CursorChanged) {
+    // if (m_Context->GFlags & ApplicationFlags_CursorChanged) {
     //     m_Window->setMouseCursor(m_Cursor);
-    //     m_Context->GFlags &= ~GameFlags_CursorChanged;
+    //     m_Context->GFlags &= ~ApplicationFlags_CursorChanged;
     // }
 
 	auto sfDelta = m_Clock.GetAndReset();
@@ -471,11 +470,11 @@ void Game::Update() {
 
     LastDelta = deltaTime;
 
-    Profiler::EndProfile({ typeid(Game), "Update" });
+    Profiler::EndProfile({ typeid(Application), "Update" });
 }
 
-void Game::ApplyBaseSettings() {
-	auto gameSettings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
+void Application::ApplyBaseSettings() {
+	auto gameSettings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
     auto window = m_State.GetGraphicsMgr().GetWindow();
 
     m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
@@ -485,73 +484,73 @@ void Game::ApplyBaseSettings() {
 		window->SetPosition(gameSettings->WindowPosition);
 }
 
-void Game::InitSettings() {
-	Logger::AddDebug(typeid(Game), "Initializing settings...");
+void Application::InitSettings() {
+	Logger::AddDebug(typeid(Application), "Initializing settings...");
     
-	m_State.GetSettingsMgr().RegisterSettingsData<GameSettings>();
+	m_State.GetSettingsMgr().RegisterSettingsData<AppSettings>();
     m_State.GetSettingsMgr().ReadConfig(m_SettingsPath);
 
 #ifdef BEATENGINE_DEBUG
-    m_State.GetSettingsMgr().RegisterSettingsData<GameDebugSettings>();
+    m_State.GetSettingsMgr().RegisterSettingsData<AppDebugSettings>();
     m_State.GetSettingsMgr().ReadConfig("debug.ini");
 #endif
 }
 
-void Game::InitUI() {
-	Logger::AddDebug(typeid(Game), "Initializing UI...");
+void Application::InitUI() {
+	Logger::AddDebug(typeid(Application), "Initializing UI...");
 }
 
-void Game::InitAudio() {
-	Logger::AddDebug(typeid(Game), "Initializing audio...");
+void Application::InitAudio() {
+	Logger::AddDebug(typeid(Application), "Initializing audio...");
 
     m_State.GetAudioMgr().Init();
 }
 
-void Game::InitViews() {
-	Logger::AddDebug(typeid(Game), "Initializing views...");
+void Application::InitViews() {
+	Logger::AddDebug(typeid(Application), "Initializing views...");
 
     m_State.GetViewMgr().Init();
 }
 
-void Game::InitSystems() {
-    Logger::AddDebug(typeid(Game), "Initializing systems...");
+void Application::InitSystems() {
+    Logger::AddDebug(typeid(Application), "Initializing systems...");
 }
 
-void Game::InitAssets() {
-	Logger::AddDebug(typeid(Game), "Initializing assets...");
+void Application::InitAssets() {
+	Logger::AddDebug(typeid(Application), "Initializing assets...");
 
     m_State.GetAssetMgr().Init();
 }
 
-void Game::InitWindow() {
-	Logger::AddDebug(typeid(Game), "Initializing window...");
+void Application::InitWindow() {
+	Logger::AddDebug(typeid(Application), "Initializing window...");
 
-	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(GameSettings));
-	auto gameSettings = std::static_pointer_cast<GameSettings>(settings);
+	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(AppSettings));
+	auto gameSettings = std::static_pointer_cast<AppSettings>(settings);
 
     m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
     m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
     m_State.GetGraphicsMgr().Init();
 
     if (gameSettings->WindowFullScreen) {
-        m_Context.GFlags |= GameFlags_Fullscreen;
+        m_Context.GFlags |= AppFlags_Fullscreen;
     }
 
     m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
 }
 
-void Game::InitKeybinds() {
-	Logger::AddDebug(typeid(Game), "Initializing keybinds... (not really)");
+void Application::InitKeybinds() {
+	Logger::AddDebug(typeid(Application), "Initializing keybinds... (not really)");
 }
 
-void Game::SubscribeToGameEvent() {
-	Logger::AddDebug(typeid(Game), "Subscribing to game events...");
+void Application::SubscribeToApplicationEvent() {
+	Logger::AddDebug(typeid(Application), "Subscribing to game events...");
 
-    EventManager::GetInstance()->Subscribe<GameSettingsChangedEvent>([this](std::shared_ptr<Base::Event>) {
+    EventManager::GetInstance()->Subscribe<AppSettingsChangedEvent>([this](std::shared_ptr<Base::Event>) {
         
-        auto settings = std::static_pointer_cast<GameSettings>(m_State.GetSettingsMgr().GetSettings(typeid(GameSettings)));
+        auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
         
-        bool curFullscreen = m_Context.GFlags & GameFlags_Fullscreen;
+        bool curFullscreen = m_Context.GFlags & AppFlags_Fullscreen;
 
         if (settings->WindowFullScreen != curFullscreen) {
             // m_Window->close();
@@ -559,23 +558,23 @@ void Game::SubscribeToGameEvent() {
             // if (settings->WindowFullScreen)
             //     this->m_Window = new sf::RenderWindow(
             //         sf::VideoMode{}, 
-            //         "BeatEngine Game",
+            //         "BeatEngine Application",
             //         sf::Style::Default,
             //         sf::State::Fullscreen 
             //     );
             // else {
             //     this->m_Window = new sf::RenderWindow(
             //         sf::VideoMode(settings->WindowSize), 
-            //         "BeatEngine Game",
+            //         "BeatEngine Application",
             //         sf::Style::Default,
             //         sf::State::Windowed
             //     );
             // }
 
             if (settings->WindowFullScreen)
-                m_Context.GFlags |= GameFlags_Fullscreen;
-            else if (m_Context.GFlags & GameFlags_Fullscreen)
-                m_Context.GFlags &= ~GameFlags_Fullscreen;
+                m_Context.GFlags |= AppFlags_Fullscreen;
+            else if (m_Context.GFlags & AppFlags_Fullscreen)
+                m_Context.GFlags &= ~AppFlags_Fullscreen;
         //     m_Window->display();
         }
 
@@ -589,59 +588,59 @@ void Game::SubscribeToGameEvent() {
 
 }
 
-void Game::SubscribeToGameSignals() {
-	Logger::AddDebug(typeid(Game), "Subscribing to game signals...");
+void Application::SubscribeToApplicationSignals() {
+	Logger::AddDebug(typeid(Application), "Subscribing to game signals...");
 
-	SignalManager::GetInstance()->RegisterCallback<ViewAddGlobalLayerSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+	SignalManager::GetInstance()->RegisterCallback<ViewAddGlobalLayerSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
 		auto signal = std::static_pointer_cast<ViewAddGlobalLayerSignal>(sig);
 		this->m_GlobalLayers.AttachLayer(signal->Layer);
 
 		signal->Layer = nullptr;
 	});
 
-    SignalManager::GetInstance()->RegisterCallback<GameExitSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal>) {
-        EventManager::GetInstance()->Send(std::make_shared<GameExitingEvent>());
+    SignalManager::GetInstance()->RegisterCallback<AppExitSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
+        EventManager::GetInstance()->Send(std::make_shared<AppExitingEvent>());
         m_Running = false;
     });
 
-    // SignalManager::GetInstance()->RegisterCallback<GameChangeCursorSignal>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-    //     auto gameSig = std::static_pointer_cast<GameChangeCursorSignal>(sig);
+    // SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+    //     auto gameSig = std::static_pointer_cast<AppChangeCursorSignal>(sig);
     //     // m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
-    //     m_Context->GFlags |= GameFlags_CursorChanged;
+    //     m_Context->GFlags |= AppFlags_CursorChanged;
     // });
 
-    SignalManager::GetInstance()->RegisterCallback<GameToggleImGui>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-        auto gameSig = std::static_pointer_cast<GameToggleImGui>(sig);
-        if (m_Context.GFlags & GameFlags_ImGui)
-            m_Context.GFlags &= ~GameFlags_ImGui;
+    SignalManager::GetInstance()->RegisterCallback<AppToggleImGui>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+        auto gameSig = std::static_pointer_cast<AppToggleImGui>(sig);
+        if (m_Context.GFlags & AppFlags_ImGui)
+            m_Context.GFlags &= ~AppFlags_ImGui;
         else
-            m_Context.GFlags |= GameFlags_ImGui;
+            m_Context.GFlags |= AppFlags_ImGui;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameAddFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-        auto gameSig = std::static_pointer_cast<GameAddFlags>(sig);
+    SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+        auto gameSig = std::static_pointer_cast<AppAddFlags>(sig);
         this->SetFlags(gameSig->Flags);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameRemoveFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
-        auto gameSig = std::static_pointer_cast<GameRemoveFlags>(sig);
+    SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+        auto gameSig = std::static_pointer_cast<AppRemoveFlags>(sig);
         this->RemoveFlags(gameSig->Flags);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<ViewAddFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<ViewAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
         this->m_Context.VFlags |= gameSig->Flags;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<ViewRemoveFlags>(typeid(Game), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<ViewRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
         this->m_Context.VFlags &= ~gameSig->Flags;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<GameToggleDrawingDebugInfo>(typeid(Game), [this](const std::shared_ptr<Base::Signal>) {
-            if (m_Context.GFlags & GameFlags_DrawDebugInfo)
-                m_Context.GFlags &= ~GameFlags_DrawDebugInfo;
+    SignalManager::GetInstance()->RegisterCallback<AppToggleDrawingDebugInfo>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
+            if (m_Context.GFlags & AppFlags_DrawDebugInfo)
+                m_Context.GFlags &= ~AppFlags_DrawDebugInfo;
             else
-                m_Context.GFlags |= GameFlags_DrawDebugInfo;
+                m_Context.GFlags |= AppFlags_DrawDebugInfo;
     });
 }

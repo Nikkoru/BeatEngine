@@ -4,7 +4,7 @@
 #include "BeatEngine/Graphics/Vector2.h"
 
 
-class GameSettings : public Base::Settings {
+class AppSettings : public Base::Settings {
 public:
 	unsigned int FpsLimit = 60;
     bool VSync = false;
@@ -14,8 +14,8 @@ public:
 
     bool WindowFullScreen = false;
 public:
-	GameSettings() : Base::Settings(typeid(GameSettings), "[Game]") {}
-	~GameSettings() override = default;
+	AppSettings() : Base::Settings(typeid(AppSettings), "[App]") {}
+	~AppSettings() override = default;
 
 	void Read(const char* line) override;
 	std::string Write() override;

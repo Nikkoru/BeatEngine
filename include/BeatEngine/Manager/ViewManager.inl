@@ -15,7 +15,7 @@ template<typename TView>
     requires(std::is_base_of_v<Base::View, TView>)
 void ViewManager::RegisterView() {
     auto ID = std::type_index(typeid(TView));
-    FabricCallback fabric = ([](GameContext* context, GameState* state)
+    FabricCallback fabric = ([](AppContext* context, AppState* state)
         -> std::shared_ptr<Base::View> { return std::make_shared<TView>(context, state); });
 
     Logger::AddInfo(typeid(ViewManager), "Registing {}", typeid(TView).name());

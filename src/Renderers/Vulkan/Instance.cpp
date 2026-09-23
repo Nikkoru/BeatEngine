@@ -1,6 +1,6 @@
 #include "BeatEngine/Renderers/Vulkan/Instance.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/Enum/AppFlags.hpp"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
@@ -25,7 +25,7 @@
 #include <volk.h>
 
 
-void VK::Instance::Init(GameContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
+void VK::Instance::Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
     m_Context = context;
     InitVulkan(window, appName.c_str(), deviceIndex);
     m_Executor.Init(m_Core.Device, m_Core.GraphicsQueueFamily, m_Core.GraphicsQueue);
@@ -88,7 +88,7 @@ void VK::Instance::Init(GameContext* context, std::string appName, uint32_t devi
         ));
     }
 
-    if (m_Context->GFlags & GameFlags_ImGui)
+    if (m_Context->GFlags & AppFlags_ImGui)
         InitImGui(window);
 
     m_Uninitializers.AddCallback([&]() {
@@ -296,7 +296,7 @@ void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
 
     ImGui::CreateContext();
     
-    if (m_Context->GFlags & GameFlags_ImGuiDocking)
+    if (m_Context->GFlags & AppFlags_ImGuiDocking)
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     GImGui->ItemUnclipByLog = true; 
 
@@ -552,7 +552,7 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     const auto [swapchainImage, swapchainImageIndex] = m_Swapchain.AcquireImage(m_Core.Device, GetCurrentFrameIndex());
 
     if (!swapchainImage || NeedsRecreateSwapchain()) {
-        if (m_Context->GFlags & GameFlags_ImGui) {
+        if (m_Context->GFlags & AppFlags_ImGui) {
             ImGui::Render();
             ImGui::EndFrame();
         }
@@ -607,7 +607,7 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     // vku::TransitionImage({}, cmd, drawImage.Image, swapchainLayout, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     // swapchainLayout = V_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     
-    if (m_Context->GFlags & GameFlags_ImGui) {
+    if (m_Context->GFlags & AppFlags_ImGui) {
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
         ImGui::EndFrame();

@@ -26,8 +26,8 @@
 #include "BeatEngine/Enum/AssetType.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Logger.h"
 
 #include "BeatEngine/System/DataStream.hpp"
@@ -49,7 +49,7 @@ unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, u
 void close(FT_Stream) {}
 }
 
-AssetManager::AssetManager(GameContext* context, GameState* state)
+AssetManager::AssetManager(AppContext* context, AppState* state)
     : m_Context(context), m_State(state) {}
 
 AssetManager::~AssetManager() {
@@ -539,7 +539,7 @@ bool AssetManager::Has(const String& name, const std::type_index viewID) {
 }
 
 void AssetManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("AssetManager Debug");
     ImGui::Text("Global Assets : %zu", m_GlobalAssets.size());

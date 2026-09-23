@@ -9,9 +9,9 @@
 
 // #include "BeatEngine/Base/Event.h"
 // #include "BeatEngine/Asset/Shader.h"
-#include "BeatEngine/Enum/GameFlags.h"
-#include "BeatEngine/Events/GameEvent.h"
-#include "BeatEngine/GameContext.h"
+#include "BeatEngine/Enum/AppFlags.hpp"
+#include "BeatEngine/Events/AppEvent.hpp"
+#include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
@@ -20,14 +20,14 @@
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Events/AudioEvent.h"
-// #include "BeatEngine/Signals/GameSignals.h"
+// #include "BeatEngine/Signals/AppSignals.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
 #include "BeatEngine/Signals/AudioSignals.h"
-#include "BeatEngine/Signals/GameSignals.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Signals/ViewSignals.h"
 #include "BeatEngine/UI/Elements/Button.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/UI/Elements/ProgressBar.h"
 #include "BeatEngine/UI/UILayer.h"
 #include "gameView.h"
@@ -35,7 +35,7 @@
 
 #include <imgui.h>
 
-TestView::TestView(GameContext* context, GameState* state) 
+TestView::TestView(AppContext* context, AppState* state) 
 	: Base::View(typeid(TestView), context, state) {
 
 	// auto playBtn = button->AddChild<UI::Button>("playBtn", *m_Font, "Play");
@@ -50,7 +50,7 @@ TestView::TestView(GameContext* context, GameState* state)
 	// pauseBtn->SetSize({ 80, 30 });
  //    pauseBtn->SetPosition({ 5, 5 + playBtn->GetPosition().Y + playBtn->GetSize().Y });
 	//
- //    auto gameBtn = button->AddChild<UI::Button>("gameBtn", *m_Font, "Game");
+ //    auto gameBtn = button->AddChild<UI::Button>("gameBtn", *m_Font, "App");
  //    gameBtn->SetSize({ 80, 30 });
  //    gameBtn->SetPosition({ static_cast<float>(windowSize.Y / 2) - static_cast<float>(gameBtn->GetSize().Y / 2), 100 });
 	//
@@ -84,7 +84,7 @@ TestView::TestView(GameContext* context, GameState* state)
 	//
 	// });
 	// pauseBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<PauseAudioStreamSignal>("test-music")); });
- //    gameBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<ViewPushSignal>(typeid(GameView))); });
+ //    gameBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<ViewPushSignal>(typeid(AppView))); });
 	//
 
 }
@@ -116,7 +116,7 @@ void TestView::Init() {
 	pauseBtn->SetSize({ 80, 30 });
     pauseBtn->SetPosition({ 5, 10 + playBtn->GetPosition().Y + playBtn->GetSize().Y });
 
-    auto gameBtn = button->AddChild<UI::Button>("gameBtn", m_Font, "Game");
+    auto gameBtn = button->AddChild<UI::Button>("gameBtn", m_Font, "App");
     gameBtn->SetSize({ 80, 30 });
     gameBtn->SetPosition({ static_cast<float>(windowSize.Y / 2) - static_cast<float>(gameBtn->GetSize().Y / 2), 100 });
 
@@ -244,7 +244,7 @@ void TestView::OnDraw(GraphicsManager& mgr) {
 	// auto percentage = sf::Text(*font, std::format("{:.0f}%", progressBar->GetPercentage() * 100), 15);
 	// percentage.setPosition({ 800 - percentage.getLocalBounds().size.x, count.getPosition().y + count.getLocalBounds().size.y + 1 });
 	//
-    if (b_mContext->GFlags & GameFlags_ImGui) {
+    if (b_mContext->GFlags & AppFlags_ImGui) {
         {
             ImGui::Begin("Control for m_Shape"); 
             std::array size = { m_Shape.GetSize().X, m_Shape.GetSize().Y };
@@ -281,7 +281,7 @@ void TestView::OnDraw(GraphicsManager& mgr) {
     m_Shape.Draw(mgr);
     m_FunnyShape.Draw(mgr);
 
-    if (b_mContext->GFlags & GameFlags_ImGui)
+    if (b_mContext->GFlags & AppFlags_ImGui)
         m_Shape.DrawWindowImGuiDrawData();
 
     if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
@@ -320,9 +320,9 @@ void TestView::OnEvent(Optional<Base::Event> event) {
 	//
     // if (auto data = event->GetIf<EventKeyPressed>()) {
     //     if (data->scancode == )
-    //         SignalManager::GetInstance()->Send(std::make_shared<GameExitSignal>());
+    //         SignalManager::GetInstance()->Send(std::make_shared<AppExitSignal>());
     // }
-    if (event->Is<GameResizedEvent>()) {
+    if (event->Is<AppResizedEvent>()) {
         auto windowSize = b_mContext->WindowSize;
         auto btn = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::Button>("gameBtn");
         btn->SetPosition({ static_cast<float>(windowSize.X / 2) - static_cast<float>(btn->GetSize().X / 2), 100 });

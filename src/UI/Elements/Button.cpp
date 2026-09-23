@@ -30,7 +30,7 @@ UI::Button::Button(Base::AssetHandle<Font> font, std::string text, float fontSiz
 	});
     SetOnHide([&]() {
         if (m_Hovered) {
-            // SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
+            // SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(sf::Cursor::Type::Arrow));
         }
         
         m_Hovered = false;

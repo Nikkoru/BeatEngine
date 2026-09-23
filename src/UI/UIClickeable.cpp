@@ -3,7 +3,7 @@
 #include "BeatEngine/Events/MouseEvents.h"
 
 // #include "BeatEngine/Manager/SignalManager.h"
-// #include "BeatEngine/Signals/GameSignals.h"
+// #include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Util/Optional.hpp"
 #include "BeatEngine/Util/UIHelper.h"
 // #include <memory>
@@ -50,13 +50,13 @@ void UIClickeable::OnMouseMove(Vector2i position) {
 
 	if (currentlyHovered && !m_Hovered) {
         // if (m_CursorFeedback)
-        //     SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Hand));
+        //     SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(sf::Cursor::Type::Hand));
 		if (OnHover)
 			OnHover();
 	}
 	else if (!currentlyHovered && m_Hovered) {
         // if (m_CursorFeedback)
-        //     SignalManager::GetInstance()->Send(std::make_shared<GameChangeCursorSignal>(sf::Cursor::Type::Arrow));
+        //     SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(sf::Cursor::Type::Arrow));
 		if (OnUnHover)
 			OnUnHover();
 	}

@@ -1,10 +1,10 @@
-#include "BeatEngine/Settings/GameSettings.h"
+#include "BeatEngine/Settings/AppSettings.hpp"
 #include "BeatEngine/Util/Helper.h"
 
 #include <cstdio>
 #include <format>
 
-void GameSettings::Read(const char* line) {
+void AppSettings::Read(const char* line) {
 	int x, y;
     char buf[6];
 
@@ -29,7 +29,7 @@ void GameSettings::Read(const char* line) {
     }
 }
 
-std::string GameSettings::Write() {
+std::string AppSettings::Write() {
 	std::string config;
 
 	config += m_SettingsTag + "\n";
@@ -42,7 +42,7 @@ std::string GameSettings::Write() {
 	return config;
 }
 
-void GameSettings::SetDefaults() {
+void AppSettings::SetDefaults() {
 	FpsLimit = 60;
     VSync = false;
     WindowFullScreen = false;

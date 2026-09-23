@@ -14,25 +14,25 @@ namespace Base {
     class View;
 };
 class GraphicsManager;
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class ViewManager {
 public:
-	using FabricCallback = std::function<std::shared_ptr<Base::View>(GameContext*, GameState*)>;
+	using FabricCallback = std::function<std::shared_ptr<Base::View>(AppContext*, AppState*)>;
 public:
 	std::unordered_map<std::type_index, FabricCallback> ViewFabrics;
 	std::stack<std::shared_ptr<Base::View>> ViewStack;
 	std::type_index MainView;
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
     ViewManager() : ViewManager(nullptr, nullptr) {}
-	ViewManager(GameContext* context, GameState* state);
+	ViewManager(AppContext* context, AppState* state);
 	~ViewManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(ViewManager)); };
 public:
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
     void Init();
     void Uninit();

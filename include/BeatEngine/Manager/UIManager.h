@@ -11,22 +11,22 @@ namespace Base {
     class Event;
 };
 class UILayer;
-class GameContext;
-class GameState;
+class AppContext;
+class AppState;
 class UIManager {
 private:
 	std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<UILayer>>> m_Layers;
 	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
 private:
-    GameContext* m_Context{ nullptr };
-    GameState* m_State{ nullptr };
+    AppContext* m_Context{ nullptr };
+    AppState* m_State{ nullptr };
 public:
     UIManager() : UIManager(nullptr, nullptr) {}
-	UIManager(GameContext* context, GameState* state);
+	UIManager(AppContext* context, AppState* state);
 	~UIManager() = default;
 
-    void SetContext(GameContext* context) { m_Context = context; }
-    void SetState(GameState* state) { m_State = state; }
+    void SetContext(AppContext* context) { m_Context = context; }
+    void SetState(AppState* state) { m_State = state; }
 
 	void OnEvent(Optional<Base::Event> event);
 

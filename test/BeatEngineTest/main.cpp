@@ -5,7 +5,7 @@
 #include <memory>
 #include <BeatEngine/Logger.h>
 // #include <BeatEngine/Renderers/OpenGL/Renderer.h>
-#include <BeatEngine/Game.h>
+#include <BeatEngine/Application.hpp>
 #include <BeatEngine/Enum/AssetType.h>
 #include <BeatEngine/Renderers/Vulkan/Renderer.h>
 #include <BeatEngine/Windows/SDL/Window.h>
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
 #endif
     }
 
-	Game game;
+	Application game;
 
 	game.RegisterView<TestView>();
 	game.RegisterView<GameView>();

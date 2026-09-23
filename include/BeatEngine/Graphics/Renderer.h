@@ -8,21 +8,21 @@
 #include <filesystem>
 #include <memory>
 
-class GameContext;
+class AppContext;
 class GraphicalElement;
 class Renderer {
 private:
     friend class GraphicsManager;
 protected:
     std::shared_ptr<BaseWindow> m_Window{ nullptr };
-    GameContext* m_Context;
+    AppContext* m_Context;
     bool m_Profile{ false };
 
     unsigned int m_TargetFps{ 0 };
     VSyncMode m_vSyncMode{ Default };
 public:
     Renderer() : Renderer(nullptr) {};
-    Renderer(GameContext* context) : m_Context(context) {}
+    Renderer(AppContext* context) : m_Context(context) {}
     virtual ~Renderer() = default;
 public:
     virtual void Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync = VSyncMode::Disable) = 0;

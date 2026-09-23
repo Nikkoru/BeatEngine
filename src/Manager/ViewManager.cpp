@@ -4,7 +4,7 @@
 #include <memory>
 #include <typeindex>
 
-#include "BeatEngine/Events/GameEvent.h"
+#include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/ViewSignals.h"
@@ -13,12 +13,12 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Events/ViewEvent.h"
 #include "BeatEngine/Logger.h"
-#include "BeatEngine/GameContext.h"
-#include "BeatEngine/GameState.h"
+#include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
 
-ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
+ViewManager::ViewManager(AppContext* context, AppState* state) : MainView(typeid(nullptr)), m_Context(context), m_State(state) {
     if (context != nullptr)
         context->ActiveView = MainView;
 
@@ -36,7 +36,7 @@ ViewManager::ViewManager(GameContext* context, GameState* state) : MainView(type
 		ViewStack.top()->OnResume();
 	});
     
-    // EventManager::GetInstance()->Subscribe<GameExitingEvent>([this](const std::shared_ptr<Base::Event>) {
+    // EventManager::GetInstance()->Subscribe<AppExitingEvent>([this](const std::shared_ptr<Base::Event>) {
     //     Uninit();
     // }); 
 }
@@ -156,7 +156,7 @@ void ViewManager::GetViewKeybinds() {
 }
 
 void ViewManager::ShowImGuiDebugWindow() {
-    if (!(m_Context->GFlags & GameFlags_ImGui)) return;
+    if (!(m_Context->GFlags & AppFlags_ImGui)) return;
 
     ImGui::Begin("ViewManager Debug");
     ImGui::Text("Registered Views: %zu", ViewFabrics.size());
