@@ -28,6 +28,8 @@ public:
     virtual void Update();
     virtual void Display();
     virtual void Draw();
+
+    virtual void DrawImGuiDebug();
 private:
     void _InitSettings();
     void _InitUI();

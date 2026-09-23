@@ -427,18 +427,18 @@ template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& pat
 
 void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID) {
     if (assets.empty()) return; 
-    size_t loadedAssets{};
     size_t assetsCount{};
+    size_t loadedAssets{};
     for (const auto& [type, vecPath] : assets) {
-        assetsCount = vecPath.size();
-        loadedAssets = assetsCount;
+        assetsCount += vecPath.size();
+        loadedAssets += vecPath.size();
         for (const auto& path : vecPath) {
             if (Preload(type, path))
                 loadedAssets--;
         }
     }
 
-    Logger::AddDebug(typeid(AssetManager), "Preloaded {}/{} assets", assetsCount, loadedAssets);
+    Logger::AddDebug(typeid(AssetManager), "Preloaded {}/{} assets", loadedAssets, assetsCount);
 }
 
 Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID) {

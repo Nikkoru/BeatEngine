@@ -109,7 +109,7 @@ void Game::Init() {
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
-    
+
     Application::Init();
 
 	m_GlobalLayers.AttachLayer<GlobalTestLayerUI>(&m_Context, &m_State);
