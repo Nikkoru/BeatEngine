@@ -2,20 +2,16 @@
 
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/RenderState.hpp"
-#include "BeatEngine/View/ViewLayer.h"
+#include "BeatEngine/Base/Event.h"
 
 #include <map>
 #include <typeindex>
 #include <memory>
 
-namespace Base {
-	class View;
-}
-
 class GraphicsManager;
+class ViewLayer;
 class ViewLayerStack : public GraphicalElement {
 private:
-	friend class Base::View;
 	std::map<std::type_index, std::shared_ptr<ViewLayer>> m_Layers;
 
 	unsigned int m_LayerCount = 0;

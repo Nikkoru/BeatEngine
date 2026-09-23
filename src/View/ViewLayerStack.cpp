@@ -1,5 +1,6 @@
 #include "BeatEngine/View/ViewLayerStack.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/View/ViewLayer.h"
 
 
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
