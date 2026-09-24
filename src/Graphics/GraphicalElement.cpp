@@ -6,7 +6,7 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
-void GraphicalElement::BaseDraw(GraphicsManager& mgr, RenderState state) {
+void GraphicalElement::BaseDraw(Renderer* const mgr, RenderState state) {
     glm::mat4 transform{ 1.f };
     if (auto camera = mgr.GetMainCamera()) {
         transform = camera->GetProjection();
@@ -30,7 +30,7 @@ void GraphicalElement::BaseDraw(GraphicsManager& mgr, RenderState state) {
     mgr.DrawVertices(m_Vertices, state);
 }
 
-void GraphicalElement::UninitGraphics(GraphicsManager& mgr) {
+void GraphicalElement::UninitGraphics(Renderer* const mgr) {
     mgr.UninitElement(*this);
 }
 

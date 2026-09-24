@@ -14,9 +14,10 @@ protected:
     AppContext m_Context{};
     AppState m_State{};
 
-    bool m_Running = false;
+    std::unique_ptr<Renderer> m_Renderer{ nullptr };
 
-	std::filesystem::path m_SettingsPath = "config.ini";
+    bool m_Running{ false };
+	std::filesystem::path m_SettingsPath{ "config.ini" };
 public:
     Application(const std::string& name = "BeatEngine Program");
     virtual ~Application() = default;

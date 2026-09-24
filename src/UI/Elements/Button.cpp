@@ -107,7 +107,7 @@ void UI::Button::OnUpdate(float dt) {
 	m_LayoutRect.SetPosition(m_Position);
 }
 
-void UI::Button::OnDraw(GraphicsManager& mgr, RenderState state) {
+void UI::Button::OnDraw(Renderer* const mgr, RenderState state) {
 	m_LayoutRect.Draw(mgr, state);
 	m_TextElement.Draw(mgr, state);
 }

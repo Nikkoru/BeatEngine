@@ -3,12 +3,13 @@
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/TextElement.hpp"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIClickeable.h"
 
 #include "BeatEngine/Asset/Font.h"
 
 #include <string>
+
+class Renderer;
 namespace UI {
 	class Button : public UIClickeable {
 	private:
@@ -47,7 +48,7 @@ namespace UI {
 
 		void OnUpdate(float dt) override;
 
-		void OnDraw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
+		void OnDraw(Renderer* const mgr, RenderState state = RenderState::Default) override;
 
         void SpecificImGuiDebug() override;
 	};

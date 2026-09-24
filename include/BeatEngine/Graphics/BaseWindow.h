@@ -20,6 +20,7 @@ protected:
     AppContext* m_Context{ nullptr };
     std::string m_RendererName{};
     WindowDriver m_WindowDriver{ WindowDriver::None };
+    bool m_Open{ false };
 public:
     BaseWindow() = default;
     virtual ~BaseWindow() = default;
@@ -53,6 +54,8 @@ public:
     virtual bool IsFullscreen() const { return {}; }
     virtual bool IsCursorGrabbed() const { return {}; }
     virtual bool IsCursorVisible() const { return {}; }
+
+    bool IsOpen() const { return m_Open; }
 
     WindowDriver GetWindowDriver() const { return m_WindowDriver; }
 

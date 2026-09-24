@@ -5,7 +5,8 @@
 #include "BeatEngine/Graphics/Glyph.hpp"
 #include "BeatEngine/Graphics/Rect.hpp"
 #include "BeatEngine/Logger.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
+// #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 
 #include <freetype/config/integer-types.h>
 #include <freetype/freetype.h>
@@ -77,8 +78,8 @@ float Font::GetLineSpacing(unsigned int charSize) const {
     return 0.1;
 }
 
-const Glyph& Font::GetGlyphByID(GraphicsManager& mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const {
-    GlyphTable& glyphs = LoadPage(mgr, charSize).Glyphs;
+const Glyph& Font::GetGlyphByID(Renderer* const mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const {
+    GlyphTable& glyphs = LoadPage(mgr, charSize).glyphs;
 
     const uint64_t key = combine(outlineThickness, bold, charID);
     
@@ -89,11 +90,11 @@ const Glyph& Font::GetGlyphByID(GraphicsManager& mgr, uint32_t charID, unsigned 
     return glyphs.try_emplace(key, glyph).first->second;
 }
 
-const Glyph& Font::GetGlyph(GraphicsManager& mgr, char32_t codePoint, unsigned int charSize, bool bold, float outlineThickness) const {
+const Glyph& Font::GetGlyph(Renderer* const mgr, char32_t codePoint, unsigned int charSize, bool bold, float outlineThickness) const {
     return GetGlyphByID(mgr, FT_Get_Char_Index(m_FTFace, codePoint), charSize, bold, outlineThickness);
 }
 
-Glyph Font::LoadGlyph(GraphicsManager& mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const {
+Glyph Font::LoadGlyph(Renderer* const mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const {
     Glyph glyph;
 
     if (!IsLoaded())
@@ -215,7 +216,7 @@ Glyph Font::LoadGlyph(GraphicsManager& mgr, uint32_t charID, unsigned int charSi
         const auto dest = Vector2u(glyph.TextureRect.Position) - Vector2u(padding, padding);
         const auto updateSize = Vector2u(glyph.TextureRect.Size) + 2u * Vector2u(padding, padding);
 
-        mgr.UpdateTexture(page.PageTexture, m_PixelData.data(), updateSize, dest);
+        mgr->UpdateTexture(page.texture, m_PixelData.data(), updateSize, dest);
     }
 
     FT_Done_Glyph(ftGlyph);
@@ -223,19 +224,20 @@ Glyph Font::LoadGlyph(GraphicsManager& mgr, uint32_t charID, unsigned int charSi
     return glyph;
 }
 
-Font::Page& Font::LoadPage(GraphicsManager& mgr, unsigned int charSize) const {
+Font::Page& Font::LoadPage(Renderer* const mgr, unsigned int charSize) const {
     return m_Pages.try_emplace(charSize, mgr, m_IsSmooth).first->second;
 }
 
-IntRect Font::FindGlyphRect(GraphicsManager& mgr, Page& page, Vector2u size) const {
+IntRect Font::FindGlyphRect(Renderer* const mgr, Page& page, Vector2u size) const {
     Row* row = nullptr;
     float bestRatio = 0;
-    for (auto it = page.Rows.begin(); it != page.Rows.end(); it++) {
-        const float ratio = static_cast<float>(size.Y) / static_cast<float>(it->Height);
+    
+    for (auto it = page.rows.begin(); it != page.rows.end(); it++) {
+        const float ratio = static_cast<float>(size.Y) / static_cast<float>(it->height);
         
         if (ratio < 0.7f || ratio > 1.f)
             continue;
-        if (size.X > page.PageTexture->GetSize().X - it->Width)
+        if (size.X > page.texture->GetSize().X - it->width)
             continue;
         if (ratio < bestRatio)
             continue;
@@ -246,26 +248,26 @@ IntRect Font::FindGlyphRect(GraphicsManager& mgr, Page& page, Vector2u size) con
 
     if (!row) {
         const unsigned int rowHeight = size.Y + size.Y / 10;
-        while ((page.NextRow + rowHeight >= page.PageTexture->GetSize().Y) || (size.X >= page.PageTexture->GetSize().X)) {
+        while ((page.nextRow + rowHeight >= page.texture->GetSize().Y) || (size.X >= page.texture->GetSize().X)) {
             // Current size of the texture isn't sufficient, extent its size by 2
-            Vector2u textureSize = page.PageTexture->GetSize();
+            Vector2u textureSize = page.texture->GetSize();
 
-            if ((textureSize.X * 2 <= mgr.GetMaxTextureSize()) && (textureSize.Y * 2 <= mgr.GetMaxTextureSize())) {
-                auto texture = mgr.CreateEmptyTexture(textureSize * 2u);
-                mgr.UpdateTexture(texture, page.PageTexture);
-                mgr.DestroyTexture(page.PageTexture);
-                page.PageTexture = texture;
+            if ((textureSize.X * 2 <= mgr->GetMaxTextureSize()) && (textureSize.Y * 2 <= mgr->GetMaxTextureSize())) {
+                auto texture = mgr->CreateEmptyTexture(textureSize * 2u);
+                mgr->UpdateTexture(texture, page.texture);
+                mgr->DestroyTexture(page.texture);
+                page.texture = texture;
             }
         }
 
-        page.Rows.emplace_back(page.NextRow, rowHeight);
-        page.NextRow += rowHeight;
-        row = &page.Rows.back();
+        page.rows.emplace_back(page.nextRow, rowHeight);
+        page.nextRow += rowHeight;
+        row = &page.rows.back();
     }
 
-    IntRect rect{Rect<unsigned int>({row->Width, row->Top}, size)};
+    IntRect rect{Rect<unsigned int>({row->width, row->top}, size)};
 
-    row->Width += size.X;
+    row->width += size.X;
 
     return rect;
 }
@@ -295,9 +297,9 @@ bool Font::SetFontSize(unsigned int size) const {
     return true;
 }
 
-Font::Page::Page(GraphicsManager& mgr, bool smooth) {
+Font::Page::Page(Renderer* const mgr, bool smooth) {
     std::array<uint32_t, 4> underlineReserve{ 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF, 0xFFFFFFFF };
-    PageTexture = mgr.CreateEmptyTexture({128, 128});
+    texture = mgr->CreateEmptyTexture({128, 128});
 
-    mgr.UpdateTexture(PageTexture, underlineReserve.data(), { 2, 2 }, { 0, 0 });
+    mgr->UpdateTexture(texture, underlineReserve.data(), { 2, 2 }, { 0, 0 });
 }

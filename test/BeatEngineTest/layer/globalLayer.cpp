@@ -124,7 +124,7 @@ void GlobalTestLayerUI::OnEvent(Optional<Base::Event> event) {
     }
 }
 
-void GlobalTestLayerUI::OnDraw(GraphicsManager& mgr, RenderState state) {
+void GlobalTestLayerUI::OnDraw(Renderer* const mgr, RenderState state) {
  //    auto font = m_Font->GetSFMLFont();
 	//
 	// auto fpsText = sf::Text(*font, m_FPSText, 15);

@@ -13,7 +13,7 @@
 #include <unordered_map>
 #include <vector>
 
-class GraphicsManager;
+class Renderer;
 class Font : public Base::Asset {
 private:
     friend class TextElement;
@@ -21,21 +21,21 @@ private:
 public:
     struct Row {
         Row (unsigned int rowTop, unsigned int rowHeight) :
-            Top(rowTop), Height(rowHeight) {}
-        unsigned int Width{};
-        unsigned int Top;
-        unsigned int Height;
+            top(rowTop), height(rowHeight) {}
+        unsigned int width{};
+        unsigned int top;
+        unsigned int height;
     };
     
     using GlyphTable = std::unordered_map<uint64_t, Glyph>;
 
     struct Page {
-        explicit Page(GraphicsManager& mgr, bool smooth);
+        explicit Page(Renderer* const mgr, bool smooth);
 
-        GlyphTable Glyphs;
-        std::shared_ptr<Texture> PageTexture;
-        unsigned int NextRow{ 3 };
-        std::vector<Row> Rows;
+        GlyphTable glyphs;
+        std::shared_ptr<Texture> texture;
+        unsigned int nextRow{ 3 };
+        std::vector<Row> rows;
     };
     using PageTable = std::unordered_map<unsigned int, Page>;
 private:
@@ -50,6 +50,8 @@ private:
     // binded to the FT_Face of a determined size or font, and it needs
     // to find a way to identify the font, is only requested internally
     // via TextElement
+
+
     uint64_t m_ID;
     std::string m_FamilyName;
     bool m_HasKerning{};
@@ -70,22 +72,18 @@ public:
 
     bool IsLoaded() const { return m_FTLibrary && m_FTStreamRec.descriptor.pointer && m_FTStroker && m_FTFace; }
 
-    const Glyph& GetGlyphByID(GraphicsManager& mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness = 0) const;
-    const Glyph& GetGlyph(GraphicsManager& mgr, char32_t codePoint, unsigned int charSize, bool bold, float outlineThickness = 0) const;
+    const Glyph& GetGlyphByID(Renderer* const mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness = 0) const;
+    const Glyph& GetGlyph(Renderer* const mgr, char32_t codePoint, unsigned int charSize, bool bold, float outlineThickness = 0) const;
 
-    const std::shared_ptr<Texture> GetTexture(GraphicsManager& mgr, unsigned int charSize) const { return LoadPage(mgr, charSize).PageTexture; }
+    const Texture* GetTexture(Renderer* const mgr, unsigned int charSize) const { return LoadPage(mgr, charSize).texture.get(); }
     float GetUnderlinePosition(unsigned int charSize) const;
     float GetUnderlineThickness(unsigned int charSize) const;
     float GetLineSpacing(unsigned int charSize) const;
 private:
     FontHandle GetFontHandle() { return m_FTFace; }
 
-    Glyph LoadGlyph(GraphicsManager& mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const;
-    Page& LoadPage(GraphicsManager& mgr, unsigned int charSize) const;
-    IntRect FindGlyphRect(GraphicsManager& mgr, Page& page, Vector2u size) const; 
+    Glyph LoadGlyph(Renderer* const mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness) const;
+    Page& LoadPage(Renderer* const mgr, unsigned int charSize) const;
+    IntRect FindGlyphRect(Renderer* const mgr, Page& page, Vector2u size) const; 
     bool SetFontSize(unsigned int size) const;
-public:
-    // virtual void MakeCopy(const Font& other) { (void)other; } 
-    // virtual void MakeMove(const Font&& other) noexcept { (void)other; } 
 };
-

@@ -25,7 +25,7 @@ public:
 
     bool IsInitialized() { return m_CacheID != NULL_IMAGE_ID; }
     bool IsValid() override { return IsInitialized(); }
-    ImTextureID GetImGuiTexture(GraphicsManager& mgr) override;
+    ImTextureID GetImGuiTexture(Renderer* const mgr) override;
 protected:
     void MakeCopy(const Texture& other) override;
     void MakeMove(const Texture&& other) noexcept override;

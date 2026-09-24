@@ -5,7 +5,7 @@
 #include <limits>
 #include <utility>
 
-class GraphicsManager;
+class Renderer;
 class Texture : public Base::Asset {
 public:
     inline static uint32_t NULL_ID{ (std::numeric_limits<uint32_t>::max)() };
@@ -26,7 +26,7 @@ public:
 	Texture& operator=(const Texture&& other) noexcept;
 
     virtual bool IsValid() { return false; }
-    virtual ImTextureID GetImGuiTexture(GraphicsManager& mgr) { (void)mgr; return ImTextureID_Invalid; };
+    virtual ImTextureID GetImGuiTexture(Renderer* const mgr) { (void)mgr; return ImTextureID_Invalid; };
 
     Vector2u GetSize() { return m_Size; }
     uint32_t GetID() { return m_CacheID; }

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIElement.h"
 
+class Renderer;
 namespace UI {
 	class ProgressBar : public UIElement {
 	private:
@@ -30,8 +30,8 @@ namespace UI {
 		void SetInnerColor(RGBColor color);
 		void SetBackColor(RGBColor color);
 
-		void OnDraw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
-		void OnUninitGraphics(GraphicsManager& mgr) override;
+		void OnDraw(Renderer* const mgr, RenderState state = RenderState::Default) override;
+		void OnUninitGraphics(Renderer* const mgr) override;
 
         void SpecificImGuiDebug() override;
 	};

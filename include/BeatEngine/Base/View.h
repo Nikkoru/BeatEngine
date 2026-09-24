@@ -1,13 +1,11 @@
 #pragma once
 
-#include <optional>
 #include <typeindex>
 
-
-#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/View/ViewLayerStack.h"
 
 class ViewManager;
+class Renderer;
 class AppContext;
 class AppState;
 namespace Base {
@@ -22,7 +20,7 @@ namespace Base {
 	protected:
 		ViewLayerStack b_mLayerStack;
 	private:
-		friend class ViewManager;
+		friend class ::ViewManager;
 	public:
 		bool operator==(const View& other) const;
 	public:
@@ -43,12 +41,12 @@ namespace Base {
 
 		virtual ~View() = default;
 	public: // Events
-        virtual void Init() = 0; 
+        virtual void Init() = 0;
 		/// <summary>
 		/// Notifies the view to draw to the given window.
 		/// </summary>
 		/// <param name="window">the SFML window to draw</param>
-		virtual void OnDraw(GraphicsManager& mgr) = 0;
+		virtual void OnDraw(Renderer* const mgr) = 0;
 		/// <summary>
 		/// Notifies the view when SFML event is trigged
 		/// </summary>

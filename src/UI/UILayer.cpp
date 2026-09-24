@@ -1,5 +1,5 @@
 #include "BeatEngine/UI/UILayer.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 
 UILayer::UILayer(Vector2f size, Vector2f position) {
     // TODO: why is this constructor here even
@@ -25,7 +25,7 @@ void UILayer::Update(float dt) {
 		m_Root->Update(dt);
 }
 
-void UILayer::Draw(GraphicsManager& mgr, RenderState state) {
+void UILayer::Draw(Renderer* const mgr, RenderState state) {
     if (m_BackPanel) {
         m_BackPanel->Draw(mgr, state);
     }
@@ -35,7 +35,7 @@ void UILayer::Draw(GraphicsManager& mgr, RenderState state) {
     }
 }
 
-void UILayer::UninitGraphics(GraphicsManager& mgr) {
+void UILayer::UninitGraphics(Renderer* const mgr) {
     if (m_BackPanel)
         m_BackPanel->UninitGraphics(mgr);
 

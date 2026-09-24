@@ -22,6 +22,7 @@
 /// Semi-abstract base class for UI Elements compatible with SFML.
 /// As is compatible with SFML, it can draw its components using the normal <code>window.draw(UIElement)</code> method which each derivated class needs to implement.
 /// </summary>
+
 class UIElement : public GraphicalElement {
 protected:
     friend class UIManager;
@@ -84,11 +85,11 @@ public:
 	void OnEvent(Optional<Base::Event> event);
 	virtual void EventHandler(Optional<Base::Event> event) { (void)event; }
 
-	virtual void OnDraw(GraphicsManager& mgr, RenderState state ) = 0;
-	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
+	virtual void OnDraw(Renderer* const mgr, RenderState state ) = 0;
+	void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
 
-    void UninitGraphics(GraphicsManager& mgr) override;
-    virtual void OnUninitGraphics(GraphicsManager& mgr) { m_LayoutRect.UninitGraphics(mgr); }
+    void UninitGraphics(Renderer* const mgr) override;
+    virtual void OnUninitGraphics(Renderer* const mgr) { m_LayoutRect.UninitGraphics(mgr); }
 
     void DrawImGuiDrawData() override;
 

@@ -5,11 +5,10 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
-#include "BeatEngine/UI/Elements/UIPanel.h"
 #include "BeatEngine/UI/UIElement.h"
 #include "BeatEngine/UI/Elements/UIPanel.h"
 
+class Renderer;
 class UILayer : public GraphicalElement {
 private:
 	std::shared_ptr<UIElement> m_Root = nullptr;
@@ -36,8 +35,8 @@ public:
 	void OnEvent(Optional<Base::Event> event);
 	
 	void Update(float dt);
-	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
-    void UninitGraphics(GraphicsManager& mgr) override;
+	void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
+    void UninitGraphics(Renderer* const mgr) override;
 
     void SetVisible(bool visible);
 

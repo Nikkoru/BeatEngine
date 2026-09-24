@@ -105,8 +105,8 @@ public:
     LinearColor GetOutlineColor() { return m_OutlineColor; }
     LineAlignment GetLineAlignment() { return m_LineAlignment; }
 
-    void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
-    // void UninitGraphics(GraphicsManager& mgr) override;
+    void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
+    // void UninitGraphics(Renderer* const mgr) override;
 private:
-    void UpdateGeometryIfNeed(GraphicsManager& mgr);
+    void UpdateGeometryIfNeed(Renderer* const mgr);
 };

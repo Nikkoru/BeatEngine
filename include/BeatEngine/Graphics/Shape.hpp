@@ -13,7 +13,7 @@ public:
     Shape() = default;
     ~Shape() override = default;
 public:
-    void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
+    void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
 public:
     void UpdateVertex();
     void SetColor(LinearColor color) { m_Color = color; UpdateVertex(); }

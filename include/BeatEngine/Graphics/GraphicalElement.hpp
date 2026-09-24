@@ -9,8 +9,8 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
+class Renderer;
 class RendererData;
-class GraphicsManager;
 class GraphicalElement {
 private:
     friend class GraphicsManager;
@@ -30,9 +30,9 @@ public:
     GraphicalElement() = default;
     virtual ~GraphicalElement() = default;
 
-    virtual void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) { BaseDraw(mgr, state); };
-    void BaseDraw(GraphicsManager& mgr, RenderState state);
-    virtual void UninitGraphics(GraphicsManager& mgr);
+    virtual void Draw(Renderer* const mgr, RenderState state = RenderState::Default) { BaseDraw(mgr, state); };
+    void BaseDraw(Renderer* const mgr, RenderState state);
+    virtual void UninitGraphics(Renderer* const mgr);
 
     void SetTexture(Base::AssetHandle<Texture> texture);
 

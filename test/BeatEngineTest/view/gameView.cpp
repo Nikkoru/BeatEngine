@@ -1,8 +1,7 @@
 #include "gameView.h"
 #include "../layer/GameLayer.h"
 #include "BeatEngine/AppState.hpp"
-#include "BeatEngine/Manager/GraphicsManager.h"
-
+#include "BeatEngine/Graphics/Renderer.h"
 
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
@@ -18,7 +17,7 @@ void GameView::Init() {
 
 }
 
-void GameView::OnDraw(GraphicsManager&) {
+void GameView::OnDraw(Renderer* const) {
 
 }
 void GameView::OnEvent(const Optional<Base::Event>) {

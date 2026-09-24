@@ -8,8 +8,8 @@
 #include <typeindex>
 #include <memory>
 
-class GraphicsManager;
 class AppState;
+class Renderer;
 class AppContext;
 class ViewLayer;
 class ViewLayerStack : public GraphicalElement {
@@ -29,8 +29,8 @@ public:
 
 	void OnEvent(Optional<Base::Event> event);
 	void OnUpdate(float dt);
-    void OnDraw(GraphicsManager& mgr, RenderState state);
-	void Draw(GraphicsManager& mgr, RenderState state = RenderState::Default) override;
+    void OnDraw(Renderer* const mgr, RenderState state);
+	void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
 };
 
 #include "BeatEngine/View/ViewLayerStack.inl"

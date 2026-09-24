@@ -92,7 +92,7 @@ TestView::TestView(AppContext* context, AppState* state)
 void TestView::Init() {
     Vector2f size{ static_cast<float>(b_mContext->WindowSize.X), static_cast<float>(b_mContext->WindowSize.Y) };
     m_Camera.InitOrtho2D(size);
-    b_mState->GetGraphicsMgr().SetMainCamera(m_Camera);
+    // b_mState->GetGraphicsMgr().SetMainCamera(m_Camera);
 
     m_Font = b_mState->GetAssetMgr().Get<Font>("main-font").Get(); 
 
@@ -167,7 +167,7 @@ void TestView::Init() {
 		m_Shape.SetSize(Vector2f{ texture.Get()->GetSize() });
     }
     else {
-        m_Shape.SetTexture(b_mState->GetGraphicsMgr().GetErrorTexture());
+        // m_Shape.SetTexture();
         m_Shape.SetSize(Vector2f{ 100.f, 100.f });
     }
 
@@ -179,7 +179,7 @@ void TestView::Init() {
 		m_FunnyShape.SetSize(Vector2f{ funnyTexture.Get()->GetSize() });
     }
     else {
-        m_FunnyShape.SetTexture(b_mState->GetGraphicsMgr().GetErrorTexture());
+        // m_FunnyShape.SetTexture(b_mState->GetGraphicsMgr().GetErrorTexture());
         m_FunnyShape.SetSize(Vector2f{ 100.f, 100.f });
     }
 
@@ -221,7 +221,7 @@ void TestView::Init() {
     });
 }
 
-void TestView::OnDraw(GraphicsManager& mgr) {
+void TestView::OnDraw(Renderer* const mgr) {
 	// auto font = m_Font->GetSFMLFont();
  //    
  //    auto musicTitle = sf::Text(*font, m_MusicTitleText, 15);
@@ -243,7 +243,7 @@ void TestView::OnDraw(GraphicsManager& mgr) {
 	//
 	// auto percentage = sf::Text(*font, std::format("{:.0f}%", progressBar->GetPercentage() * 100), 15);
 	// percentage.setPosition({ 800 - percentage.getLocalBounds().size.x, count.getPosition().y + count.getLocalBounds().size.y + 1 });
-	//
+
     if (b_mContext->ContainsAFlags(AppFlags_ImGui)) {
         {
             ImGui::Begin("Control for m_Shape"); 
@@ -350,7 +350,7 @@ void TestView::OnUpdate(float dt) {
         musicProgressBar->Update(dt);
     }
 
-	progressBar->SetPosition({ (b_mState->GetGraphicsMgr().GetWindow()->GetSize().X / 2) - (progressBar->GetSize().X / 2), 0});
+	progressBar->SetPosition({ (b_mContext->WindowSize.X / 2) - (progressBar->GetSize().X / 2), 0});
 	progressBar->SetSize({ 425, 5 });
 	progressBar->Update(dt);
 }

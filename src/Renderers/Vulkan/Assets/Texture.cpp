@@ -14,9 +14,9 @@ VulkanTexture& VulkanTexture::operator=(VulkanTexture other) {
     return *this;
 }
 
-ImTextureID VulkanTexture::GetImGuiTexture(GraphicsManager& mgr) {
+ImTextureID VulkanTexture::GetImGuiTexture(Renderer* const mgr) {
     if (m_ImGuiDrawData == VkDescriptorSet{}) {
-        auto renderer = std::dynamic_pointer_cast<VulkanRenderer>(mgr.GetRenderer());
+        auto renderer = dynamic_cast<VulkanRenderer*>(mgr);
         auto image = renderer->GetImageFromID(m_CacheID);
 
         m_ImGuiDrawData = ImGui_ImplVulkan_AddTexture(image.Linear, image.ImageView, VK_IMAGE_LAYOUT_GENERAL);

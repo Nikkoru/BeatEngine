@@ -9,7 +9,7 @@ private:
     bool m_ShowRect = true;
 public:
     UIPanel() = default;
-    void OnDraw(GraphicsManager& mgr, RenderState state) override;
+    void OnDraw(Renderer* const mgr, RenderState state) override;
     void OnUpdate(float dt) override { (void)dt; }
 
     void ShowRect(bool show);

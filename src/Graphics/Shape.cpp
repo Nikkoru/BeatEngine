@@ -4,7 +4,7 @@
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include <glm/ext/vector_float3.hpp>
 
-void Shape::Draw(GraphicsManager& mgr, RenderState state) {
+void Shape::Draw(Renderer* const mgr, RenderState state) {
     BaseDraw(mgr, state);
 }
 

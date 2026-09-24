@@ -1,10 +1,10 @@
 #include "BeatEngine/UI/UIElement.h"
 
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/UI/Alignment.h"
 #include "BeatEngine/Util/UIHelper.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include <memory>
 
 UIElement::~UIElement() {
@@ -128,7 +128,7 @@ void UIElement::OnEvent(Optional<Base::Event> event) {
 			element->EventHandler(event);
 }
 
-void UIElement::Draw(GraphicsManager& mgr, RenderState state) {
+void UIElement::Draw(Renderer* const mgr, RenderState state) {
     if (!m_Hidden)
 	    OnDraw(mgr, state);
 
@@ -139,7 +139,7 @@ void UIElement::Draw(GraphicsManager& mgr, RenderState state) {
             element->OnDraw(mgr, state);
 }
 
-void UIElement::UninitGraphics(GraphicsManager& mgr) {
+void UIElement::UninitGraphics(Renderer* const mgr) {
     OnUninitGraphics(mgr);
 
     if (m_Childs.empty()) return;

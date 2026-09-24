@@ -6,7 +6,8 @@
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/RectShape.hpp"
 #include "BeatEngine/Graphics/TextElement.hpp"
-#include "BeatEngine/Manager/GraphicsManager.h"
+// #include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/UI/UILayer.h"
 #include <BeatEngine/Base/View.h>
 #include <BeatEngine/Asset/Font.h>
@@ -41,7 +42,7 @@ public:
 	~TestView() override = default;
 public:
     void Init() override;
-	void OnDraw(GraphicsManager& mgr) override;
+	void OnDraw(Renderer* const mgr) override;
 	void OnEvent(Optional<Base::Event> event) override;
 	void OnUpdate(float dt) override;
 	void OnExit() override;

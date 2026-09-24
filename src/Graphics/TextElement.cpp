@@ -7,7 +7,7 @@
 #include <SheenBidi/SBScriptLocator.h>
 #include <SheenBidi/SBAlgorithm.h>
 
-#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Logger.h"
 
 #include <hb-ft.h>
@@ -391,13 +391,13 @@ void TextElement::SetLineAlignment(LineAlignment alignment) {
     m_UpdateGeometry = true;
 }
 
-void TextElement::Draw(GraphicsManager& mgr, RenderState state) {
+void TextElement::Draw(Renderer* const mgr, RenderState state) {
     if (!m_Font) return;
 
     UpdateGeometryIfNeed(mgr);
 
     DrawCommand cmd{
-        .projection = mgr.GetMainCamera()->GetProjection(),
+        // .projection = mgr.GetMainCamera()->GetProjection(),
         .transform = GetTransform().GetMatrix(),
         .padding = m_Padding.ToGLMVec2(),
         .textureID = m_FontTextureID,
@@ -411,13 +411,14 @@ void TextElement::Draw(GraphicsManager& mgr, RenderState state) {
     m_Vertices.SetType(PrimitiveType::TriangleList);
 
     if (m_OutlineVertices.GetSize() > 0)
-        mgr.DrawVertices(m_OutlineVertices, state);
+        mgr->DrawVertices(m_OutlineVertices, state);
 
-    mgr.DrawVertices(m_Vertices, state);
+    mgr->DrawVertices(m_Vertices, state);
 }
 
-void TextElement::UpdateGeometryIfNeed(GraphicsManager& mgr) {
+void TextElement::UpdateGeometryIfNeed(Renderer* const mgr) {
     auto font = m_Font.Get();
+    if (!font) return;
 
     if (!m_UpdateGeometry && font->GetTexture(mgr, m_CharacterSize)->m_CacheID == m_FontTextureID) return;
 

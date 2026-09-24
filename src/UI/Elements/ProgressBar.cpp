@@ -51,12 +51,12 @@ void UI::ProgressBar::SetBackColor(RGBColor color) {
 	m_LayoutRect.SetColor(color);
 }
 
-void UI::ProgressBar::OnDraw(GraphicsManager& mgr, RenderState state) {
+void UI::ProgressBar::OnDraw(Renderer* const mgr, RenderState state) {
 	m_LayoutRect.Draw(mgr, state);
 	m_InnerRect.Draw(mgr, state);
 }
 
-void UI::ProgressBar::OnUninitGraphics(GraphicsManager& mgr) {
+void UI::ProgressBar::OnUninitGraphics(Renderer* const mgr) {
     m_LayoutRect.UninitGraphics(mgr);
     m_InnerRect.UninitGraphics(mgr);
 }

@@ -1,5 +1,5 @@
 #include "BeatEngine/View/ViewLayerStack.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/View/ViewLayer.h"
 
 void ViewLayerStack::AttachLayer(std::shared_ptr<ViewLayer> layer) {
@@ -30,11 +30,11 @@ void ViewLayerStack::OnUpdate(float dt) {
 	}
 }
 
-void ViewLayerStack::OnDraw(GraphicsManager& mgr, RenderState state) {
+void ViewLayerStack::OnDraw(Renderer* const mgr, RenderState state) {
     Draw(mgr, state);
 }
 
-void ViewLayerStack::Draw(GraphicsManager& mgr, RenderState state) {
+void ViewLayerStack::Draw(Renderer* const mgr, RenderState state) {
 	for (const auto& [type, layer] : m_Layers) {
 		layer->OnDraw(mgr, state);
 	}
