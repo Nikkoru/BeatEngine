@@ -5,6 +5,42 @@
 
 template <typename TAsset>
     requires(std::is_base_of_v<Base::Asset, TAsset>)
+void AssetManager::SetLoadCallback(AssetLoadCallback callback) {
+    if (m_LoadCallbacks.contains(typeid(TAsset))) {
+        Logger::AddWarning(typeid(AssetManager), "Asset type \"{}\" already has a load callback", typeid(TAsset).name());
+        return;
+    } 
+
+    m_LoadCallbacks[typeid(TAsset)] = callback;
+    Logger::AddDebug(typeid(AssetManager), "Added callback for asset type: \"{}\"", typeid(TAsset).name());
+}
+
+template <typename TAsset>
+    requires(std::is_base_of_v<Base::Asset, TAsset>)
+void AssetManager::SetUnloadCallback(AssetUnloadCallback callback) {
+    if (m_UnloadCallbacks.contains(typeid(TAsset))) {
+        Logger::AddWarning(typeid(AssetManager), "Asset type \"{}\" already has a unload callback", typeid(TAsset).name());
+        return;
+    }
+
+    m_UnloadCallbacks[typeid(TAsset)] = callback;
+    Logger::AddDebug(typeid(AssetManager), "Added unload callback for asset type: \"{}\"", typeid(TAsset).name());
+}
+
+template <typename TAsset>
+    requires(std::is_base_of_v<Base::Asset, TAsset>)
+Base::AssetHandle<TAsset> AssetManager::Load(const fs::path& path, std::type_index viewID) {
+    std::string assetName = typeid(TAsset).name();
+    if (!m_LoadCallbacks.contains(typeid(TAsset))) {
+        auto msg = std::format("Load failed for file in \"{}\": Theres no callback available for this type -> {}", path.string(), assetName);
+        Logger::AddCritical(typeid(AssetManager), msg);
+        THROW_RUNTIME_ERROR(msg);
+    }
+    auto handle = m_LoadCallbacks.at(typeid(TAsset))(path);
+    return Base::AssetHandle<TAsset>::Cast(handle);
+}
+template <typename TAsset>
+    requires(std::is_base_of_v<Base::Asset, TAsset>)
 Base::AssetHandle<TAsset> AssetManager::Get(const String& assetName, const std::type_index viewID) {
     if (viewID == typeid(nullptr)) {
         if (m_GlobalAssets.contains(assetName))

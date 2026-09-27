@@ -2,6 +2,7 @@
 
 #include <array>
 
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Graphics/Glyph.hpp"
 #include "BeatEngine/Graphics/Rect.hpp"
 #include "BeatEngine/Logger.h"
@@ -18,6 +19,17 @@
 #include <freetype/ftbitmap.h>
 
 namespace {
+unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, unsigned long count) {
+    auto* stream = static_cast<DataStream*>(rec->descriptor.pointer);
+    if (auto streamPos = stream->Seek(offset).Value(); streamPos == offset) {
+        if (count > 0)
+            return static_cast<unsigned long>(stream->Read(reinterpret_cast<char*>(buffer), count).Value());
+
+        return 0;
+    }
+    return count > 0 ? 0 : 1;
+}
+void close(FT_Stream) {}
 template <typename T, typename U>
 inline T reinterpret(const U& input) {
     T output;
@@ -43,6 +55,64 @@ Font& Font::operator=(const Font& other) {
 Font& Font::operator=(const Font&& other) noexcept {
     (void)other;
 	return *this;
+}
+
+Base::AssetHandle<void> Font::CreateFontFT(const std::filesystem::path& path) {
+    auto name = path.stem().string();
+    auto font = std::make_shared<Font>();
+    
+    if (FT_Init_FreeType(&font->m_FTLibrary) != 0) {
+        Logger::AddCritical("Failed to load font \"{}\": FreeType failed to init", name);
+        THROW_RUNTIME_ERROR("Failed to load font");
+    }
+
+    font->m_Stream.StartReadForFile(path);
+
+    font->m_FTStreamRec.base = nullptr;
+    font->m_FTStreamRec.size = static_cast<unsigned long>(font->m_Stream.GetSize());
+    font->m_FTStreamRec.pos = 0;
+    font->m_FTStreamRec.descriptor.pointer = &font->m_Stream;
+    font->m_FTStreamRec.read = &read;
+    font->m_FTStreamRec.close = &close;
+
+    FT_Open_Args args{};
+    args.flags = FT_OPEN_STREAM;
+    args.stream = &font->m_FTStreamRec;
+    args.driver = nullptr;
+
+    if (auto result = FT_Open_Face(font->m_FTLibrary, &args, 0, &font->m_FTFace); result != 0) {
+        auto errStringC = FT_Error_String(result);
+        auto errStr = errStringC == nullptr ? "error in the error thats amazing" : errStringC; 
+        Logger::AddCritical("", "Failed to load font \"{}\": FreeType failed to create the font face, reason: {}", name, errStr);
+        THROW_RUNTIME_ERROR("Failed to load font");
+    }
+
+    if (FT_Stroker_New(font->m_FTLibrary, &font->m_FTStroker) != 0) {
+        Logger::AddCritical("Failed to load font \"{}\": FreeType failed to create the stroker", name);
+        THROW_RUNTIME_ERROR("Failed to load font");
+    }
+
+    if (FT_Select_Charmap(font->m_FTFace, FT_ENCODING_UNICODE) != 0) {
+        Logger::AddCritical("Failed to load font \"{}\": FreeType failed set unicode character set", name);
+        THROW_RUNTIME_ERROR("Failed to load font");
+    }
+
+    font->m_FamilyName = font->m_FTFace->family_name ? font->m_FTFace->family_name : "";
+    font->m_HasKerning = FT_HAS_KERNING(font->m_FTFace);
+    font->m_HasVerticalMetrics = FT_HAS_VERTICAL(font->m_FTFace);
+
+    auto handle = Base::AssetHandle<Font>(font, typeid(Font));
+
+    // the handle id is sufficient
+    font->m_ID = handle.GetID();
+
+    return static_cast<Base::AssetHandle<void>>(handle);
+}
+
+void Font::DestroyFont(const Base::AssetHandle<Font>& font, Renderer* const renderer) {
+    for (const auto& [charSize, pages] : font.Get()->m_Pages) {
+        renderer->DestroyTexture(pages.texture);
+    }
 }
 
 float Font::GetUnderlinePosition(unsigned int charSize) const {

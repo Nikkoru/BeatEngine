@@ -30,24 +30,8 @@
 #include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Logger.h"
 
-#include "BeatEngine/System/DataStream.hpp"
-#include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "imgui.h"
-
-namespace {
-unsigned long read(FT_Stream rec, unsigned long offset, unsigned char* buffer, unsigned long count) {
-    auto* stream = static_cast<DataStream*>(rec->descriptor.pointer);
-    if (auto streamPos = stream->Seek(offset).Value(); streamPos == offset) {
-        if (count > 0)
-            return static_cast<unsigned long>(stream->Read(reinterpret_cast<char*>(buffer), count).Value());
-
-        return 0;
-    }
-    return count > 0 ? 0 : 1;
-}
-void close(FT_Stream) {}
-}
 
 AssetManager::AssetManager(AppContext* context, AppState* state)
     : m_Context(context), m_State(state) {}
@@ -57,372 +41,18 @@ AssetManager::~AssetManager() {
    m_ViewAssets.clear();
 }
 
-
 void AssetManager::Uninit() {
     for (const auto& [viewID, assetMap] : m_ViewAssets) {
         for (const auto& [assetName, asset] : assetMap) {
-            if (asset.Type == typeid(Texture)) {
-                Logger::AddDebug(typeid(AssetManager), "Destroying texture \"{}\"", assetName);
-                auto texture = std::dynamic_pointer_cast<Texture>(asset.Asset);
-                m_State->GetGraphicsMgr().DestroyTexture(texture);
-            }
-            else if (asset.Type == typeid(Font)) {
-                Logger::AddDebug(typeid(AssetManager), "Destroying font \"{}\"", assetName);
-                auto font = std::dynamic_pointer_cast<Font>(asset.Asset);
-                for (const auto& [charSize, page] : font->m_Pages) {
-                    m_State->GetGraphicsMgr().DestroyTexture(page.PageTexture);
-                }
-            }
+            if (m_UnloadCallbacks.contains(asset.Type))
+                m_UnloadCallbacks.at(asset.Type)(asset.Handle);
         }
     }
 
-    for (const auto& [assetName, asset] : m_GlobalAssets) {
-        if (asset.Type == typeid(Texture)) {
-            Logger::AddDebug(typeid(AssetManager), "Destroying texture \"{}\"", assetName);
-            auto texture = std::dynamic_pointer_cast<Texture>(asset.Asset);
-            m_State->GetGraphicsMgr().DestroyTexture(texture);
-        }
-        else if (asset.Type == typeid(Font)) {
-            Logger::AddDebug(typeid(AssetManager), "Destroying font \"{}\"", assetName);
-            auto font = std::dynamic_pointer_cast<Font>(asset.Asset);
-                for (const auto& [charSize, page] : font->m_Pages) {
-                    m_State->GetGraphicsMgr().DestroyTexture(page.PageTexture);
-                }
-        }
+    for (auto& [assetName, asset] : m_GlobalAssets) {
+        if (m_UnloadCallbacks.contains(asset.Type))
+            m_UnloadCallbacks.at(asset.Type)(asset.Handle);
     }
-}
-
-
-template <> Base::AssetHandle<Texture> AssetManager::Load<Texture>(const fs::path& path, std::type_index viewID) {
-	if (fs::exists(path)) {
-		std::string name = path.stem().string();
-
-		Base::AssetHandle<Texture> handle;
-
-		bool global = viewID == typeid(nullptr);
-
-		if (global) {
-			if (!m_GlobalAssets.contains(name)) {
-                auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
-
-				handle = Base::AssetHandle<Texture>(texture, typeid(Texture));
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture), typeid(Texture) };
-			}
-			else {
-				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
-				handle = Base::AssetHandle<Texture>::Cast(m_GlobalAssets[name].Handle);
-			}
-		}
-		else {
-			if (!m_ViewAssets.contains(viewID))
-				m_ViewAssets[viewID];
-			if (!m_ViewAssets.at(viewID).contains(name)) {
-                auto texture = m_State->GetGraphicsMgr().CreateTexture(path);
-
-				handle = Base::AssetHandle<Texture>(texture, typeid(Texture));
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(texture), typeid(Texture) };
-			}
-			else {
-				Logger::AddWarning(typeid(AssetManager), "Asset already exists: \"{}\", returning existing asset", name);
-				handle = Base::AssetHandle<Texture>::Cast(m_ViewAssets.at(viewID)[name].Handle); 
-			}
-		}
-
-		return handle;
-	}
-	else {
-		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
-		return Base::AssetHandle<Texture>();
-	}
-}
-template <> Base::AssetHandle<Sound> AssetManager::Load<Sound>(const fs::path& path, std::type_index viewID) {
-	if (fs::exists(path)) {
-		std::string name = path.stem().string();
-		std::string fullpath = path.string();
-
-		Base::AssetHandle<Sound> handle;
-
-		bool global = viewID == typeid(nullptr);
-		bool exists = false;
-
-		if (global) {
-			if (m_GlobalAssets.contains(name)) {
-				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-				handle = Base::AssetHandle<Sound>::Cast(m_GlobalAssets[name].Handle);
-				exists = true;
-			}
-			else
-				m_GlobalAssets[name];
-		}
-		else {
-			if (!m_ViewAssets.contains(viewID))
-				m_ViewAssets[viewID];
-			if (m_ViewAssets.at(viewID).contains(name)) {
-				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-				handle = Base::AssetHandle<Sound>::Cast(m_ViewAssets.at(viewID)[name].Handle);
-				exists = true;
-			}
-			else
-				m_ViewAssets.at(viewID)[name];
-		}
-		if (!exists) {
-			ma_result result;
-			ma_decoder decoder;
-			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 48000);
-			
-			result = ma_decoder_init_file(fullpath.c_str(), &config, &decoder);
-
-			if (result != MA_SUCCESS) {
-				std::string msg = "Couldn't read audio file: \"" + name + "\"";
-				Logger::AddCritical(typeid(AssetManager), msg);
-				ma_decoder_uninit(&decoder);
-				THROW_RUNTIME_ERROR(msg);
-			}
-
-			uint64_t frameCount = 0;
-			std::vector<float> data;
-			uint8_t channels = 0;
-
-			ma_uint64 maxFrames = decoder.outputSampleRate * 60;
-			channels = decoder.outputChannels;
-			data.resize(maxFrames * channels);
-
-			result = ma_decoder_read_pcm_frames(&decoder, data.data(), maxFrames, (ma_uint64*)&frameCount);
-			ma_decoder_uninit(&decoder);
-
-			if (result != MA_SUCCESS) {
-				std::string msg = "Unable to decode audio: \"" + name + "\"";
-				Logger::AddCritical(typeid(AssetManager), msg);
-				THROW_RUNTIME_ERROR(msg);
-			}
-
-			auto sound = std::make_shared<Sound>(name, data, frameCount, m_AudioSampleRate);
-
-			handle = Base::AssetHandle<Sound>(sound, typeid(Sound));
-
-			if (global)
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(sound) };
-			else
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(sound) };
-		}
-
-		return handle;
-	}
-	else {
-		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
-		return Base::AssetHandle<Sound>();
-	}
-}
-template <> Base::AssetHandle<AudioStream> AssetManager::Load<AudioStream>(const fs::path& path, std::type_index viewID) {
-	if (fs::exists(path)) {
-		String name = path.stem().c_str();
-		String fullpath = path.c_str();
-
-        name.CheckRealType();
-        fullpath.CheckRealType();
-
-		Base::AssetHandle<AudioStream> handle;
-
-		bool global = viewID == typeid(nullptr);
-		bool exists = false;
-
-		if (global) {
-			if (m_GlobalAssets.contains(name)) {
-				exists = true;
-			}
-		}
-		else {
-			if (!m_ViewAssets.contains(viewID))
-				m_ViewAssets[viewID];
-			if (m_ViewAssets.at(viewID).contains(name)) {
-				exists = true;
-			}
-		}
-
-		if (!exists) {
-			ma_result result;
-			ma_decoder decoder;
-			ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
-
-            {
-                ma_decoding_backend_vtable* customBackendVTable[] {
-                    ma_decoding_backend_libvorbis
-                };
-
-                config.pCustomBackendUserData = nullptr;
-                config.ppCustomBackendVTables = customBackendVTable;
-                config.customBackendCount = sizeof(customBackendVTable) / sizeof(customBackendVTable[0]);
-            }
-
-			SF_INFO sfInfo{};
-            TagLib::FileRef ref;
-
-			sf_count_t totalFrames = -1;
-            
-            float seconds = -1;
-
-			SNDFILE* sndFile = nullptr;
-
-
-            if (fullpath.IsType(String::UTF16))
-                result = ma_decoder_init_file_w(fullpath.ToCWString(), &config, &decoder);
-#ifdef _WIN32
-            else if (fullpath.IsType(String::UTF8))
-                result = ma_decoder_init_file_w(fullpath.ToCWString(), &config, &decoder);
-#endif
-            else
-				result = ma_decoder_init_file(fullpath.ToCString(true), &config, &decoder);
-
-			if (result != MA_SUCCESS) {
-                auto str = ma_result_description(result);
-                std::string msg = std::format("Failed to load \"{}\": {}", fullpath, str);
-                Logger::AddCritical(typeid(AssetManager), "{}", msg);
-				ma_decoder_uninit(&decoder);
-				THROW_RUNTIME_ERROR(msg);
-			}
-
-#ifdef _WIN32
-				sndFile = sf_wchar_open(path.c_str(), SFM_READ, &sfInfo);
-#else
-				sndFile = sf_open(fullpath.ToCString(true), SFM_READ, &sfInfo);
-#endif
-
-			if (sndFile) {
-				totalFrames = sfInfo.frames;
-                 seconds = static_cast<float>(totalFrames) / sfInfo.samplerate;
-			}
-			else {
-             Logger::AddError(typeid(AssetManager), "Failed to retreive frame count data of \"{}\", reason: {}", name, sf_strerror(sndFile));
-
-			}
-			sf_close(sndFile);
-
-
-            if (fullpath.IsType(String::UTF16))
-                ref = TagLib::FileRef(fullpath.ToCWString());
-#ifdef _WIN32
-            else if (fullpath.IsType(String::UTF8))
-                ref = TagLib::FileRef(fullpath.ToCWString());
-#endif
-            else
-                ref = TagLib::FileRef(fullpath.ToCString(true));
-
-			auto stream = std::make_shared<AudioStream>(name, decoder, decoder.outputSampleRate, m_AudioSampleRate, ref, seconds, static_cast<uint64_t>(totalFrames));
-
-			handle = Base::AssetHandle<AudioStream>(stream, typeid(AudioStream));
-            if (global)
-                m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream), typeid(AudioStream) };
-            else
-                m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(stream) };
-		}
-
-        Logger::AddDebug(typeid(AudioManager), "Asset {} created", name);
-		return handle;
-	}
-	else {
-		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
-		return Base::AssetHandle<AudioStream>();
-	}
-}
-template <> Base::AssetHandle<Font> AssetManager::Load<Font>(const fs::path& path, std::type_index viewID) {
-	if (fs::exists(path)) {
-		std::string name = path.stem().string();
-		std::string fullpath = path.string();
-
-		Base::AssetHandle<Font> handle;
-
-        auto font = std::make_shared<Font>();
-
-		bool global = viewID == typeid(nullptr);
-		bool exists = false;
-
-		if (global) {
-			if (m_GlobalAssets.contains(name)) {
-				exists = true;
-			}
-		}
-		else {
-			if (!m_ViewAssets.contains(viewID))
-				m_ViewAssets[viewID];
-			if (m_ViewAssets.at(viewID).contains(name)) {
-				exists = true;
-			}
-		}
-
-        if (!exists) {
-            if (FT_Init_FreeType(&font->m_FTLibrary) != 0) {
-                Logger::AddCritical("Failed to load font \"{}\": FreeType failed to init", name);
-                THROW_RUNTIME_ERROR("Failed to load font");
-            }
-
-            font->m_Stream.StartReadForFile(path);
-
-            font->m_FTStreamRec.base = nullptr;
-            font->m_FTStreamRec.size = static_cast<unsigned long>(font->m_Stream.GetSize());
-            font->m_FTStreamRec.pos = 0;
-            font->m_FTStreamRec.descriptor.pointer = &font->m_Stream;
-            font->m_FTStreamRec.read = &read;
-            font->m_FTStreamRec.close = &close;
-
-            FT_Open_Args args{};
-            args.flags = FT_OPEN_STREAM;
-            args.stream = &font->m_FTStreamRec;
-            args.driver = nullptr;
-
-            if (auto result = FT_Open_Face(font->m_FTLibrary, &args, 0, &font->m_FTFace); result != 0) {
-                auto errStringC = FT_Error_String(result);
-                auto errStr = errStringC == nullptr ? "error in the error thats amazing" : errStringC; 
-                Logger::AddCritical("", "Failed to load font \"{}\": FreeType failed to create the font face, reason: {}", name, errStr);
-                THROW_RUNTIME_ERROR("Failed to load font");
-            }
-
-            if (FT_Stroker_New(font->m_FTLibrary, &font->m_FTStroker) != 0) {
-                Logger::AddCritical("Failed to load font \"{}\": FreeType failed to create the stroker", name);
-                THROW_RUNTIME_ERROR("Failed to load font");
-            }
-
-            if (FT_Select_Charmap(font->m_FTFace, FT_ENCODING_UNICODE) != 0) {
-                Logger::AddCritical("Failed to load font \"{}\": FreeType failed set unicode character set", name);
-                THROW_RUNTIME_ERROR("Failed to load font");
-            }
-
-            font->m_FamilyName = font->m_FTFace->family_name ? font->m_FTFace->family_name : "";
-            font->m_HasKerning = FT_HAS_KERNING(font->m_FTFace);
-            font->m_HasVerticalMetrics = FT_HAS_VERTICAL(font->m_FTFace);
-        }
-
-        handle = Base::AssetHandle<Font>(font, typeid(Font));
-
-        // the handle id is sufficient
-        font->m_ID = handle.GetID();
-
-		if (global) {
-			if (!m_GlobalAssets.contains(name)) {
-				m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font), typeid(Font) };
-			}
-			else {
-				Logger::AddError(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-				handle = Base::AssetHandle<Font>::Cast(m_ViewAssets.at(viewID)[name].Handle);
-			}
-
-		}
-		else {
-			if (!m_ViewAssets.contains(viewID))
-				m_ViewAssets[viewID];
-			if (!m_ViewAssets.at(viewID).contains(name)) {
-				m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(font), typeid(Font) };
-			}
-			else {
-				Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-				handle = Base::AssetHandle<Font>::Cast(m_ViewAssets.at(viewID)[name].Handle);
-			}
-		}
-		return handle;
-	}
-	else {
-		Logger::AddError(typeid(AssetManager), "File \"{}\" doesn't exist", path.string());
-		return Base::AssetHandle<Font>();
-	}
 }
 
 void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID) {
@@ -439,48 +69,6 @@ void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID)
     }
 
     Logger::AddDebug(typeid(AssetManager), "Preloaded {}/{} assets", loadedAssets, assetsCount);
-}
-
-Base::AssetHandle<Shader> AssetManager::LoadShader(const fs::path& path, Shader::Type type, const std::type_index viewID) {
-    if (!fs::exists(path)) {
-		Logger::AddError(typeid(AssetManager), "Directory/File \"{}\" doesn't exist", path.string());
-		return Base::AssetHandle<Shader>();
-    }
-
-    std::string name = path.stem().string();
-
-    Base::AssetHandle<Shader> handle;
-
-    bool global = viewID == typeid(nullptr);
-
-    if (global) {
-        if (m_GlobalAssets.contains(name)) {
-            Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-            handle = Base::AssetHandle<Shader>::Cast(m_GlobalAssets[name].Handle);
-        }
-        else {
-            auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
-            handle = Base::AssetHandle<Shader>(shader);
-
-            m_GlobalAssets[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
-        }
-    }
-    else {
-        if (!m_ViewAssets.contains(viewID))
-            m_ViewAssets[viewID];
-        if (!m_ViewAssets.at(viewID).contains(name)) {
-            auto shader = m_State->GetGraphicsMgr().CreateShader(path, type);
-            handle = Base::AssetHandle<Shader>(shader, typeid(Shader));
-            m_ViewAssets.at(viewID)[name] = { static_cast<Base::AssetHandle<void>>(handle), std::static_pointer_cast<Base::Asset>(shader), typeid(Shader) };
-        }
-        else {
-            Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" already exists, returning existing asset", name);
-            handle = Base::AssetHandle<Shader>::Cast(m_ViewAssets.at(viewID)[name].Handle);
-        }
-    }
-    Logger::AddDebug(typeid(AssetManager), "Loaded Shader \"{}\"", name);
-
-    return handle;
 }
 
 bool AssetManager::Preload(AssetType type, const fs::path& path, std::type_index viewID) {
@@ -518,19 +106,19 @@ void AssetManager::Init() {
             }
             break;
         case AssetType::FragmentShader:
-            if (LoadShader(asset, Shader::Type::Fragment)) {
-                totalAssetLoaded--;
-            }
+            // if (LoadShader(asset, Shader::Type::Fragment)) {
+            //     totalAssetLoaded--;
+            // }
             break;
         case AssetType::VertexShader:
-            if (LoadShader(asset, Shader::Type::Vertex)) {
-                totalAssetLoaded--;
-            }
+            // if (LoadShader(asset, Shader::Type::Vertex)) {
+            //     totalAssetLoaded--;
+            // }
             break;
         case AssetType::ComputeShader:
-            if (LoadShader(asset, Shader::Type::Compute)) {
-                totalAssetLoaded--;
-            }
+            // if (LoadShader(asset, Shader::Type::Compute)) {
+            //     totalAssetLoaded--;
+            // }
             break;
         case AssetType::Font:
             if (Load<Font>(asset)) {
@@ -554,7 +142,7 @@ bool AssetManager::Has(const String& name, const std::type_index viewID) {
 	}
 }
 
-void AssetManager::ShowImGuiDebugWindow() {
+void AssetManager::ShowImGuiDebugWindow(Renderer* const renderer) {
     if (!m_Context->ContainsAFlags(AppFlags_ImGui)) return;
 
     ImGui::Begin("AssetManager Debug");
@@ -602,13 +190,13 @@ void AssetManager::ShowImGuiDebugWindow() {
                 Load<Font>(buf);
                 break;
             case AssetType::VertexShader:
-                LoadShader(buf, Shader::Type::Vertex);
+                // LoadShader(buf, Shader::Type::Vertex);
                 break;
             case AssetType::FragmentShader:
-                LoadShader(buf, Shader::Type::Fragment);
+                // LoadShader(buf, Shader::Type::Fragment);
                 break;
             case AssetType::ComputeShader:
-                LoadShader(buf, Shader::Type::Compute);
+                // LoadShader(buf, Shader::Type::Compute);
                 break;
             case AssetType::None:
                 break;
@@ -631,13 +219,13 @@ void AssetManager::ShowImGuiDebugWindow() {
                 Load<Font>(buf, activeView);
                 break;
             case AssetType::VertexShader:
-                LoadShader(buf, Shader::Type::Vertex, activeView);
+                // LoadShader(buf, Shader::Type::Vertex, activeView);
                 break;
             case AssetType::FragmentShader:
-                LoadShader(buf, Shader::Type::Fragment, activeView);
+                // LoadShader(buf, Shader::Type::Fragment, activeView);
                 break;
             case AssetType::ComputeShader:
-                LoadShader(buf, Shader::Type::Compute, activeView);
+                // LoadShader(buf, Shader::Type::Compute, activeView);
                 break;
             case AssetType::None:
                 break;
@@ -711,7 +299,7 @@ void AssetManager::ShowImGuiDebugWindow() {
     ImGui::End();
 
     if (m_ShowAssetBrowser) {
-        ShowAssetBrowser();
+        ShowAssetBrowser(renderer);
     }
 }
 
@@ -757,7 +345,7 @@ void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids
     }
 }
 
-void AssetManager::ShowAssetBrowser() {
+void AssetManager::ShowAssetBrowser(Renderer* const renderer) {
     Profiler::StartProfile({ typeid(AssetManager), "ShowAssetBrowser" }, IM_COL32(150, 0, 100, 255));
     std::vector<Slot> totalAssets;
     std::vector<String> assetNames;
@@ -867,7 +455,7 @@ void AssetManager::ShowAssetBrowser() {
                             auto texture = Base::AssetHandle<Texture>::Cast(assetData).Get();
                             ImVec2 padBoxMin = { boxMin.x - 3, boxMin.y - 3 };
                             ImVec2 padBoxMax = { boxMax.x - 3, boxMax.y - 3 };
-                            drawList->AddImage(texture->GetImGuiTexture(m_State->GetGraphicsMgr()), padBoxMin, padBoxMax);
+                            drawList->AddImage(texture->GetImGuiTexture(renderer), padBoxMin, padBoxMax);
                         }
 
                         std::string typeLabel;

@@ -1,5 +1,15 @@
 #include "BeatEngine/Application.hpp"
 
+#include <freetype/freetype.h>
+#include <freetype/ftsystem.h>
+#include <miniaudio.h>
+#include <extras/decoders/libopus/miniaudio_libopus.h>
+#include <extras/decoders/libvorbis/miniaudio_libvorbis.h>
+#include <sndfile.h>
+#include <taglib/tag.h>
+
+#include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Events/AppEvent.hpp"
 
 #include "BeatEngine/Graphics/BaseWindow.h"
@@ -356,7 +366,7 @@ void Application::DrawImGuiDebug() {
     if (drawAudioMgr)
         m_State.GetAudioMgr().ShowImGuiDebugWindow();
     if (drawAssetMgr)
-        m_State.GetAssetMgr().ShowImGuiDebugWindow();
+        m_State.GetAssetMgr().ShowImGuiDebugWindow(m_Renderer.get());
     // if (drawEntityMgr)
     //     m_State.GetEntityMgr().ShowImGuiDebugWindow();
     // if (drawEventMgr)
@@ -410,9 +420,149 @@ void Application::_InitSystems() {
 
 void Application::_InitAssets() {
 	Logger::AddDebug(typeid(Application), "Initializing assets...");
+    auto assetMgr = m_State.GetAssetMgr();
+    assetMgr.SetLoadCallback<Texture>([&](const fs::path& path) -> Base::AssetHandle<void> {
+        auto texture = m_Renderer->CreateTexture(path);
+        return static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Texture>{ texture, typeid(Texture) });
+    });
 
-    m_State.GetAssetMgr().Init();
+    assetMgr.SetLoadCallback<Sound>([](const fs::path& path) -> Base::AssetHandle<void> {
+		std::string name = path.stem().string();
+
+        ma_result result;
+        ma_decoder decoder;
+        ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 48000);
+        
+        result = ma_decoder_init_file(path.string().c_str(), &config, &decoder);
+
+        if (result != MA_SUCCESS) {
+            std::string msg = "Couldn't read audio file: \"" + name + "\"";
+            Logger::AddCritical(typeid(AssetManager), msg);
+            ma_decoder_uninit(&decoder);
+            THROW_RUNTIME_ERROR(msg);
+        }
+
+        uint64_t frameCount = 0;
+        std::vector<float> data;
+        uint8_t channels = 0;
+
+        ma_uint64 maxFrames = decoder.outputSampleRate * 60;
+        channels = decoder.outputChannels;
+        data.resize(maxFrames * channels);
+
+        result = ma_decoder_read_pcm_frames(&decoder, data.data(), maxFrames, (ma_uint64*)&frameCount);
+        ma_decoder_uninit(&decoder);
+
+        if (result != MA_SUCCESS) {
+            std::string msg = "Unable to decode audio: \"" + name + "\"";
+            Logger::AddCritical(typeid(AssetManager), msg);
+            THROW_RUNTIME_ERROR(msg);
+        }
+
+        auto sound = std::make_shared<Sound>(name, data, frameCount, 48000);
+
+        return static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Sound>{ sound, typeid(Sound) });
+    });
+    assetMgr.Init();
+    assetMgr.SetLoadCallback<AudioStream>([](const fs::path& path) -> Base::AssetHandle<void> {
+		std::string name = path.stem().string();
+
+        ma_result result;
+        ma_decoder decoder;
+        ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
+
+        {
+            ma_decoding_backend_vtable* customBackendVTable[] {
+                ma_decoding_backend_libvorbis
+            };
+
+            config.pCustomBackendUserData = nullptr;
+            config.ppCustomBackendVTables = customBackendVTable;
+            config.customBackendCount = sizeof(customBackendVTable) / sizeof(customBackendVTable[0]);
+        }
+
+        SF_INFO sfInfo{};
+        TagLib::FileRef ref;
+
+        sf_count_t totalFrames = -1;
+        
+        float seconds = -1;
+
+        SNDFILE* sndFile = nullptr;
+        
+#ifdef _WIN32
+        result = ma_decoder_init_file_w(path.c_str(), &config, &decoder);
+        sndFile = sf_wchar_open(path.c_str(), SFM_READ, &sfInfo);
+#else
+        result = ma_decoder_init_file(path.c_str(), &config, &decoder);
+        sndFile = sf_open(path.c_str(), SFM_READ, &sfInfo);
+#endif // _WIN32
+        if (result != MA_SUCCESS) {
+            auto str = ma_result_description(result);
+            std::string msg = std::format("Failed to load \"{}\": {}", path.string(), str);
+            Logger::AddCritical(typeid(AssetManager), "{}", msg);
+            ma_decoder_uninit(&decoder);
+            THROW_RUNTIME_ERROR(msg);
+        }
+        if (sndFile) {
+            totalFrames = sfInfo.frames;
+            seconds = static_cast<float>(totalFrames) / sfInfo.samplerate;
+        }
+        else {
+            Logger::AddError(
+                typeid(AssetManager),
+                "Failed to retreive frame count data of \"{}\", reason: {}",
+                name,
+                sf_strerror(sndFile)
+            );
+        }
+        sf_close(sndFile);
+
+        ref = TagLib::FileRef{ path.c_str() };
+        
+        auto stream = std::make_shared<AudioStream>(
+            name,
+            decoder,
+            decoder.outputSampleRate,
+            48000,
+            ref,
+            seconds,
+            static_cast<uint64_t>(totalFrames)
+        );
+
+        return static_cast<Base::AssetHandle<void>>(
+            Base::AssetHandle<AudioStream>(stream, typeid(AudioStream))
+        );
+    });
+
+    assetMgr.SetLoadCallback<Shader>([&](const fs::path& path) -> Base::AssetHandle<void> {
+        auto typeExt = path.extension().string();
+        Shader::Type type{};
+        if (typeExt.contains("frag"))
+            type = Shader::Type::Fragment;
+        else if (typeExt.contains("vert"))
+            type = Shader::Type::Vertex;
+        else if (typeExt.contains("comp"))
+            type = Shader::Type::Compute;
+
+        auto shader = m_Renderer->CreateShader(path, type);
+        return static_cast<Base::AssetHandle<void>>(
+            Base::AssetHandle<Shader>(shader, typeid(Shader))
+        );
+    });
+
+    assetMgr.SetLoadCallback<Font>(&Font::CreateFontFT);
+
+    assetMgr.SetUnloadCallback<Texture>([&](const Base::AssetHandle<void>& asset) {
+        auto textureHandle = Base::AssetHandle<Texture>::Cast(asset);
+        m_Renderer->DestroyTexture(textureHandle.Get());
+    });
+    assetMgr.SetUnloadCallback<Font>([&](const Base::AssetHandle<void>& asset) {
+        auto fontHandle = Base::AssetHandle<Font>::Cast(asset);
+        Font::DestroyFont(fontHandle, m_Renderer.get());
+    });
 }
+
 
 void Application::_InitGraphics() {
 	Logger::AddDebug(typeid(Application), "Initializing Graphics...");
