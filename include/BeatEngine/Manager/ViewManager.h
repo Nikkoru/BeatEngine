@@ -29,13 +29,10 @@ private:
 public:
     ViewManager() : ViewManager(nullptr, nullptr) {}
 	ViewManager(AppContext* context, AppState* state);
-	~ViewManager() { SignalManager::GetInstance()->RemoveCallbacks(typeid(ViewManager)); };
+	~ViewManager();
 public:
     void SetContext(AppContext* context) { m_Context = context; }
     void SetState(AppState* state) { m_State = state; }
-
-    void Init();
-    void Uninit();
 public:
 	template<typename TView>
 		requires(std::is_base_of_v<Base::View, TView>)

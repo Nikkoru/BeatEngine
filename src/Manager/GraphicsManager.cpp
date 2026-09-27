@@ -51,10 +51,10 @@ void GraphicsManager::Init() {
     assert(m_Renderer && "No renderer defined, define one using GraphicsManager::MakeRenderer<T>() or App::SetRenderer<T>()")
 #endif
     
-    if (m_WindowFullscreen)
-        m_Renderer->Init(m_WindowTitle, { static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) });
-    else
-        m_Renderer->Init(m_WindowTitle, m_WindowSize, VSyncMode::Disable);
+    // if (m_WindowFullscreen)
+    //     m_Renderer->Init(m_WindowTitle, { static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) });
+    // else
+    //     m_Renderer->Init(m_WindowTitle, m_WindowSize, VSyncMode::Disable);
 }
 
 void GraphicsManager::Update() {

@@ -17,12 +17,10 @@
 
 class VulkanRenderer : public Renderer {
 public: 
-    VulkanRenderer() : VulkanRenderer(nullptr) {}
-    VulkanRenderer(AppContext* context) : Renderer(context) {}
+    VulkanRenderer(AppContext* ctx = nullptr, std::shared_ptr<BaseWindow> window = nullptr);
     ~VulkanRenderer() override = default;
 private:
     uint32_t m_DeviceIndex{};
-
 
     // Vulkan::Core
     VK::Instance m_Instance;
@@ -58,7 +56,7 @@ private:
     std::shared_ptr<Texture> GetErrorTexture() override { return m_Instance.GetErrorTexture(); }
     std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
 public:
-    void Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync = VSyncMode::Disable) override;
+    void Init(VSyncMode vSync = VSyncMode::Disable) override;
     void Uninit() override;
 public:
     void Render() override;

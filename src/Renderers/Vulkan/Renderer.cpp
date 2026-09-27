@@ -38,11 +38,12 @@
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Util/Graphics.hpp"
 
-void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, VSyncMode vSync) {
+VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> window) : Renderer(ctx) {
     AddVulkanLog("Initializing VulkanRenderer");
 
-    if (m_vSyncMode == VSyncMode::Default)
-        m_vSyncMode = vSync;
+    // if (m_vSyncMode == VSyncMode::Default)
+    //     m_vSyncMode = vSync;
+    m_Window = window;
 
     if (m_Window == nullptr) {
         m_Window = std::make_shared<SDLWindow>();
@@ -50,9 +51,9 @@ void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, VSyncMod
     }
     m_Window->PrepareInitFor("Vulkan");
 
-    m_Window->Init(m_Context, windowTitle, windowSize);
+    m_Window->Init(m_Context);
 
-    m_Instance.Init(m_Context, windowTitle, m_DeviceIndex, m_Window, vSync);
+    m_Instance.Init(m_Context, m_Window->GetTitle(), m_DeviceIndex, m_Window, m_vSyncMode);
     m_AllocatedDrawImage = m_Instance.CreateDrawImage(m_Window->GetSize());
 
     {
@@ -84,6 +85,10 @@ void VulkanRenderer::Init(std::string windowTitle, Vector2u windowSize, VSyncMod
         m_DefaultVertexShader = vertexShader;
         m_DefaultFragmentShader = fragShader;
     }
+
+}
+
+void VulkanRenderer::Init(VSyncMode vSync) {
 
 }
 

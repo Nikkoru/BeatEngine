@@ -37,22 +37,18 @@ AssetManager::AssetManager(AppContext* context, AppState* state)
     : m_Context(context), m_State(state) {}
 
 AssetManager::~AssetManager() {
-   m_GlobalAssets.clear();
-   m_ViewAssets.clear();
-}
-
-void AssetManager::Uninit() {
     for (const auto& [viewID, assetMap] : m_ViewAssets) {
         for (const auto& [assetName, asset] : assetMap) {
             if (m_UnloadCallbacks.contains(asset.Type))
                 m_UnloadCallbacks.at(asset.Type)(asset.Handle);
         }
     }
-
+    m_ViewAssets.clear();
     for (auto& [assetName, asset] : m_GlobalAssets) {
         if (m_UnloadCallbacks.contains(asset.Type))
             m_UnloadCallbacks.at(asset.Type)(asset.Handle);
     }
+    m_GlobalAssets.clear();
 }
 
 void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID) {
@@ -70,46 +66,6 @@ void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID)
     }
 
     Logger::AddDebug(typeid(AssetManager), "Loaded {}/{} assets", loadedAssets, assetsCount);
-}
-
-void AssetManager::Init() {
-    if (!m_AssetsToLoad.empty())
-        Logger::AddDebug(typeid(AssetManager), "Some assets were requested to load when preloading. loading...");
-    // auto totalAssetLoaded = m_AssetsToLoad.size();
-    // for (const auto& [type, asset] : m_AssetsToLoad) {
-    //
-    //     Logger::AddDebug(typeid(AssetManager), "Loading \"{}\"", asset.string());
-    //     switch (type) {
-    //     case AssetType::Texture:
-    //         if (Load<Texture>(asset)) {
-    //             totalAssetLoaded--;
-    //         }
-    //         break;
-    //     case AssetType::FragmentShader:
-    //         // if (LoadShader(asset, Shader::Type::Fragment)) {
-    //         //     totalAssetLoaded--;
-    //         // }
-    //         break;
-    //     case AssetType::VertexShader:
-    //         // if (LoadShader(asset, Shader::Type::Vertex)) {
-    //         //     totalAssetLoaded--;
-    //         // }
-    //         break;
-    //     case AssetType::ComputeShader:
-    //         // if (LoadShader(asset, Shader::Type::Compute)) {
-    //         //     totalAssetLoaded--;
-    //         // }
-    //         break;
-    //     case AssetType::Font:
-    //         if (Load<Font>(asset)) {
-    //             totalAssetLoaded--;
-    //         }
-    //         break;
-    //     default:
-    //         break;
-    //     }
-    // }
-    // Logger::AddDebug(typeid(AssetManager), "Loaded {} assets", totalAssetLoaded);
 }
 
 bool AssetManager::Has(const String& name, const std::type_index viewID) {

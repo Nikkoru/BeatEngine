@@ -16,11 +16,14 @@ private:
     SDL_InitFlags m_InitFlags{};
 
     bool m_Fullscreen{ false };
+
+    Vector2u m_SavedSize{ 1280, 720 };
+    std::string m_SavedTitle{ "BeatEngine App" };
 public:
     SDLWindow() = default;
     ~SDLWindow() override = default;
 public:
-    void Init(AppContext* context = nullptr, std::string windowTitle = "BeatEngine App", Vector2u windowSize = { 1280, 720 }) override;
+    void Init(AppContext* context = nullptr) override;
     void Uninit() override;
 
     void InitImGui() override;

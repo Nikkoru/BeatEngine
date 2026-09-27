@@ -35,43 +35,44 @@ void AddSDLLog(std::string_view fmt, Args&&... elms) {
 #endif
 }
 
-void SDLWindow::Init(AppContext* context, std::string windowTitle, Vector2u windowSize) {
+void SDLWindow::Init(AppContext* context) {
     if (m_InitFlags == 0)
         m_InitFlags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD;
     m_Context = context;
 
     AddSDLLog("Initializing SDL Window");
 
-   SDL_Init(m_InitFlags);
+    SDL_Init(m_InitFlags);
 
-    if (windowTitle == "")
-        windowTitle = m_Context->ProgramName;
+    if (m_SavedTitle == "")
+        m_SavedTitle = m_Context->ProgramName;
 
-    if (windowSize == Vector2u{ static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) })
+    if (m_SavedSize == Vector2u{ static_cast<unsigned int>(-1), static_cast<unsigned int>(-1) })
         m_WindowFlags |= SDL_WINDOW_FULLSCREEN; 
 
     PrepareForRenderer();
 
-    m_WindowImpl = SDL_CreateWindow(windowTitle.c_str(), windowSize.X, windowSize.Y, m_WindowFlags);
-    if (windowSize == Vector2u{}) {
-        windowSize = GetSize();
-    }
+    m_WindowImpl = SDL_CreateWindow(m_SavedTitle.c_str(), m_SavedSize.X, m_SavedSize.Y, m_WindowFlags);
     
     auto driverName = SDL_GetCurrentVideoDriver();
 
     if (driverName) {
-        if (strcmp(driverName, "x11") == 0) m_WindowDriver = WindowDriver::X11;
-        else if (strcmp(driverName, "wayland") == 0) m_WindowDriver = WindowDriver::Wayland;
-        else if (strcmp(driverName, "cocoa") == 0) m_WindowDriver = WindowDriver::Cocoa;
-        else if (strcmp(driverName, "windows") == 0) m_WindowDriver = WindowDriver::Windows;
+        if (strcmp(driverName, "x11") == 0)             m_WindowDriver = WindowDriver::X11;
+        else if (strcmp(driverName, "wayland") == 0)    m_WindowDriver = WindowDriver::Wayland;
+        else if (strcmp(driverName, "cocoa") == 0)      m_WindowDriver = WindowDriver::Cocoa;
+        else if (strcmp(driverName, "windows") == 0)    m_WindowDriver = WindowDriver::Windows;
     }
     else {
         m_WindowDriver = WindowDriver::None;
         driverName = "No video driver";
     }
 
+    // if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
+    //     InitImGui();
+    // }
 
-    AddSDLLog("Window created. Size = ({}, {}), Driver = {}, Title = {}", windowSize.X, windowSize.Y, driverName, windowTitle);
+
+    AddSDLLog("Window created. Size = ({}, {}), Driver = {}, Title = {}", m_SavedSize.X, m_SavedSize.Y, driverName, m_SavedTitle);
     LogActiveFlags();
 }
 
@@ -94,7 +95,7 @@ void SDLWindow::UninitImGui() {
 }
 
 void SDLWindow::Close() {
-
+    m_Open = false;
 }
 
 void SDLWindow::SetSize(const Vector2u size) {

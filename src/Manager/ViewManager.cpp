@@ -40,16 +40,13 @@ ViewManager::ViewManager(AppContext* context, AppState* state) : MainView(typeid
     //     Uninit();
     // }); 
 }
-
-void ViewManager::Init() {
-
-}
-
-void ViewManager::Uninit() {
+ViewManager::~ViewManager() {
     while (!ViewStack.empty()) {
         ViewStack.top()->OnExit();
         ViewStack.pop();
     }
+
+    SignalManager::GetInstance()->RemoveCallbacks(typeid(ViewManager));
 }
 
 bool ViewManager::Push(std::type_index viewID) {

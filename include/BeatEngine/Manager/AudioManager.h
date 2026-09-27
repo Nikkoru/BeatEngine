@@ -93,9 +93,6 @@ public:
     void SetContext(AppContext* context) { m_Context = context; }
     void SetState(AppState* state) { m_State = state; }
 
-    void Init();
-    void Uninit();
-
 	void AddSound(std::shared_ptr<Sound> sound);
 	void AddStream(std::shared_ptr<AudioStream> stream);
 	void StopStream(std::shared_ptr<AudioStream> stream);

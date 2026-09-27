@@ -271,13 +271,7 @@ AudioManager::AudioManager(AppContext* context, AppState* state): m_Context(cont
 
 		AddSound(audioSignal->SoundToPlay);
 	});
-}
 
-AudioManager::~AudioManager() {
-    SignalManager::GetInstance()->RemoveCallbacks(typeid(AudioManager));
-}
-
-void AudioManager::Init() {
     Pa_Initialize();
 
 	PaStreamParameters outputParams{};
@@ -339,13 +333,15 @@ void AudioManager::Init() {
     CreateStream();
 }
 
-void AudioManager::Uninit() {
+AudioManager::~AudioManager() {
     Pa_StopStream(m_AudioStream);
 	Pa_CloseStream(m_AudioStream);
 	Pa_Terminate();
 
     m_Streams.clear();
     m_Sounds.clear();
+
+    SignalManager::GetInstance()->RemoveCallbacks(typeid(AudioManager));
 }
 
 void AudioManager::AddSound(std::shared_ptr<Sound> sound) {

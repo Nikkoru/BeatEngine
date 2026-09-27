@@ -39,15 +39,10 @@ Application::Application(const std::string& name): m_Context(name) {
     Logger::AddInfo("", "This is a Test Build");
     m_MainContext->EFlags |= EnvFlags_TestBuild;
 #endif // BEATENGINE_TEST
-}
-
-void Application::Init() {
-    Logger::AddInfo(typeid(Application), "Initializing Application");
-    
     _InitSettings();
 	_InitAudio();
 	_InitSystems();
-	_InitGraphics();
+	// _InitGraphics();
 	_InitAssets();
 	_InitUI();
 	_InitViews();
@@ -57,18 +52,40 @@ void Application::Init() {
 	_SubscribeToAppSignals();
 }
 
-void Application::Uninit() {
+Application::~Application() {
     Logger::AddInfo(typeid(Application), "Application in shutdown");
 
-    // m_State->KeybindsMgr->Uninit();
-    m_State.GetViewMgr().Uninit();
-    m_State.GetUIMgr().Uninit();
-    m_State.GetAssetMgr().Uninit();
     m_State.GetSystemMgr().StopSystems();
-    m_State.GetAudioMgr().Uninit();
-    // m_State.GetGraphicsMgr().Close();
-    // m_SettingsMgr->Uninit();
 }
+
+// void Application::Init() {
+//     Logger::AddInfo(typeid(Application), "Initializing Application");
+//
+//     _InitSettings();
+// 	_InitAudio();
+// 	_InitSystems();
+// 	_InitGraphics();
+// 	_InitAssets();
+// 	_InitUI();
+// 	_InitViews();
+// 	_InitKeybinds();
+//
+// 	_SubscribeToAppEvent();
+// 	_SubscribeToAppSignals();
+// }
+//
+// void Application::Uninit() {
+//     Logger::AddInfo(typeid(Application), "Application in shutdown");
+//
+//     // m_State->KeybindsMgr->Uninit();
+//     m_State.GetViewMgr().Uninit();
+//     m_State.GetUIMgr().Uninit();
+//     m_State.GetAssetMgr().Uninit();
+//     m_State.GetSystemMgr().StopSystems();
+//     m_State.GetAudioMgr().Uninit();
+//     // m_State.GetGraphicsMgr().Close();
+//     // m_SettingsMgr->Uninit();
+// }
 
 void Application::Run() {
 	Logger::AddInfo(typeid(Application), "Application started!");
@@ -77,6 +94,17 @@ void Application::Run() {
 
     if (!viewMgr.HasActiveViews())
         viewMgr.Push(viewMgr.MainView);
+
+    if (m_Renderer == nullptr) {
+#ifdef BEATENGINE_VULKAN_RENDERER
+        m_Renderer = std::make_unique<VulkanRenderer>(&m_Context);
+#elif defined(BEATENGINE_OPENGL_RENDERER)
+        m_Renderer = std::make_unique<OpenGLRenderer>(&m_Context);
+#else
+        THROW_RUNTIME_ERROR("Not renderer defined, define one.");
+#endif
+        // m_Renderer->Init();
+    }
 
     while (m_Renderer->IsOpen()) {
         while (auto event = m_Renderer->PollEvent()) {
@@ -94,8 +122,6 @@ void Application::Run() {
         Draw();
         Display();
     }
-
-    Uninit();
 }
 
 void Application::Update() {
@@ -112,7 +138,7 @@ void Application::Update() {
 	auto deltaTime = delta.AsSeconds();
 
 	if (!this->m_State.GetViewMgr().OnUpdate(deltaTime)) {
-        Uninit();
+        m_Renderer->Close();
 		return;
 	}
 
@@ -404,14 +430,10 @@ void Application::_InitUI() {
 
 void Application::_InitAudio() {
 	Logger::AddDebug(typeid(Application), "Initializing audio...");
-
-    m_State.GetAudioMgr().Init();
 }
 
 void Application::_InitViews() {
 	Logger::AddDebug(typeid(Application), "Initializing views...");
-
-    m_State.GetViewMgr().Init();
 }
 
 void Application::_InitSystems() {
@@ -469,7 +491,6 @@ void Application::_InitAssets() {
             sound
         );
     });
-    assetMgr.Init();
     assetMgr.SetLoadCallback<AudioStream>([](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
 		std::string name = path.stem().string();
 
@@ -584,15 +605,16 @@ void Application::_InitGraphics() {
 
     if (m_Renderer == nullptr)
 #ifdef BEATENGINE_VULKAN_RENDERER
-        m_Renderer = std::make_unique<VulkanRenderer>();
+        m_Renderer = std::make_unique<VulkanRenderer>(&m_Context);
 #elif defined(BEATENGINE_OPENGL_RENDERER)
-        m_Renderer = std::make_unique<OpenGLRenderer>();
+        m_Renderer = std::make_unique<OpenGLRenderer>(&m_Context);
 #else
         THROW_RUNTIME_ERROR("Not renderer defined, define one.");
 #endif
     // m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
     // m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
     // m_State.GetGraphicsMgr().Init();
+    m_Renderer->Init();
 
     if (gameSettings->WindowFullScreen) {
         m_Context.AFlags |= AppFlags_Fullscreen;

@@ -20,13 +20,13 @@ protected:
     AppContext* m_Context{ nullptr };
     std::string m_RendererName{};
     WindowDriver m_WindowDriver{ WindowDriver::None };
-    bool m_Open{ false };
+    bool m_Open{ true };
 public:
     BaseWindow() = default;
     virtual ~BaseWindow() = default;
 public:
     void PrepareInitFor(std::string renderer) { m_RendererName = renderer; }
-    virtual void Init(AppContext* context = nullptr, std::string windowTitle = "BeatEngine App", Vector2u windowSize = { 1280, 720 }) = 0;
+    virtual void Init(AppContext* context = nullptr) = 0;
 
     virtual void Uninit() = 0;
 

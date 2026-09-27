@@ -13,28 +13,28 @@
 Game::Game(int argc, char** argv)
     : m_Argc(argc)
     , m_Argv(argv)
-    , Application("BeatEngineTest") {}
+    , Application("BeatEngineTest") {
 
-void Game::Init() {
-    m_Renderer = std::make_unique<VulkanRenderer>();
+    m_Context.AddAFlags(AppFlags_ImGui);
+    m_Context.AddAFlags(AppFlags_ImGuiDocking);
+
     auto window = std::make_shared<SDLWindow>();
     window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
     window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
+    window->SetTitle("BE");
+    window->SetSize({ 1280, 720 });
+
+    m_Renderer = std::make_unique<VulkanRenderer>(&m_Context, window);
 
     m_Renderer->SetWindow(window);
 
     std::vector<std::filesystem::path> paths;
-
-    m_Context.AddAFlags(AppFlags_ImGui);
-    m_Context.AddAFlags(AppFlags_ImGuiDocking);
 
     m_Renderer->GetWindow()->SetTitle("BE");
     m_Renderer->GetWindow()->SetSize({ 1280, 720 });
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
-
-    Application::Init();
 
     if (m_Argc >= 2) {
         auto index = std::stoi(m_Argv[1]);

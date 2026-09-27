@@ -11,20 +11,18 @@ protected:
     Clock m_MainClock{};
     float m_LastDelta{};
 
+    std::unique_ptr<Renderer> m_Renderer{ nullptr };
+
     ViewLayerStack m_GlobalLayers{};
     AppContext m_Context{};
     AppState m_State{};
-
-    std::unique_ptr<Renderer> m_Renderer{ nullptr };
 
     bool m_Running{ false };
 	std::filesystem::path m_SettingsPath{ "config.ini" };
 public:
     Application(const std::string& name = "BeatEngine Program");
-    virtual ~Application() = default;
+    virtual ~Application();
 public:
-    virtual void Init();
-    virtual void Uninit();
     virtual void Run();
 
     virtual void Update();

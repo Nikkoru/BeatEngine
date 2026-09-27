@@ -40,9 +40,6 @@ public:
 public:
     void SetContext(AppContext* context) { m_Context = context; }
     void SetState(AppState* state) { m_State = state; }
-
-    void Init();
-    void Uninit();
 private:
     Assets m_AssetsToLoad;
 	std::unordered_map<String, Slot> m_GlobalAssets;
