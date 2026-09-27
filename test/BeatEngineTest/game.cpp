@@ -24,7 +24,18 @@ void Game::Init() {
     m_Renderer->SetWindow(window);
 
     std::vector<std::filesystem::path> paths;
-    
+
+    m_Context.AddAFlags(AppFlags_ImGui);
+    m_Context.AddAFlags(AppFlags_ImGuiDocking);
+
+    m_Renderer->GetWindow()->SetTitle("BE");
+    m_Renderer->GetWindow()->SetSize({ 1280, 720 });
+    m_State.GetViewMgr().RegisterView<TestView>();
+    m_State.GetViewMgr().RegisterView<GameView>();
+    m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
+
+    Application::Init();
+
     if (m_Argc >= 2) {
         auto index = std::stoi(m_Argv[1]);
         
@@ -100,17 +111,6 @@ void Game::Init() {
             }
         }
 	});
-
-    m_Context.AddAFlags(AppFlags_ImGui);
-    m_Context.AddAFlags(AppFlags_ImGuiDocking);
-
-    m_Renderer->GetWindow()->SetTitle("BE");
-    m_Renderer->GetWindow()->SetSize({ 1280, 720 });
-    m_State.GetViewMgr().RegisterView<TestView>();
-    m_State.GetViewMgr().RegisterView<GameView>();
-    m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
-
-    Application::Init();
 
 	m_GlobalLayers.AttachLayer<GlobalTestLayerUI>(&m_Context, &m_State);
 }

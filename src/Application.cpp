@@ -420,7 +420,7 @@ void Application::_InitSystems() {
 
 void Application::_InitAssets() {
 	Logger::AddDebug(typeid(Application), "Initializing assets...");
-    auto assetMgr = m_State.GetAssetMgr();
+    auto& assetMgr = m_State.GetAssetMgr();
     assetMgr.SetLoadCallback<Texture>([&](const fs::path& path) -> Base::AssetHandle<void> {
         auto texture = m_Renderer->CreateTexture(path);
         return static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Texture>{ texture, typeid(Texture) });
