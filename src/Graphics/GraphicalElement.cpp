@@ -1,6 +1,6 @@
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/DrawCommand.hpp"
-#include "BeatEngine/Graphics/RendererData.hpp"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/GraphicsManager.h"
 #include <glm/ext/matrix_float4x4.hpp>
@@ -8,9 +8,9 @@
 
 void GraphicalElement::BaseDraw(Renderer* const mgr, RenderState state) {
     glm::mat4 transform{ 1.f };
-    if (auto camera = mgr.GetMainCamera()) {
-        transform = camera->GetProjection();
-    }
+    // if (auto camera = mgr.GetMainCamera()) {
+    //     transform = camera->GetProjection();
+    // }
 
     DrawCommand cmd{
         .projection = transform,
@@ -27,11 +27,11 @@ void GraphicalElement::BaseDraw(Renderer* const mgr, RenderState state) {
 
     m_Vertices.SetType(m_PrimitiveType);
 
-    mgr.DrawVertices(m_Vertices, state);
+    mgr->DrawVertices(m_Vertices, state);
 }
 
 void GraphicalElement::UninitGraphics(Renderer* const mgr) {
-    mgr.UninitElement(*this);
+    mgr->UninitVertices(m_Vertices);
 }
 
 void GraphicalElement::SetTexture(Base::AssetHandle<Texture> texture) {

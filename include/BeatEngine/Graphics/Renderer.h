@@ -4,7 +4,8 @@
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/RenderState.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/VertexArray.hpp"
+#include "BeatEngine/Manager/AssetManager.h"
 #include <filesystem>
 #include <memory>
 
@@ -15,7 +16,7 @@ private:
     friend class GraphicsManager;
 protected:
     std::shared_ptr<BaseWindow> m_Window{ nullptr };
-    AppContext* m_Context;
+    AppContext* m_Context{ nullptr };
     bool m_Profile{ false };
 
     unsigned int m_TargetFps{ 0 };
@@ -32,6 +33,9 @@ public:
     virtual void Display() = 0;
     virtual void Clear() = 0;
     virtual void Update() = 0;
+
+    bool IsOpen() { return m_Window->IsOpen(); }
+    void Close() { m_Window->Close(); }
 
     virtual void SetGlobalShader(std::shared_ptr<Shader> shader) = 0;
 

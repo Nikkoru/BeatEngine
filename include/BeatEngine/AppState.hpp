@@ -17,7 +17,7 @@ private:
 	SettingsManager SettingsMgr{};
 	AudioManager AudioMgr{};
 	UIManager UIMgr{};
-    GraphicsManager GraphicsMgr{};
+    // GraphicsManager GraphicsMgr{};
 public:
     AppState() = default;
     void PrepareManagers(AppContext* context);
@@ -28,5 +28,5 @@ public:
     SettingsManager& GetSettingsMgr();
     AudioManager& GetAudioMgr();
     UIManager& GetUIMgr();
-    GraphicsManager& GetGraphicsMgr();
+    // GraphicsManager& GetGraphicsMgr();
 };

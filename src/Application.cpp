@@ -4,6 +4,7 @@
 
 #include "BeatEngine/Graphics/BaseWindow.h"
 
+#include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Settings/AppDebugSettings.hpp"
 #include "BeatEngine/Settings/AppSettings.hpp"
 
@@ -15,6 +16,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 
 #include "version.h"
+#include <memory>
 
 Application::Application(const std::string& name): m_Context(name) {
     m_State.PrepareManagers(&m_Context);
@@ -54,22 +56,22 @@ void Application::Uninit() {
     m_State.GetAssetMgr().Uninit();
     m_State.GetSystemMgr().StopSystems();
     m_State.GetAudioMgr().Uninit();
-    m_State.GetGraphicsMgr().Close();
+    // m_State.GetGraphicsMgr().Close();
     // m_SettingsMgr->Uninit();
 }
 
 void Application::Run() {
 	Logger::AddInfo(typeid(Application), "Application started!");
     auto& viewMgr = m_State.GetViewMgr();
-    auto& graphicsMgr = m_State.GetGraphicsMgr();
+    // auto& graphicsMgr = m_State.GetGraphicsMgr();
 
     if (!viewMgr.HasActiveViews())
         viewMgr.Push(viewMgr.MainView);
 
-    while (graphicsMgr.IsOpen()) {
-        while (auto event = graphicsMgr.PollEvent()) {
+    while (m_Renderer->IsOpen()) {
+        while (auto event = m_Renderer->PollEvent()) {
          if (event->Is<AppExitingEvent>()) {
-                graphicsMgr.Close();
+                m_Renderer->Close();
                 break;
             }
             m_GlobalLayers.OnEvent(event);
@@ -88,9 +90,8 @@ void Application::Run() {
 
 void Application::Update() {
     Profiler::StartProfile({ typeid(Application), "Update" }, { .0f, 1.0f, .0f, 1.0f });
-    auto& graphicsMgr = m_State.GetGraphicsMgr();
-
-    m_Context.WindowSize = graphicsMgr.GetWindow()->GetSize();
+    // auto& graphicsMgr = m_State.GetGraphicsMgr();
+    // m_Context.WindowSize = graphicsMgr.GetWindow()->GetSize();
 
     // if (m_Context->AFlags & ApplicationFlags_CursorChanged) {
     //     m_Window->setMouseCursor(m_Cursor);
@@ -105,7 +106,7 @@ void Application::Update() {
 		return;
 	}
 
-    graphicsMgr.Update();
+    m_Renderer->Update();
 	
     m_State.GetSystemMgr().Update(deltaTime);
 	m_GlobalLayers.OnUpdate(deltaTime);
@@ -122,15 +123,15 @@ void Application::Display() {
         DrawImGuiDebug();
     }
 
-    m_State.GetGraphicsMgr().Clear();
-	m_State.GetGraphicsMgr().Display();
+    m_Renderer->Clear();
+	m_Renderer->Display();
 
     Profiler::EndProfile({ typeid(Application), "Display" });
 }
 
 void Application::Draw() {
     Profiler::StartProfile({ typeid(Application), "Draw" }, { .0f, .0f, 1.0f, 1.0f });
-    m_State.GetGraphicsMgr().Render();
+    m_Renderer->Render();
 
     if (m_Context.AFlags & AppFlags_DebugDock && 
         m_Context.AFlags & AppFlags_ImGui &&
@@ -164,8 +165,8 @@ void Application::Draw() {
     }
 	// m_Running = m_State.GetViewMgr().OnDraw();
 
-	m_GlobalLayers.Draw(m_State.GetGraphicsMgr());
-    m_State.GetUIMgr().OnDraw();
+	m_GlobalLayers.Draw(m_Renderer.get());
+    m_State.GetUIMgr().OnDraw(m_Renderer.get());
 
     Profiler::EndProfile({ typeid(Application), "Draw" });
 }
@@ -285,7 +286,7 @@ void Application::DrawImGuiDebug() {
         if (ImGui::BeginTabItem("Actions")) {
             if (ImGui::Button("Exit"))
                 SignalManager::GetInstance()->Send(std::make_shared<AppExitSignal>());
-            ImGui::Checkbox("Allow editing flags", &editFlags);
+   ImGui::Checkbox("Allow editing flags", &editFlags);
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Status")) {
@@ -298,8 +299,8 @@ void Application::DrawImGuiDebug() {
             else deltas.Add(m_LastDelta);
             
             float avgDelta{};
-            float minDelta{ std::numeric_limits<float>::max() };
-            float maxDelta{ std::numeric_limits<float>::min() };
+            float minDelta{ (std::numeric_limits<float>::max)() };
+            float maxDelta{ (std::numeric_limits<float>::min)() };
             for (const auto& delta : deltas) {
                 avgDelta += delta;
                 if (delta < minDelta)
@@ -360,8 +361,8 @@ void Application::DrawImGuiDebug() {
     //     m_State.GetEntityMgr().ShowImGuiDebugWindow();
     // if (drawEventMgr)
     //     EventManager::GetInstance()->ShowImGuiDebugWindow();
-    if (drawGraphicsMgr)
-        m_State.GetGraphicsMgr().ShowImGuiDebugWindow();
+    // if (drawGraphicsMgr)
+    //     m_State.GetGraphicsMgr().ShowImGuiDebugWindow();
     if (drawSettingsMgr)
         m_State.GetSettingsMgr().ShowImGuiDebugWindow();
     // if (drawSignalMgr)
@@ -414,20 +415,28 @@ void Application::_InitAssets() {
 }
 
 void Application::_InitGraphics() {
-	Logger::AddDebug(typeid(Application), "Initializing window...");
+	Logger::AddDebug(typeid(Application), "Initializing Graphics...");
 
 	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(AppSettings));
 	auto gameSettings = std::static_pointer_cast<AppSettings>(settings);
 
-    m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
-    m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
-    m_State.GetGraphicsMgr().Init();
+    if (m_Renderer == nullptr)
+#ifdef BEATENGINE_VULKAN_RENDERER
+        m_Renderer = std::make_unique<VulkanRenderer>();
+#elif defined(BEATENGINE_OPENGL_RENDERER)
+        m_Renderer = std::make_unique<OpenGLRenderer>();
+#else
+        THROW_RUNTIME_ERROR("Not renderer defined, define one.");
+#endif
+    // m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
+    // m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
+    // m_State.GetGraphicsMgr().Init();
 
     if (gameSettings->WindowFullScreen) {
         m_Context.AFlags |= AppFlags_Fullscreen;
     }
 
-    m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
+    // m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
 }
 
 void Application::_InitKeybinds() {

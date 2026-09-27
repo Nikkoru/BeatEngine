@@ -57,25 +57,25 @@ std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool g
 
 void UIManager::RemoveLayer(const std::string layerName, bool global) {
     if (global) {
-        m_GlobalLayers[layerName]->UninitGraphics(m_State->GetGraphicsMgr());
+        // m_GlobalLayers[layerName]->UninitGraphics(m_State->GetGraphicsMgr());
         m_GlobalLayers.erase(layerName);
     }
     else {
-        m_Layers[m_Context->ActiveView][layerName]->UninitGraphics(m_State->GetGraphicsMgr());
+        // m_Layers[m_Context->ActiveView][layerName]->UninitGraphics(m_State->GetGraphicsMgr());
         m_Layers[m_Context->ActiveView].erase(layerName);
     }
 }
 
 void UIManager::RemoveViewLayers(const std::type_index viewID) {
     for (const auto& layer : m_Layers.at(viewID)) {
-        layer.second->UninitGraphics(m_State->GetGraphicsMgr());
+        // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
     }
 	m_Layers.erase(viewID);
 }
 
 void UIManager::RemoveGlobalLayers() {
     for (const auto& layer : m_GlobalLayers) {
-        layer.second->UninitGraphics(m_State->GetGraphicsMgr());
+        // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
     }
 	m_GlobalLayers.clear();
 }
@@ -85,20 +85,20 @@ void UIManager::RemoveAllLayers() {
 
     for (const auto& [viewID, layerMap] : m_Layers) {
         for (const auto& layer : layerMap) {
-            layer.second->UninitGraphics(m_State->GetGraphicsMgr());
+            // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
         }
     }
 	m_Layers.clear();
 }
 
-void UIManager::OnDraw() {
+void UIManager::OnDraw(Renderer* const renderer) {
 	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
-        layer->Draw(m_State->GetGraphicsMgr());
+        layer->Draw(renderer);
 	}
 	for (const auto& [name, layer] : m_GlobalLayers) {
         auto state = RenderState::Default;
         state.DrawInGlobal = true;
-        layer->Draw(m_State->GetGraphicsMgr(), state);
+        layer->Draw(renderer);
 	}
 }
 

@@ -13,7 +13,7 @@ namespace Base {
     class Event;
     class View;
 };
-class GraphicsManager;
+class Renderer;
 class AppContext;
 class AppState;
 class ViewManager {
@@ -49,7 +49,7 @@ public:
 	void RegisterView();
 
 	bool OnEvent(Optional<Base::Event> event);
-	bool OnDraw();
+	bool OnDraw(Renderer* const renderer);
 	bool OnUpdate(float dt);
 	bool OnExit();
 

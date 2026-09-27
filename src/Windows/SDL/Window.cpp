@@ -93,6 +93,10 @@ void SDLWindow::UninitImGui() {
     ImGui_ImplSDL3_Shutdown();
 }
 
+void SDLWindow::Close() {
+
+}
+
 void SDLWindow::SetSize(const Vector2u size) {
     SDL_SetWindowSize(m_WindowImpl, size.X, size.Y);
 }

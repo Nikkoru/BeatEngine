@@ -26,6 +26,8 @@ public:
     void InitImGui() override;
     void UninitImGui() override;
 
+    void Close() override;
+
     void SetSize(const Vector2u size) override;
     void SetMinimumSize(const Vector2u size) override;
     void SetMaximumSize(const Vector2u size) override;

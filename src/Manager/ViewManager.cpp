@@ -108,10 +108,10 @@ bool ViewManager::OnEvent(Optional<Base::Event> event) {
 	}
 }
 
-bool ViewManager::OnDraw() {
+bool ViewManager::OnDraw(Renderer* const renderer) {
     Profiler::StartProfile({ typeid(ViewManager), "OnDraw" }, IM_COL32(255, 255, 0, 255));
 	if (!ViewStack.empty()) {
-		ViewStack.top()->OnDraw(m_State->GetGraphicsMgr());
+		ViewStack.top()->OnDraw(renderer);
         Profiler::EndProfile({ typeid(ViewManager), "OnDraw" });
 		return true;
 	}

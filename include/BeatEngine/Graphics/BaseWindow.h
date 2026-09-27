@@ -33,6 +33,8 @@ public:
     virtual void UninitImGui() = 0;
     virtual void InitImGui() = 0;
 
+    virtual void Close() = 0;
+
     virtual Optional<Base::Event> PollEvent() = 0;
 
     virtual void SetSize(const Vector2u size) { (void)size; };

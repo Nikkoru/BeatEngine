@@ -37,7 +37,7 @@ public:
 	void RemoveGlobalLayers();
 	void RemoveAllLayers();
 
-	void OnDraw();
+	void OnDraw(Renderer* const renderer);
 
 	void Update(float dt);
     

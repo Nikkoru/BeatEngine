@@ -15,7 +15,7 @@ void AppState::PrepareManagers(AppContext* context) {
     AudioMgr.SetContext(context);
     AudioMgr.SetState(this);
 
-    GraphicsMgr = GraphicsManager(context, this);
+    // GraphicsMgr = GraphicsManager(context, this);
 }
 
 ViewManager& AppState::GetViewMgr() {
@@ -36,6 +36,6 @@ UIManager& AppState::GetUIMgr() {
 AudioManager& AppState::GetAudioMgr() {
     return AudioMgr;
 }
-GraphicsManager& AppState::GetGraphicsMgr() {
-    return GraphicsMgr;
-}
+// GraphicsManager& AppState::GetGraphicsMgr() {
+//     return GraphicsMgr;
+// }

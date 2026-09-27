@@ -8,6 +8,7 @@
 #include "system/system.h"
 #include "view/gameView.h"
 #include "view/view.h"
+#include <memory>
 
 Game::Game(int argc, char** argv)
     : m_Argc(argc)
@@ -15,19 +16,19 @@ Game::Game(int argc, char** argv)
     , Application("BeatEngineTest") {}
 
 void Game::Init() {
-    auto renderer = std::make_shared<VulkanRenderer>();
+    m_Renderer = std::make_unique<VulkanRenderer>();
     auto window = std::make_shared<SDLWindow>();
     window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
     window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
 
-    renderer->SetWindow(window);
+    m_Renderer->SetWindow(window);
 
     std::vector<std::filesystem::path> paths;
     
     if (m_Argc >= 2) {
         auto index = std::stoi(m_Argv[1]);
         
-        renderer->SetDeviceIndex(index);
+        // m_Renderer->SetDeviceIndex(index);
     }
     if (m_Argc >= 3) {
         if (!std::filesystem::exists(m_Argv[2])) {
@@ -103,9 +104,8 @@ void Game::Init() {
     m_Context.AddAFlags(AppFlags_ImGui);
     m_Context.AddAFlags(AppFlags_ImGuiDocking);
 
-    m_State.GetGraphicsMgr().MakeRenderer(renderer);
-    m_State.GetGraphicsMgr().SetWindowTitle("BE");
-    m_State.GetGraphicsMgr().SetWindowSize({ 1280, 720 });
+    m_Renderer->GetWindow()->SetTitle("BE");
+    m_Renderer->GetWindow()->SetSize({ 1280, 720 });
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();

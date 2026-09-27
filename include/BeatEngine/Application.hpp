@@ -4,6 +4,7 @@
 #include "BeatEngine/AppState.hpp"
 #include "BeatEngine/System/Clock.h"
 #include "BeatEngine/View/ViewLayerStack.h"
+#include "BeatEngine/Graphics/Renderer.h"
 
 class Application {
 protected:
