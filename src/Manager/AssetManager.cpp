@@ -63,73 +63,53 @@ void AssetManager::BulkLoad(const Assets& assets, const std::type_index& viewID)
         assetsCount += vecPath.size();
         loadedAssets += vecPath.size();
         for (const auto& path : vecPath) {
-            if (Preload(type, path))
+            auto handle = _DoLoad(type, path, viewID);
+            if (!handle)
                 loadedAssets--;
         }
     }
 
-    Logger::AddDebug(typeid(AssetManager), "Preloaded {}/{} assets", loadedAssets, assetsCount);
-}
-
-bool AssetManager::Preload(AssetType type, const fs::path& path, std::type_index viewID) {
-    switch (type) {
-    case AssetType::Texture:
-    case AssetType::FragmentShader:
-    case AssetType::VertexShader:
-    case AssetType::ComputeShader:
-    case AssetType::Font:
-        if (!m_AssetsToLoad.contains(type))
-            m_AssetsToLoad[type];
-        m_AssetsToLoad.at(type) = path;
-        return false;
-    case AssetType::AudioStream:
-        Load<AudioStream>(path, viewID);
-        return true;
-    case AssetType::Sound:
-        Load<Sound>(path, viewID);
-        return true;
-    default:
-        return false;
-    }
+    Logger::AddDebug(typeid(AssetManager), "Loaded {}/{} assets", loadedAssets, assetsCount);
 }
 
 void AssetManager::Init() {
     if (!m_AssetsToLoad.empty())
         Logger::AddDebug(typeid(AssetManager), "Some assets were requested to load when preloading. loading...");
-    auto totalAssetLoaded = m_AssetsToLoad.size();
-    for (const auto& [type, asset] : m_AssetsToLoad) {
-        Logger::AddDebug(typeid(AssetManager), "Loading \"{}\"", asset.string());
-        switch (type) {
-        case AssetType::Texture:
-            if (Load<Texture>(asset)) {
-                totalAssetLoaded--;
-            }
-            break;
-        case AssetType::FragmentShader:
-            // if (LoadShader(asset, Shader::Type::Fragment)) {
-            //     totalAssetLoaded--;
-            // }
-            break;
-        case AssetType::VertexShader:
-            // if (LoadShader(asset, Shader::Type::Vertex)) {
-            //     totalAssetLoaded--;
-            // }
-            break;
-        case AssetType::ComputeShader:
-            // if (LoadShader(asset, Shader::Type::Compute)) {
-            //     totalAssetLoaded--;
-            // }
-            break;
-        case AssetType::Font:
-            if (Load<Font>(asset)) {
-                totalAssetLoaded--;
-            }
-            break;
-        default:
-            break;
-        }
-    }
-    Logger::AddDebug(typeid(AssetManager), "Loaded {} assets", totalAssetLoaded);
+    // auto totalAssetLoaded = m_AssetsToLoad.size();
+    // for (const auto& [type, asset] : m_AssetsToLoad) {
+    //
+    //     Logger::AddDebug(typeid(AssetManager), "Loading \"{}\"", asset.string());
+    //     switch (type) {
+    //     case AssetType::Texture:
+    //         if (Load<Texture>(asset)) {
+    //             totalAssetLoaded--;
+    //         }
+    //         break;
+    //     case AssetType::FragmentShader:
+    //         // if (LoadShader(asset, Shader::Type::Fragment)) {
+    //         //     totalAssetLoaded--;
+    //         // }
+    //         break;
+    //     case AssetType::VertexShader:
+    //         // if (LoadShader(asset, Shader::Type::Vertex)) {
+    //         //     totalAssetLoaded--;
+    //         // }
+    //         break;
+    //     case AssetType::ComputeShader:
+    //         // if (LoadShader(asset, Shader::Type::Compute)) {
+    //         //     totalAssetLoaded--;
+    //         // }
+    //         break;
+    //     case AssetType::Font:
+    //         if (Load<Font>(asset)) {
+    //             totalAssetLoaded--;
+    //         }
+    //         break;
+    //     default:
+    //         break;
+    //     }
+    // }
+    // Logger::AddDebug(typeid(AssetManager), "Loaded {} assets", totalAssetLoaded);
 }
 
 bool AssetManager::Has(const String& name, const std::type_index viewID) {
@@ -343,6 +323,45 @@ void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids
             }
         }
     }
+}
+
+Base::AssetHandle<void> AssetManager::_DoLoad(std::type_index assetType, const fs::path& path, std::type_index viewID) {
+    if (!fs::exists(path)) {
+        Logger::AddError(typeid(AssetManager), "Path \"{}\" doesn't exists", path.string());
+        return {};
+    }
+    if (!fs::is_regular_file(path)) {
+        Logger::AddError(typeid(AssetManager), "Path \"{}\" is not a regular file", path.string());
+        return {};
+    }
+
+    auto global = viewID == typeid(nullptr);
+    std::string assetTypeName = assetType.name();
+    auto assetName = path.stem().string();
+
+    if (global && m_GlobalAssets.contains(assetName)) {
+        Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" is already loaded. Retuning existing one", assetName);
+        return m_GlobalAssets.at(assetName).Handle;
+    }
+    else if (!global && !m_ViewAssets.contains(viewID))
+        m_ViewAssets[viewID];
+    else if (!global && m_ViewAssets.at(viewID).contains(assetName)) {
+        Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" is already loaded. Retuning existing one", assetName);
+        return m_ViewAssets.at(viewID).at(assetName).Handle;
+    }
+
+    if (!m_LoadCallbacks.contains(assetType)) {
+        auto msg = std::format("Load failed for file in \"{}\": Theres no callback available for this type -> {}", path.string(), assetTypeName);
+        Logger::AddCritical(typeid(AssetManager), msg);
+        THROW_RUNTIME_ERROR(msg);
+    }
+    auto [handle, ptr] = m_LoadCallbacks.at(assetType)(path);
+    auto slot = Slot{ handle, ptr, assetType };
+    if (global)
+        m_GlobalAssets[assetName] = slot;
+    else
+        m_ViewAssets.at(viewID).at(assetName) = slot;
+    return handle;
 }
 
 void AssetManager::ShowAssetBrowser(Renderer* const renderer) {

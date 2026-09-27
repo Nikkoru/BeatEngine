@@ -32,47 +32,7 @@ void AssetManager::SetUnloadCallback(AssetUnloadCallback callback) {
 template <typename TAsset>
     requires(std::is_base_of_v<Base::Asset, TAsset>)
 Base::AssetHandle<TAsset> AssetManager::Load(const fs::path& path, std::type_index viewID) {
-    if (!fs::exists(path)) {
-        Logger::AddError(typeid(AssetManager), "Path \"{}\" doesn't exists", path.string());
-        return {};
-    }
-    if (!fs::is_regular_file(path)) {
-        Logger::AddError(typeid(AssetManager), "Path \"{}\" is not a regular file", path.string());
-        return {};
-    }
-
-    auto global = viewID == typeid(nullptr);
-    std::string assetTypeName = typeid(TAsset).name();
-    auto assetName = path.stem().string();
-
-    if (global && m_GlobalAssets.contains(assetName)) {
-        Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" is already loaded. Retuning existing one", assetName);
-        return Base::AssetHandle<TAsset>::Cast(
-            m_GlobalAssets.at(assetName).Handle
-        );
-    }
-    else if (!m_ViewAssets.contains(viewID))
-        m_ViewAssets[viewID];
-    else if (m_ViewAssets.at(viewID).contains(assetName)) {
-        Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" is already loaded. Retuning existing one", assetName);
-        return Base::AssetHandle<TAsset>::Cast(
-            m_ViewAssets.at(viewID).at(assetName).Handle
-        );
-    }
-
-    if (!m_LoadCallbacks.contains(typeid(TAsset))) {
-        auto msg = std::format("Load failed for file in \"{}\": Theres no callback available for this type -> {}", path.string(), assetTypeName);
-        Logger::AddCritical(typeid(AssetManager), msg);
-        THROW_RUNTIME_ERROR(msg);
-    }
-    auto handle = m_LoadCallbacks.at(typeid(TAsset))(path);
-    auto derivatedHandle = Base::AssetHandle<TAsset>::Cast(handle);
-    auto slot = Slot{ handle, derivatedHandle.Get(), typeid(TAsset) };
-    if (global)
-        m_GlobalAssets[assetName] = slot;
-    else
-        m_ViewAssets.at(viewID).at(assetName) = slot;
-    return Base::AssetHandle<TAsset>::Cast(handle);
+    return Base::AssetHandle<TAsset>::Cast(_DoLoad(typeid(TAsset), path, viewID));
 }
 template <typename TAsset>
     requires(std::is_base_of_v<Base::Asset, TAsset>)

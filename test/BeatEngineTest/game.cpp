@@ -83,33 +83,28 @@ void Game::Init() {
 
     m_State.GetAssetMgr().BulkLoad({
 		{
-			AssetType::Font,
+			typeid(Font),
 			{
 				"assets/fonts/main-font.ttf"
 			}
 		},
 		{
-			AssetType::Sound,
+			typeid(Sound),
 			{
 				"assets/sounds/test-sound.mp3"
 			}
 		},
-	       {
-	           AssetType::AudioStream,
-	           paths
-	       },
         {
-            AssetType::FragmentShader,
-            {
-                "assets/shaders/shader.frag"
-            }
+            typeid(AudioStream),
+            paths
         },
         {
-            AssetType::VertexShader,
+            typeid(Shader),
             {
+                "assets/shaders/shader.frag"
                 "assets/shaders/shader.vert"
             }
-        }
+        },
 	});
 
 	m_GlobalLayers.AttachLayer<GlobalTestLayerUI>(&m_Context, &m_State);

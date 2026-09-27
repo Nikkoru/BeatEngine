@@ -30,8 +30,8 @@ public:
 		Slot() = default;
 		Slot(Base::AssetHandle<void> handle, std::shared_ptr<Base::Asset> asset, std::type_index type = typeid(nullptr)) : Handle(handle), Asset(asset), Type(type) {}
 	};
-    using Assets = std::unordered_map<AssetType, std::vector<std::filesystem::path>>;
-    using AssetLoadCallback = std::function<Base::AssetHandle<void>(const fs::path&)>;
+    using Assets = std::unordered_map<std::type_index, std::vector<std::filesystem::path>>;
+    using AssetLoadCallback = std::function<std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>>(const fs::path&)>;
     using AssetUnloadCallback = std::function<void(const Base::AssetHandle<void>&)>;
 public:
     AssetManager() : AssetManager(nullptr, nullptr) {}
@@ -44,7 +44,7 @@ public:
     void Init();
     void Uninit();
 private:
-    std::unordered_map<AssetType, fs::path> m_AssetsToLoad;
+    Assets m_AssetsToLoad;
 	std::unordered_map<String, Slot> m_GlobalAssets;
 	std::unordered_map<std::type_index, std::unordered_map<String, Slot>> m_ViewAssets;
     std::unordered_map<std::type_index, AssetLoadCallback> m_LoadCallbacks;
@@ -66,18 +66,18 @@ public:
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)
 	Base::AssetHandle<TAsset> Load(const fs::path& path, const std::type_index viewID = typeid(nullptr));
+    
     void BulkLoad(const Assets& assets, const std::type_index& viewID = typeid(nullptr));
 	template <typename TAsset>
 		requires(std::is_base_of_v<Base::Asset, TAsset>)
 	Base::AssetHandle<TAsset> Get(const String& assetName, const std::type_index viewID = typeid(nullptr));
     bool Has(const String& name, const std::type_index viewID = typeid(nullptr));
 
-    bool Preload(AssetType type, const fs::path& path, const std::type_index viewID = typeid(nullptr));
-
     void ShowImGuiDebugWindow(Renderer* const renderer);
     void ShowAssetBrowser(Renderer* const renderer);
 private:
     void ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids, std::vector<Slot>& totalAssets); 
+    Base::AssetHandle<void> _DoLoad(std::type_index assetType, const fs::path& path, std::type_index viewID);
 };
 
 #include "BeatEngine/Manager/AssetManager.inl"

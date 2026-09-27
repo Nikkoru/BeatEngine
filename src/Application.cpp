@@ -421,12 +421,15 @@ void Application::_InitSystems() {
 void Application::_InitAssets() {
 	Logger::AddDebug(typeid(Application), "Initializing assets...");
     auto& assetMgr = m_State.GetAssetMgr();
-    assetMgr.SetLoadCallback<Texture>([&](const fs::path& path) -> Base::AssetHandle<void> {
+    assetMgr.SetLoadCallback<Texture>([&](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
         auto texture = m_Renderer->CreateTexture(path);
-        return static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Texture>{ texture, typeid(Texture) });
+        return std::make_pair(
+            static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Texture>{ texture, typeid(Texture) }),
+            texture
+        );
     });
 
-    assetMgr.SetLoadCallback<Sound>([](const fs::path& path) -> Base::AssetHandle<void> {
+    assetMgr.SetLoadCallback<Sound>([](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
 		std::string name = path.stem().string();
 
         ma_result result;
@@ -461,10 +464,13 @@ void Application::_InitAssets() {
 
         auto sound = std::make_shared<Sound>(name, data, frameCount, 48000);
 
-        return static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Sound>{ sound, typeid(Sound) });
+        return std::make_pair(
+            static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Sound>{ sound, typeid(Sound) }),
+            sound
+        );
     });
     assetMgr.Init();
-    assetMgr.SetLoadCallback<AudioStream>([](const fs::path& path) -> Base::AssetHandle<void> {
+    assetMgr.SetLoadCallback<AudioStream>([](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
 		std::string name = path.stem().string();
 
         ma_result result;
@@ -530,12 +536,15 @@ void Application::_InitAssets() {
             static_cast<uint64_t>(totalFrames)
         );
 
-        return static_cast<Base::AssetHandle<void>>(
-            Base::AssetHandle<AudioStream>(stream, typeid(AudioStream))
+        return std::make_pair(
+            static_cast<Base::AssetHandle<void>>(
+                Base::AssetHandle<AudioStream>(stream, typeid(AudioStream))
+            ),
+            stream
         );
     });
 
-    assetMgr.SetLoadCallback<Shader>([&](const fs::path& path) -> Base::AssetHandle<void> {
+    assetMgr.SetLoadCallback<Shader>([&](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
         auto typeExt = path.extension().string();
         Shader::Type type{};
         if (typeExt.contains("frag"))
@@ -546,8 +555,11 @@ void Application::_InitAssets() {
             type = Shader::Type::Compute;
 
         auto shader = m_Renderer->CreateShader(path, type);
-        return static_cast<Base::AssetHandle<void>>(
-            Base::AssetHandle<Shader>(shader, typeid(Shader))
+        return std::make_pair(
+            static_cast<Base::AssetHandle<void>>(
+                Base::AssetHandle<Shader>(shader, typeid(Shader))
+            ),
+            shader
         );
     });
 

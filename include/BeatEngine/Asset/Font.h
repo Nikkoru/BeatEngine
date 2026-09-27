@@ -70,7 +70,7 @@ public:
 	Font& operator=(const Font& other);
 	Font& operator=(const Font&& other) noexcept;
 
-    static Base::AssetHandle<void> CreateFontFT(const std::filesystem::path& path);
+    static std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> CreateFontFT(const std::filesystem::path& path);
     static void DestroyFont(const Base::AssetHandle<Font>& font, Renderer* const renderer);
 
     bool IsLoaded() const { return m_FTLibrary && m_FTStreamRec.descriptor.pointer && m_FTStroker && m_FTFace; }

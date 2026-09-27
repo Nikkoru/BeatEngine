@@ -57,7 +57,7 @@ Font& Font::operator=(const Font&& other) noexcept {
 	return *this;
 }
 
-Base::AssetHandle<void> Font::CreateFontFT(const std::filesystem::path& path) {
+std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> Font::CreateFontFT(const std::filesystem::path& path) {
     auto name = path.stem().string();
     auto font = std::make_shared<Font>();
     
@@ -106,7 +106,10 @@ Base::AssetHandle<void> Font::CreateFontFT(const std::filesystem::path& path) {
     // the handle id is sufficient
     font->m_ID = handle.GetID();
 
-    return static_cast<Base::AssetHandle<void>>(handle);
+    return std::make_pair(
+        static_cast<Base::AssetHandle<void>>(handle),
+        font
+    );
 }
 
 void Font::DestroyFont(const Base::AssetHandle<Font>& font, Renderer* const renderer) {
