@@ -7,13 +7,13 @@
 #include <memory>
 
 void GraphicalElement::BaseDraw(Renderer* const mgr, RenderState state) {
-    glm::mat4 transform{ 1.f };
+    glm::mat4 proj{ 0.f };
     // if (auto camera = mgr.GetMainCamera()) {
-    //     transform = camera->GetProjection();
+    //     proj = camera->GetProjection();
     // }
 
     DrawCommand cmd{
-        .projection = transform,
+        .projection = proj,
         .transform = glm::mat4{ 1.f },
         .padding = m_Padding.ToGLMVec2(),
         .textureID = Texture::NULL_ID,

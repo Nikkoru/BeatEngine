@@ -4,6 +4,7 @@
 void Camera::InitOrtho2D(const Vector2f& size, float zNear, float zFar) {
     m_ClipSpaceYDown = true;
     m_Orthographic2D = true;
+    m_Initialized = true;
 
     m_ZNear = zNear;
     m_ZFar = zFar;

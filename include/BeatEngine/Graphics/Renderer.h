@@ -1,6 +1,7 @@
 #pragma once
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Asset/Texture.h"
+#include "BeatEngine/Camera/Camera.h"
 #include "BeatEngine/Graphics/BaseWindow.h"
 #include "BeatEngine/Graphics/RenderState.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
@@ -21,6 +22,8 @@ protected:
 
     unsigned int m_TargetFps{ 0 };
     VSyncMode m_vSyncMode{ Default };
+
+    Camera m_MainCamera{};
 public:
     Renderer() : Renderer(nullptr) {};
     Renderer(AppContext* context) : m_Context(context) {}
@@ -55,6 +58,10 @@ public:
     virtual void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) = 0;
     virtual void DestroyTexture(std::shared_ptr<Texture> texture) = 0;
     virtual std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) = 0;
+
+    void SetMainCamera(const Camera& camera) { m_MainCamera = camera; };
+    void CreateMainCamera() { m_MainCamera.InitOrtho2D(Vector2f{ m_Window->GetSize() }); }
+    Camera& GetCamera();
 
     virtual void ShowImGuiRenderTabContent() {}
 

@@ -12,6 +12,8 @@ private:
     float m_ZNear{};
     float m_ZFar{};
 
+    bool m_Initialized{};
+
     bool m_Orthographic{ false };
     bool m_Orthographic2D{ false };
     bool m_UpdateProjection{ false };
@@ -49,4 +51,5 @@ public:
     Vector2f GetPosition() const;
     Vector2f GetSize() const;
     bool IsAutoResize() const;
+    bool IsInitialized() const { return m_Initialized; }
 };

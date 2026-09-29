@@ -86,6 +86,8 @@ VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> wind
         m_DefaultFragmentShader = fragShader;
     }
 
+    if (!m_MainCamera.IsInitialized())
+        CreateMainCamera();
 }
 
 void VulkanRenderer::Init(VSyncMode vSync) {
@@ -313,6 +315,9 @@ void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
 
 void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (vertices.GetSize() <= 0) return;
+
+    if (state._DrawCommand->projection == glm::mat4{ 0 })
+    state._DrawCommand->projection = m_MainCamera.GetProjection();
 
 	auto& drawDatas = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas;
 

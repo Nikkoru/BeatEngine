@@ -25,13 +25,10 @@ Game::Game(int argc, char** argv)
     window->SetSize({ 1280, 720 });
 
     m_Renderer = std::make_unique<VulkanRenderer>(&m_Context, window);
-
     m_Renderer->SetWindow(window);
 
     std::vector<std::filesystem::path> paths;
 
-    m_Renderer->GetWindow()->SetTitle("BE");
-    m_Renderer->GetWindow()->SetSize({ 1280, 720 });
     m_State.GetViewMgr().RegisterView<TestView>();
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
