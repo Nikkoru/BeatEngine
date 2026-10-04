@@ -2,21 +2,21 @@
 
 #include <cmath>
 
-bool UIHelper::CheckCollisionRec(Vector2i point, RectShape rec) {
+bool UIHelper::CheckCollisionRec(Vector2i point, const RectShape& rec) {
 	auto recPos = rec.GetPosition();
 	auto recSize = rec.GetSize();
 
 	return ((point.X >= recPos.X) && (point.X < (recPos.X + recSize.X)) && (point.Y >= recPos.Y) && (point.Y < (recPos.Y + recSize.Y)));
 }
 
-bool UIHelper::CheckCollisionRec(Vector2f point, RectShape rec) {
+bool UIHelper::CheckCollisionRec(Vector2f point, const RectShape& rec) {
 	auto recPos = rec.GetPosition();
 	auto recSize = rec.GetSize();
 
 	return ((point.X >= recPos.X) && (point.X < (recPos.X + recSize.X)) && (point.Y >= recPos.Y) && (point.Y < (recPos.Y + recSize.Y)));
 }
 
-bool UIHelper::CheckCollisionRec(Vector2u point, RectShape rec) {
+bool UIHelper::CheckCollisionRec(Vector2u point, const RectShape& rec) {
 	auto recPos = rec.GetPosition();
 	auto recSize = rec.GetSize();
 

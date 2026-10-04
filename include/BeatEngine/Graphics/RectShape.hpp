@@ -14,5 +14,5 @@ public:
 public:
     void SetSize(Vector2f size); 
 
-    Vector2f GetSize() { return m_Size; }
+    Vector2f GetSize() const { return m_Size; }
 };
