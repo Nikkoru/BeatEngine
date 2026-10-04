@@ -40,6 +40,7 @@ public:
     void SetVSyncMode(VSyncMode vsync) override;
     void SetCursorGrabbed(bool grabbed) override;
     void SetCursorVisible(bool visible) override;
+    void SetCursor(Cursor& cursor) override;
 
     Vector2u GetSize() const override;
     Vector2u GetMinimumSize() const override;
@@ -50,6 +51,8 @@ public:
     bool IsFullscreen() const override;
     bool IsCursorGrabbed() const override;
     bool IsCursorVisible() const override;
+
+    Cursor CreateCursor() const override;
 
     Optional<Base::Event> PollEvent() override;
 

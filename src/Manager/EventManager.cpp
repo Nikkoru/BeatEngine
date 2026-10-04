@@ -1,6 +1,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 
 #include "BeatEngine/Logger.h"
+#include "imgui.h"
 
 
 std::shared_ptr<EventManager> EventManager::m_Instance = nullptr;
@@ -36,6 +37,30 @@ void EventManager::Send(const std::shared_ptr<Base::Event> event) {
 
 void EventManager::SetExitCallback(ExitCallback callback) {
 	m_ExitCallback = std::move(callback);
+}
+
+void EventManager::ShowImGuiDebugWindow() {
+    ImGui::Begin("EventManager Debug Window"); 
+    ImGui::Text("View Subscribers: %zu", m_ViewSubscribers.size());
+    for (const auto& [eventID, subscribersMap] : m_ViewSubscribers) {
+        if (ImGui::TreeNode(eventID.name())) {
+            for (const auto& [subscriberID, callbacks] : subscribersMap) {
+                if (ImGui::TreeNode(subscriberID.name())) {
+                    ImGui::Text("Callbacks: %zu", callbacks.size());
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+    }
+    ImGui::Text("Global Subscribers: %zu", m_Subscribers.size());
+    for (const auto& [eventID, callbacks] : m_Subscribers) {
+        if (ImGui::TreeNode(eventID.name())) {
+            ImGui::Text("Callbacks: %zu", callbacks.size());
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
 }
 
 void EventManager::UpdateMainView(std::type_index id) {

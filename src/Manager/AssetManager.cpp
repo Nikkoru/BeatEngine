@@ -1,6 +1,9 @@
 #include "BeatEngine/Manager/AssetManager.h"
 
+#ifdef _WIN32
 #include <Windows.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <cstdint>

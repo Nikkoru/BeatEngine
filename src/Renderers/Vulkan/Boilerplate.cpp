@@ -84,7 +84,7 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, std::vector<VkEx
     uint32_t devCount{};
 
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, nullptr));
-    AddVulkanLog("Loggervailable devices: {}", devCount);
+    AddVulkanLog("Available devices: {}", devCount);
     std::vector<VkPhysicalDevice> devices(devCount);
     VK_CHECK(vkEnumeratePhysicalDevices(instance, &devCount, devices.data()));
 

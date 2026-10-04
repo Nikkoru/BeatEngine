@@ -26,6 +26,8 @@ public:
 
     void ClearCallbacks() { m_SignalCallbacks.clear(); }
     void RemoveCallbacks(std::type_index id) { if (m_SignalCallbacks.contains(id)) m_SignalCallbacks.at(id).clear(); }
+
+    void ShowImGuiDebugWindow();
 };
 
 #include "BeatEngine/Manager/SignalManager.inl"

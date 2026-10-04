@@ -4,15 +4,16 @@
 #include "BeatEngine/Enum/AppFlags.hpp"
 #include "BeatEngine/Enum/ViewFlags.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
+#include "BeatEngine/Windows/Cursor.hpp"
 // #include <SFML/Window/Cursor.hpp>
 
-// class AppChangeCursorSignal : public Base::Signal {
-// public:
-//     sf::Cursor::Type NewCursor;
-// public:
-//     AppChangeCursorSignal(sf::Cursor::Type cursorType) 
-//         : Base::Signal(typeid(AppChangeCursorSignal)), NewCursor(cursorType) {}
-// };
+class AppChangeCursorSignal : public Base::Signal {
+public:
+    CursorType NewCursor;
+public:
+    AppChangeCursorSignal(CursorType cursorType) 
+        : Base::Signal(typeid(AppChangeCursorSignal)), NewCursor(cursorType) {}
+};
 
 class AppExitSignal : public Base::Signal {    
 public:

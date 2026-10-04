@@ -4,7 +4,6 @@
 #include "BeatEngine/View/ViewLayer.h"
 
 #include <memory>
-#include <string>
 
 class ViewPushSignal : public Base::Signal {
 public:

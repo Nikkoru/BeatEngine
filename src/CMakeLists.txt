@@ -38,6 +38,9 @@
     "${PROJECT_SOURCE_DIR}/src/Renderers/OpenGL/Renderer.cpp"
 
     "${PROJECT_SOURCE_DIR}/src/Windows/SDL/Window.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Windows/SDL/Cursor.cpp"
+
+    "${PROJECT_SOURCE_DIR}/src/Windows/Cursor.cpp"
 
 	"${PROJECT_SOURCE_DIR}/src/View/ViewLayer.cpp"
 	"${PROJECT_SOURCE_DIR}/src/View/ViewLayerStack.cpp"

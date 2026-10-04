@@ -12,6 +12,7 @@
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Profiler.h"
 #include "BeatEngine/Windows/Mouse.hpp"
+#include "BeatEngine/Windows/SDL/Cursor.hpp"
 #include "SDL3/SDL_keycode.h"
 #include "imgui.h"
 
@@ -152,6 +153,13 @@ void SDLWindow::SetCursorVisible(bool visible) {
         SDL_HideCursor();
 }
 
+void SDLWindow::SetCursor(Cursor& cursor) {
+    auto impl = GetCursorImpl(cursor);
+    auto sdlImpl = std::dynamic_pointer_cast<SDLCursor>(impl);
+
+    SDL_SetCursor(sdlImpl->_Cursor);
+}
+
 Vector2u SDLWindow::GetSize() const {
     int x{}, y{};
     SDL_GetWindowSize(m_WindowImpl, &x, &y);
@@ -201,6 +209,13 @@ bool SDLWindow::IsCursorGrabbed() const {
 
 bool SDLWindow::IsCursorVisible() const {
     return SDL_CursorVisible();
+}
+
+Cursor SDLWindow::CreateCursor() const {
+    auto cursor = Cursor{};
+    SetCursorImpl(cursor, std::make_shared<SDLCursor>());
+
+    return cursor;
 }
 
 Optional<Base::Event> SDLWindow::PollEvent() {

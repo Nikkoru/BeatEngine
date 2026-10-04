@@ -17,10 +17,17 @@ if (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     target_link_options(BeatEngineTest PRIVATE "$<$<CONFIG:Debug>:/DEBUG>") 
 endif()
 
+if (WIN32)
 file(
     COPY "${CMAKE_SOURCE_DIR}/assets" 
     DESTINATION "${PROJECT_BINARY_DIR}/${CMAKE_PRESET_NAME}/bin"
 )
+elseif(UNIX)
+file(
+    COPY "${CMAKE_SOURCE_DIR}/assets" 
+    DESTINATION "${PROJECT_BINARY_DIR}/bin"
+)
+endif()
 
 set_property(TARGET BeatEngineTest PROPERTY CXX_STANDARD 23)
 target_compile_features(BeatEngineTest PRIVATE cxx_std_23)

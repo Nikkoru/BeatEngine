@@ -17,7 +17,7 @@
 
 class VulkanRenderer : public Renderer {
 public: 
-    VulkanRenderer(AppContext* ctx = nullptr, std::shared_ptr<BaseWindow> window = nullptr);
+    VulkanRenderer(AppContext* ctx = nullptr, std::shared_ptr<BaseWindow> window = nullptr, uint32_t idx = 0);
     ~VulkanRenderer() override = default;
 private:
     uint32_t m_DeviceIndex{};

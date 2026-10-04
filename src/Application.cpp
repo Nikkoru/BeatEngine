@@ -695,6 +695,14 @@ void Application::_SubscribeToAppSignals() {
         // m_Running = false;
     });
 
+
+    SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+        auto gameSig = std::static_pointer_cast<AppChangeCursorSignal>(sig);
+        m_Cursor = Cursor::CreateFromSystem(m_Renderer->GetWindow(), gameSig->NewCursor).Value();
+        m_Context.AddAFlags(AppFlags_CursorChanged);
+
+        m_Renderer->GetWindow()->SetCursor(m_Cursor);
+    });
     // SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
     //     auto gameSig = std::static_pointer_cast<AppChangeCursorSignal>(sig);
     //     // m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();

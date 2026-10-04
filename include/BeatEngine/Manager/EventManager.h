@@ -31,6 +31,8 @@ public:
 	void SetExitCallback(ExitCallback callback);
 
     void ClearCallbacks() { m_ViewSubscribers.clear(); m_Subscribers.clear(); };
+
+    void ShowImGuiDebugWindow();
 protected:
 	friend class ViewManager;
 	void UpdateMainView(const std::type_index id);

@@ -18,6 +18,8 @@ protected:
     AppState m_State{};
 
     bool m_Running{ false };
+    Cursor m_Cursor{};
+
 	std::filesystem::path m_SettingsPath{ "config.ini" };
 public:
     Application(const std::string& name = "BeatEngine Program");

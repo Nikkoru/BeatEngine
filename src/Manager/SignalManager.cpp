@@ -1,6 +1,7 @@
 #include "BeatEngine/Manager/SignalManager.h"
 
 #include "BeatEngine/Logger.h"
+#include "imgui.h"
 
 std::shared_ptr<SignalManager> SignalManager::m_Instance = nullptr;
 
@@ -20,4 +21,21 @@ void SignalManager::Send(std::shared_ptr<Base::Signal> sig) {
 			Logger::AddWarning(typeid(SignalManager), "No callbacks registered for signal");
 	else
 		Logger::AddWarning(typeid(SignalManager), "No signal callbacks registered");
+}
+
+void SignalManager::ShowImGuiDebugWindow() {
+    ImGui::Begin("SignalManager Debug Window"); 
+    ImGui::Text("Callbacks: %zu", m_SignalCallbacks.size());
+    for (const auto& [signalID, callbackMap] : m_SignalCallbacks) {
+        if (ImGui::TreeNode(signalID.name())) {
+            for (const auto& [callerID, callbacks] : callbackMap) {
+                if (ImGui::TreeNode(callerID.name())) {
+                    ImGui::Text("Callbacks: %zu", callbacks.size());
+                    ImGui::TreePop();
+                }
+            }
+            ImGui::TreePop();
+        }
+    }
+    ImGui::End();
 }

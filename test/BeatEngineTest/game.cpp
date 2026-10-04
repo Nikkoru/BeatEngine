@@ -11,9 +11,9 @@
 #include <memory>
 
 Game::Game(int argc, char** argv)
-    : m_Argc(argc)
-    , m_Argv(argv)
-    , Application("BeatEngineTest") {
+    : Application("BeatEngineTest")
+    , m_Argc(argc)
+    , m_Argv(argv) {
 
     m_Context.AddAFlags(AppFlags_ImGui);
     m_Context.AddAFlags(AppFlags_ImGuiDocking);
@@ -24,7 +24,12 @@ Game::Game(int argc, char** argv)
     window->SetTitle("BE");
     window->SetSize({ 1280, 720 });
 
-    m_Renderer = std::make_unique<VulkanRenderer>(&m_Context, window);
+    auto idx = 0;
+    if (m_Argc >= 2) {
+        idx = std::stoi(m_Argv[1]);
+    }
+
+    m_Renderer = std::make_unique<VulkanRenderer>(&m_Context, window, idx);
     m_Renderer->SetWindow(window);
 
     std::vector<std::filesystem::path> paths;
@@ -33,11 +38,6 @@ Game::Game(int argc, char** argv)
     m_State.GetViewMgr().RegisterView<GameView>();
     m_State.GetSystemMgr().RegisterSystem<SettingsSystemTest>();
 
-    if (m_Argc >= 2) {
-        auto index = std::stoi(m_Argv[1]);
-        
-        // m_Renderer->SetDeviceIndex(index);
-    }
     if (m_Argc >= 3) {
         if (!std::filesystem::exists(m_Argv[2])) {
             Logger::AddCritical("\"{}\" must be a valid path that contains .mp3 files", m_Argv[2]);

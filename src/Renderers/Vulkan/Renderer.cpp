@@ -39,7 +39,8 @@
 #include "BeatEngine/Util/Graphics.hpp"
 #include "BeatEngine/Renderers/Vulkan/VulkanRendererData.hpp"
 
-VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> window) : Renderer(ctx) {
+VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> window, uint32_t idx) :
+    Renderer(ctx), m_DeviceIndex(idx) {
     AddVulkanLog("Initializing VulkanRenderer");
 
     // if (m_vSyncMode == VSyncMode::Default)

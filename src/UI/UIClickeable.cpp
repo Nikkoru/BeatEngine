@@ -2,8 +2,8 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Events/MouseEvents.h"
 
-// #include "BeatEngine/Manager/SignalManager.h"
-// #include "BeatEngine/Signals/AppSignals.hpp"
+#include "BeatEngine/Manager/SignalManager.h"
+#include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Util/Optional.hpp"
 #include "BeatEngine/Util/UIHelper.h"
 // #include <memory>
@@ -49,14 +49,14 @@ void UIClickeable::OnMouseMove(Vector2i position) {
 	bool currentlyHovered = UIHelper::CheckCollisionRec(position, m_LayoutRect);
 
 	if (currentlyHovered && !m_Hovered) {
-        // if (m_CursorFeedback)
-        //     SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(sf::Cursor::Type::Hand));
+        if (m_CursorFeedback)
+            SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(CursorType::Pointer));
 		if (OnHover)
 			OnHover();
 	}
 	else if (!currentlyHovered && m_Hovered) {
-        // if (m_CursorFeedback)
-        //     SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(sf::Cursor::Type::Arrow));
+        if (m_CursorFeedback)
+            SignalManager::GetInstance()->Send(std::make_shared<AppChangeCursorSignal>(CursorType::Arrow));
 		if (OnUnHover)
 			OnUnHover();
 	}
