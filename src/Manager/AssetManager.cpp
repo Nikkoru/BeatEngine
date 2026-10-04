@@ -319,7 +319,7 @@ Base::AssetHandle<void> AssetManager::_DoLoad(std::type_index assetType, const f
     if (global)
         m_GlobalAssets[assetName] = slot;
     else
-        m_ViewAssets.at(viewID).at(assetName) = slot;
+        m_ViewAssets.at(viewID)[assetName] = slot;
     return handle;
 }
 
