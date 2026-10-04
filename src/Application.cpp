@@ -199,7 +199,7 @@ void Application::Draw() {
         ImGui::End();
 
     }
-	// m_Running = m_State.GetViewMgr().OnDraw();
+	m_State.GetViewMgr().OnDraw(m_Renderer.get());
 
 	m_GlobalLayers.Draw(m_Renderer.get());
     m_State.GetUIMgr().OnDraw(m_Renderer.get());
@@ -383,6 +383,14 @@ void Application::DrawImGuiDebug() {
             ImGui::Text("ActiveView: %s", m_Context.ActiveView.name());
             ImGui::Text("ProgramName: %s", m_Context.ProgramName.c_str());
 
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Renderer")) {
+            m_Renderer->ShowImGuiRenderTabContent();
+            ImGui::EndTabItem();
+        }
+        if (ImGui::BeginTabItem("Window")) {
+            m_Renderer->GetWindow()->ImGuiWindowContent();
             ImGui::EndTabItem();
         }
         ImGui::EndTabBar();
