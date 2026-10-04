@@ -37,6 +37,7 @@
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Windows/SDL/Window.h"
 #include "BeatEngine/Util/Graphics.hpp"
+#include "BeatEngine/Renderers/Vulkan/VulkanRendererData.hpp"
 
 VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> window) : Renderer(ctx) {
     AddVulkanLog("Initializing VulkanRenderer");
@@ -101,20 +102,20 @@ void VulkanRenderer::Uninit() {
 
     AddVulkanLog("Shutting down the renderer");
 
-    for (const auto& frameData : m_RenderFramesData) {
-        for (const auto& [viewID, drawDatas] : frameData.DrawDatas) {
-            for (const auto& drawData : drawDatas) {
-                m_Instance.DestroyBuffer(drawData.VertexBuffer);
-                m_Instance.DestroyBuffer(drawData.DrawCommandBuffer);
-            }
-        }
-    }
+    // for (const auto& frameData : m_RenderFramesData) {
+    //     for (const auto& [viewID, drawDatas] : frameData.DrawDatas) {
+    //         for (const auto& drawData : drawDatas) {
+    //             m_Instance.DestroyBuffer(drawData.VertexBuffer);
+    //             m_Instance.DestroyBuffer(drawData.DrawCommandBuffer);
+    //         }
+    //     }
+    // }
 
-    for (const auto& [viewID, layouts] : m_Layouts) {
-        for (const auto& layout : layouts) {
-            vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
-        }
-    }
+    // for (const auto& [viewID, layouts] : m_Layouts) {
+    //     for (const auto& layout : layouts) {
+    //         vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
+    //     }
+    // }
 
     m_Instance.DestroyImage(m_AllocatedDrawImage);
     m_Instance.Uninit();
@@ -156,8 +157,6 @@ void VulkanRenderer::Clear() {
     auto time = clock.Get();
     auto sec = time.AsSeconds();
 
-
-
     VkClearColorValue clearColor{ { tan(sec), cos(sec), tan(sec), 1.0f} };
     VkImageSubresourceRange imageRange{
         .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
@@ -170,6 +169,8 @@ void VulkanRenderer::Clear() {
     vku::TransitionImage(m_ActiveCmd, m_AllocatedDrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
     m_Instance.ClearImage(m_ActiveCmd, clearColor, imageRange);
+
+    // ClearVertexBuffers();
 }
 
 void VulkanRenderer::Update() {
@@ -317,52 +318,72 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (vertices.GetSize() <= 0) return;
 
     if (state._DrawCommand->projection == glm::mat4{ 0 })
-    state._DrawCommand->projection = m_MainCamera.GetProjection();
+        state._DrawCommand->projection = m_MainCamera.GetProjection();
 
-	auto& drawDatas = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas;
-
-	auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
-
-	if (!drawDatas.contains(viewID))
-		drawDatas[viewID] = {};
-	if (!m_Layouts.contains(viewID))
-		m_Layouts[viewID] = {};
-
-    if (!IsVertexArrayInitialized(vertices)) {
+    if (!IsVertexArrayInitialized(vertices))
         InitVertices(vertices, state);
-    }
-    uint32_t vertexID{};
 
-    vertexID = GetVertexArrayID(vertices);
+	auto* data = GetVertexArrayRendererData(vertices);
+    auto* vulkanData = static_cast<VulkanRendererData*>(data);
 
-    auto& cmdBuffer = drawDatas.at(viewID).at(vertexID).DrawCommandBuffer;
-    auto& vertexBuffer = drawDatas.at(viewID).at(vertexID).VertexBuffer;
+    // auto vertexID = GetVertexArrayID(vertices);
+    //
+    // if (m_RenderFramesData.size() <= vertexID) {
+    //     AddVulkanLog("ID {} out of bounds", vertexID);
+    //     return;
+    // }
+
+    auto& cmdBuffer = vulkanData->m_DrawCommandBuffer;
+    auto& vertexBuffer = vulkanData->m_VertexBuffer;
     
-    auto pipelineLayout = m_Layouts.at(viewID).at(vertexID);
+    VkPipelineLayout pipelineLayout{};
+
+    {
+        const auto layout = m_Instance.GetBindlessDescSetLayout();
+        uint32_t size{};
+        if (state.PushConstantsSize == sizeof(PushConstants))
+            size = sizeof(DefaultPushConstants);
+        else
+            size = state.PushConstantsSize;
+
+        const auto pushConstantRange = VkPushConstantRange{
+            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .offset = 0,
+            .size = size
+        };
+        pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
+
+        // m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
+    }
 
     if (vertices.GetSize() * sizeof(Vertex) != vertexBuffer.BufferSize && vertices.GetSize() > 0) {
-        for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
-            auto& buffer = m_RenderFramesData[i].DrawDatas.at(viewID).at(vertexID).VertexBuffer;
-            
-            m_Instance.DestroyBuffer(buffer);
-
-            buffer = m_Instance.CreateBuffer(
-                vertices.GetSize() * sizeof(Vertex),
-                VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
-            );
-        }
+        // for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
+        //     auto& buffer = m_RenderFramesData[i].at(vertexID).VertexBuffer;
+        //
+        //     m_Instance.DestroyBuffer(buffer);
+        //
+        //     buffer = m_Instance.CreateBuffer(
+        //         vertices.GetSize() * sizeof(Vertex),
+        //         VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
+        //     );
+        // }
+        m_Instance.DestroyBuffer(vertexBuffer);
+        vertexBuffer = m_Instance.CreateBuffer(
+            vertices.GetSize() * sizeof(Vertex),
+            VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
+        );
     }
-
-    memcpy(
-        cmdBuffer.AllocationInfo.pMappedData,
-        state._DrawCommand.get(),
-        state.DrawCommandSize
-    );
 
     memcpy(
         vertexBuffer.AllocationInfo.pMappedData,
         vertices.GetData(),
         vertices.GetSize() * sizeof(Vertex)
+    );
+
+    memcpy(
+        cmdBuffer.AllocationInfo.pMappedData,
+        state._DrawCommand.get(),
+        state.DrawCommandSize
     );
 
     VkRenderingAttachmentInfo colorInfo{
@@ -642,11 +663,17 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vkCmdPipelineBarrier2(m_ActiveCmd, &presentDependencyInfo);
 
+#ifdef BEATENGINE_DEBUG
     if (m_Context->ContainsAFlags(AppFlags_ImGui) && m_Context->ContainsEFlags(EnvFlags_Debug)) {
         ImGui::Begin("Rendered elements so far");
-        if (ImGui::TreeNode(IsVertexArrayHighlight(vertices) ? std::format("VertexArrayHighlight_Of{}_ArrayID{}_ID{}_In_{}", GetVertexArrayHighlightSourceID(vertices), GetVertexArrayHighlightID(vertices), GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str() : std::format("VertexArray_ID{}_In_{}", GetVertexArrayID(vertices), (state.DrawInGlobal ? "Global" : viewID.name())).c_str())) {
+        if (ImGui::TreeNode(
+                IsVertexArrayHighlight(vertices)
+                ? std::format("Vertex_ID{}", GetVertexArrayID(vertices)).c_str()
+                : std::format("VertexHighlight_ID{}", GetVertexArrayHighlightID(vertices)).c_str()
+            )
+        ) {
             ImGui::Text("PrimitiveType : %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str()); 
-            ImGui::Text("View drawing to: %s", state.DrawInGlobal ? "Global" : viewID.name());
+            // ImGui::Text("View drawing to: %s", state.DrawInGlobal ? "Global" : viewID.name());
             ImGui::Text("Size: %zu", vertices.GetSize());
             ImGui::SeparatorText("Vertex");
             for (size_t i = 0; i < vertices.GetSize(); i++) {
@@ -665,16 +692,13 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     }
 
     if (state.HighlightVertices) {
-        if (!m_Highlights.contains(m_Context->ActiveView))
-            m_Highlights[m_Context->ActiveView] = {};
-
         VertexArray* highlightVertices = nullptr;
         
-        if (
-            GetVertexArrayHighlightID(vertices) != (std::numeric_limits<uint32_t>::max)() &&
-            GetVertexArrayHighlightID(vertices) < m_Highlights.at(m_Context->ActiveView).size()
+        if (true
+            // GetVertexArrayHighlightID(vertices) != (std::numeric_limits<uint32_t>::max)() &&
+            // GetVertexArrayHighlightID(vertices) < m_Highlights.at(m_Context->ActiveView).size()
         ) {
-            highlightVertices = &m_Highlights.at(m_Context->ActiveView).at(GetVertexArrayHighlightID(vertices));
+            // highlightVertices = &m_Highlights.at(m_Context->ActiveView).at(GetVertexArrayHighlightID(vertices));
         }
         else {
             auto highlightVertex = Util::GetOutlineVertices(vertices);
@@ -692,8 +716,8 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
             SetVertexHighlightID(vertices, GetVertexArrayHighlightID(highlightVertex));
 
-            m_Highlights.at(m_Context->ActiveView).emplace_back(highlightVertex);
-            highlightVertices = &m_Highlights.at(m_Context->ActiveView).back();
+            // m_Highlights.emplace_back(highlightVertex);
+            // highlightVertices = &m_Highlights.at(m_Context->ActiveView).back();
         }
 
         if (highlightVertices == nullptr) return;
@@ -704,99 +728,121 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
         highlightState.LineWidth = 1.f;
         DrawVertices(*highlightVertices, highlightState);
     }
-
+#endif
 }
 
 void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
-    uint32_t vertexID{};
+    // uint32_t vertexID{};
 
-    auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
+    // auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
 
-    if (IsVertexArrayHighlight(vertices))
-        vertexID = GetFreeHighlightIndex(viewID);
-    else
-        vertexID = GetFreeBufferIndex(viewID);
+    // if (IsVertexArrayHighlight(vertices))
+    //     vertexID = GetFreeHighlightIndex(viewID);
+    // else
+    //     vertexID = GetFreeBufferIndex(viewID);
 
-    SetVertexArrayID(vertices, vertexID);
+    std::shared_ptr<VulkanRendererData> data = std::make_shared<VulkanRendererData>();
+
+    // SetVertexArrayID(vertices, vertexID);
     SetVertexArrayInitializedStatus(vertices, true);
 
-    {
-        VkPipelineLayout pipelineLayout{};
-        const auto layout = m_Instance.GetBindlessDescSetLayout();
-        uint32_t size{};
-        if (state.PushConstantsSize == sizeof(PushConstants))
-            size = sizeof(DefaultPushConstants);
-        else
-            size = state.PushConstantsSize;
-
-        const auto pushConstantRange = VkPushConstantRange{
-            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .offset = 0,
-            .size = size
-        };
-        pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
-
-        m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
-    }
+    // {
+    //     VkPipelineLayout pipelineLayout{};
+    //     const auto layout = m_Instance.GetBindlessDescSetLayout();
+    //     uint32_t size{};
+    //     if (state.PushConstantsSize == sizeof(PushConstants))
+    //         size = sizeof(DefaultPushConstants);
+    //     else
+    //         size = state.PushConstantsSize;
+    //
+    //     const auto pushConstantRange = VkPushConstantRange{
+    //         .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+    //         .offset = 0,
+    //         .size = size
+    //     };
+    //     pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
+    //
+    //     m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
+    // }
     
-    for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
-        if (!m_RenderFramesData.at(i).DrawDatas.contains(viewID))
-            m_RenderFramesData.at(i).DrawDatas[viewID] = {};
 
-        DrawData drawData{};
-         
-        drawData.DrawCommandBuffer = m_Instance.CreateBuffer(
+        // if (!m_RenderFramesData.at(i).DrawDatas.contains(viewID))
+        //     m_RenderFramesData.at(i).DrawDatas[viewID] = {};
+
+        data->m_DrawCommandBuffer = m_Instance.CreateBuffer(
             state.DrawCommandSize,
             VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
         );
 
         if (!vertices.IsEmpty())
-             drawData.VertexBuffer = m_Instance.CreateBuffer(
+             data->m_VertexBuffer = m_Instance.CreateBuffer(
                 vertices.GetSize() * sizeof(Vertex), 
                 VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT 
             );
         else
-            drawData.VertexBuffer = m_Instance.CreateBuffer(
+            data->m_VertexBuffer = m_Instance.CreateBuffer(
                 sizeof(Vertex), 
                 VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
             );
+    
 
-        m_RenderFramesData.at(i).DrawDatas.at(viewID).emplace(m_RenderFramesData.at(i).DrawDatas.at(viewID).begin() + vertexID, drawData);
-    }
+    SetVertexArrayRendererData(vertices, data);
+    SetVertexArrayDestroyFunc(vertices, [this](RendererData* data) {
+        DestroyVerticesData(data);
+    });
 }
 
 void VulkanRenderer::UninitVertices(VertexArray& vertices) {
-    if (m_Layouts.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
+    // if (m_Layouts.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
+    //
+    // auto layout = m_Layouts.at(m_Context->ActiveView).at(GetVertexArrayID(vertices));
 
-    auto layout = m_Layouts.at(m_Context->ActiveView).at(GetVertexArrayID(vertices));
-
-    vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
+    // vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
 
     for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
-        if (!m_RenderFramesData.at(i).DrawDatas.contains(m_Context->ActiveView)) return;
-        if (m_RenderFramesData.at(i).DrawDatas.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
-        if (!m_Layouts.contains(m_Context->ActiveView)) return;
+        // if (!m_RenderFramesData.at(i).DrawDatas.contains(m_Context->ActiveView)) return;
+        // if (m_RenderFramesData.at(i).DrawDatas.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
+        // if (!m_Layouts.contains(m_Context->ActiveView)) return;
+        //
+        // auto& cmdBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).DrawCommandBuffer;
+        // auto& vertexBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).VertexBuffer;
 
-        auto& cmdBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).DrawCommandBuffer;
-        auto& vertexBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).VertexBuffer;
+        // m_Instance.DestroyBuffer(cmdBuffer);
+        // m_Instance.DestroyBuffer(vertexBuffer);
+    }
+}
 
-        m_Instance.DestroyBuffer(cmdBuffer);
-        m_Instance.DestroyBuffer(vertexBuffer);
+void VulkanRenderer::DestroyVerticesData(RendererData* data) {
+    auto vkData = static_cast<VulkanRendererData*>(data);
+
+    m_Instance.DestroyBuffer(vkData->m_VertexBuffer);
+    m_Instance.DestroyBuffer(vkData->m_DrawCommandBuffer);
+}
+
+void VulkanRenderer::ClearVertexBuffers() {
+    for (auto& frame : m_RenderFramesData) {
+        for (const auto& drawData : frame) {
+            m_Instance.DestroyBuffer(drawData.VertexBuffer);
+            m_Instance.DestroyBuffer(drawData.DrawCommandBuffer);
+        }
+        frame.clear();
     }
 }
 
 uint32_t VulkanRenderer::GetFreeBufferIndex(std::type_index viewID) {
-    if (!m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.contains(viewID))
-        m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas[viewID] = {};
-
-    return m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(viewID).size();
+    // if (!m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.contains(viewID))
+    //     m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas[viewID] = {};
+    //
+    // return m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(viewID).size();
+    return 0;
 }
 
 uint32_t VulkanRenderer::GetFreeHighlightIndex(std::type_index viewID) {
-    if (!m_Highlights.contains(viewID))
-        m_Highlights[viewID] = {};
-
-    return m_Highlights.at(viewID).size();
+    // if (!m_Highlights.contains(viewID))
+    //     m_Highlights[viewID] = {};
+    //
+    // return m_Highlights.at(viewID).size();
+    return 0;
 }
 
 std::shared_ptr<BaseWindow> VulkanRenderer::GetWindow() const {

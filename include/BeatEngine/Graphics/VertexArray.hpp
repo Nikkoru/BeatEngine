@@ -1,7 +1,9 @@
 #pragma once
 
 #include "BeatEngine/Graphics/PrimitiveType.hpp"
+#include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Graphics/Vertex.hpp"
+#include <memory>
 #include <vector>
 
 /// @brief Wrapper class to `std::vector<Vertex>` with some additional data
@@ -10,6 +12,8 @@
 /// `PrimitiveType` and additional data such as ID and initialized status required by the
 /// renderer for retrieving needed data that the renderer holds for rendering the `VertexArray`
 class VertexArray {
+public:
+    using DestroyFunction = std::function<void(RendererData*)>;
 private:
     friend class Renderer;
     std::vector<Vertex> m_Vertices;
@@ -26,16 +30,22 @@ private:
     // needs to be freed or not, this overrides whatever it was in that id without questions
     bool m_Initialized{ false };
     bool m_IsHighlight{ false };
+    DestroyFunction m_DestroyFunc{ nullptr };
+    std::shared_ptr<RendererData> m_RendererData{ nullptr };
 private:
     void SetHighlightID(uint32_t sourceID, uint32_t arrayID = 0) { m_IsHighlight ? m_HighlightID = ((sourceID << 22u) | (arrayID << 12u)) : m_HighlightID = sourceID; }
     uint32_t GetSourceID() { return m_HighlightID >> 22u; }
     uint32_t GetArrayID() { return (m_HighlightID >> 12u) & 0x3FFu; }
+    void SetRendererData();
 public:
     using Iterator = std::vector<Vertex>::iterator;
     using ConstIterator = std::vector<Vertex>::const_iterator;
     using ReverseIterator = std::vector<Vertex>::reverse_iterator;
     using ConstReverseIterator = std::vector<Vertex>::const_reverse_iterator;
 public:
+    VertexArray() = default;
+    ~VertexArray() { if (m_DestroyFunc) m_DestroyFunc(m_RendererData.get()); }
+
     Vertex& operator[] (size_t i) { return At(i); };
     const Vertex& operator[] (size_t i) const { return At(i); };
 

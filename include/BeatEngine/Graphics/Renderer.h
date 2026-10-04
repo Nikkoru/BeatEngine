@@ -73,6 +73,8 @@ public:
 
     virtual Optional<Base::Event> PollEvent() const = 0;
 protected:
+    RendererData* GetVertexArrayRendererData(VertexArray& vertices) { return vertices.m_RendererData.get(); }
+    void SetVertexArrayRendererData(VertexArray& vertices, std::shared_ptr<RendererData> data) { vertices.m_RendererData = data; }
     uint32_t GetVertexArrayHighlightSourceID(VertexArray& vertices) { return vertices.GetSourceID(); }
     uint32_t GetVertexArrayHighlightID(VertexArray& vertices) { return vertices.m_IsHighlight ? vertices.m_HighlightID : vertices.GetArrayID() ; }
     void SetVertexHighlightID(VertexArray& vertices, uint32_t sourceID, uint32_t arrayID = 0) { vertices.SetHighlightID(sourceID, arrayID); }
@@ -82,4 +84,5 @@ protected:
     void SetVertexArrayInitializedStatus(VertexArray& vertices, bool initialized) { vertices.m_Initialized = initialized; }
     bool IsVertexArrayHighlight(VertexArray& vertices) { return vertices.m_IsHighlight; }
     void SetVertexArrayHighlightStatus(VertexArray& vertices, bool highlight) { vertices.m_IsHighlight = highlight; }
+    void SetVertexArrayDestroyFunc(VertexArray& vertices, VertexArray::DestroyFunction func) { vertices.m_DestroyFunc = func; }
 };

@@ -33,9 +33,7 @@ private:
         GPUBuffer VertexBuffer;
     };
 
-    struct FrameDrawData {
-        std::unordered_map<std::type_index, std::vector<DrawData>> DrawDatas;
-    };
+    using FrameDrawData = std::vector<DrawData>;
 
     class DefaultPushConstants : public PushConstants {
     public:
@@ -48,8 +46,8 @@ private:
     std::shared_ptr<Shader> m_DefaultFragmentShader{};
 
     std::array<FrameDrawData, FRAME_OVERLAP> m_RenderFramesData;
-    std::unordered_map<std::type_index, std::vector<VkPipelineLayout>> m_Layouts;
-    std::unordered_map<std::type_index, std::vector<VertexArray>> m_Highlights;
+    std::vector<VkPipelineLayout> m_Layouts;
+    std::vector<VertexArray> m_Highlights;
 private:
     bool m_StopRendering{ false };
 private:
@@ -70,7 +68,9 @@ public:
     void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) override;
     void InitVertices(VertexArray& vertices, RenderState state) override;
     void UninitVertices(VertexArray& vertices) override;
+    void DestroyVerticesData(RendererData* data);
 
+    void ClearVertexBuffers();
 
     unsigned int GetMaxTextureSize() override;
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;

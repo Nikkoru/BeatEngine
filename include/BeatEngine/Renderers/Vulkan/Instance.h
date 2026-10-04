@@ -20,7 +20,7 @@ class VulkanRenderer;
 namespace VK {
 class Instance {
 private:
-    friend class VulkanRenderer;
+    friend class ::VulkanRenderer;
     AppContext* m_Context{ nullptr };
     Core m_Core{};
     Swapchain m_Swapchain{};
@@ -96,8 +96,6 @@ public:
     VkDescriptorSetLayout GetBindlessDescSetLayout() { return m_ImageCache.BindlessSetMgr.GetSetLayout(); }
     void BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout layout);
 private:
-    friend class VulkanRenderer;
-
     void InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex);
     void InitImGui(std::shared_ptr<BaseWindow> window);
 
