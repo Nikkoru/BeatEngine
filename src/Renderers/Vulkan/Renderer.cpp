@@ -336,26 +336,6 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     auto& cmdBuffer = vulkanData->m_DrawCommandBuffer;
     auto& vertexBuffer = vulkanData->m_VertexBuffer;
-    
-    VkPipelineLayout pipelineLayout{};
-
-    {
-        const auto layout = m_Instance.GetBindlessDescSetLayout();
-        uint32_t size{};
-        if (state.PushConstantsSize == sizeof(PushConstants))
-            size = sizeof(DefaultPushConstants);
-        else
-            size = state.PushConstantsSize;
-
-        const auto pushConstantRange = VkPushConstantRange{
-            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-            .offset = 0,
-            .size = size
-        };
-        pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
-
-        // m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
-    }
 
     if (vertices.GetSize() * sizeof(Vertex) != vertexBuffer.BufferSize && vertices.GetSize() > 0) {
         // for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
@@ -579,7 +559,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vkCmdSetColorBlendEquationEXT(m_ActiveCmd, 0, 1, &blendEquation);
 
-    m_Instance.BindBindlessDescSet(m_ActiveCmd, pipelineLayout);
+    m_Instance.BindBindlessDescSet(m_ActiveCmd, vulkanData->m_Layout);
 
     vkCmdBindVertexBuffers2(
         m_ActiveCmd,
@@ -625,7 +605,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     vkCmdPushConstants(
         m_ActiveCmd,
-        pipelineLayout,
+        vulkanData->m_Layout,
         VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
         0,
         pushSize,
@@ -770,21 +750,36 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
         // if (!m_RenderFramesData.at(i).DrawDatas.contains(viewID))
         //     m_RenderFramesData.at(i).DrawDatas[viewID] = {};
 
-        data->m_DrawCommandBuffer = m_Instance.CreateBuffer(
-            state.DrawCommandSize,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
-        );
+    data->m_DrawCommandBuffer = m_Instance.CreateBuffer(
+        state.DrawCommandSize,
+        VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
+    );
 
-        if (!vertices.IsEmpty())
-             data->m_VertexBuffer = m_Instance.CreateBuffer(
-                vertices.GetSize() * sizeof(Vertex), 
-                VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT 
-            );
+    if (!vertices.IsEmpty())
+         data->m_VertexBuffer = m_Instance.CreateBuffer(
+            vertices.GetSize() * sizeof(Vertex), 
+            VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT 
+        );
+    else
+        data->m_VertexBuffer = m_Instance.CreateBuffer(
+            sizeof(Vertex), 
+            VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
+        );
+    {
+        const auto layout = m_Instance.GetBindlessDescSetLayout();
+        uint32_t size{};
+        if (state.PushConstantsSize == sizeof(PushConstants))
+            size = sizeof(DefaultPushConstants);
         else
-            data->m_VertexBuffer = m_Instance.CreateBuffer(
-                sizeof(Vertex), 
-                VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
-            );
+            size = state.PushConstantsSize;
+
+        const auto pushConstantRange = VkPushConstantRange{
+            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+            .offset = 0,
+            .size = size
+        };
+        data->m_Layout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
+    }
     
 
     SetVertexArrayRendererData(vertices, data);

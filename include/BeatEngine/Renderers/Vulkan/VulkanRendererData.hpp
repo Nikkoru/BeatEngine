@@ -10,6 +10,8 @@ private:
 
     GPUBuffer m_VertexBuffer{};
     GPUBuffer m_DrawCommandBuffer{};
+
+    VkPipelineLayout m_Layout{};
 public:
     VulkanRendererData() = default;
     ~VulkanRendererData() override = default;
