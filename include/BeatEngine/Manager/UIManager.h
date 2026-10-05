@@ -1,6 +1,5 @@
 #pragma once
 
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/UIElement.h"
 
 #include <memory>

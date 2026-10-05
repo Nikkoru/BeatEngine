@@ -3,7 +3,6 @@
 // #include "BeatEngine/Events/AppEvent.h"
 #include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Manager/AssetManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Settings/AppSettings.hpp"
 #include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Signals/SettingsSignals.h"

@@ -27,7 +27,6 @@
 
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Enum/AssetType.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/AppState.hpp"

@@ -5,7 +5,6 @@
 #include <typeindex>
 
 #include "BeatEngine/Events/AppEvent.hpp"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/ViewSignals.h"
 #include "BeatEngine/Manager/EventManager.h"

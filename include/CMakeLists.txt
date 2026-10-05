@@ -1,8 +1,6 @@
 list(APPEND HEADERS
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/EventManager.inl"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/GraphicsManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.h"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/ViewManager.inl"
 	"${PROJECT_SOURCE_DIR}/include/BeatEngine/Manager/SignalManager.h"

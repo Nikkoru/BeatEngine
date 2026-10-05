@@ -1,6 +1,5 @@
 ﻿list(APPEND SOURCES
     "${PROJECT_SOURCE_DIR}/src/Manager/ViewManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Manager/GraphicsManager.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Manager/EventManager.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Manager/SignalManager.cpp"
 	"${PROJECT_SOURCE_DIR}/src/Manager/EntityManager.cpp"

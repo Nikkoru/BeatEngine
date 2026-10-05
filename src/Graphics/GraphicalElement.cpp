@@ -2,7 +2,6 @@
 #include "BeatEngine/Graphics/DrawCommand.hpp"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 

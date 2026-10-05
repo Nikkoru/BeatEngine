@@ -1,7 +1,6 @@
 #include "BeatEngine/Graphics/Shape.hpp"
 #include "BeatEngine/Graphics/RendererData.hpp"
 #include "BeatEngine/Logger.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include <glm/ext/vector_float3.hpp>
 
 void Shape::Draw(Renderer* const mgr, RenderState state) {

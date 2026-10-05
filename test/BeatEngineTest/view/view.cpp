@@ -16,7 +16,6 @@
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/EventManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/AudioSignals.h"
 #include "BeatEngine/Events/AudioEvent.h"

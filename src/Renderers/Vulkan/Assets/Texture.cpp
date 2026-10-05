@@ -1,6 +1,6 @@
 #include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
 #include "BeatEngine/Asset/Texture.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
+#include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "imgui.h"

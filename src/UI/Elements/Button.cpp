@@ -1,7 +1,6 @@
 #include "BeatEngine/UI/Elements/Button.h"
 // #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Base/Asset.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 #include "BeatEngine/UI/Alignment.h"
 #include "imgui.h"
 

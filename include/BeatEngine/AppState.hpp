@@ -6,7 +6,6 @@
 #include "BeatEngine/Manager/SystemManager.h"
 #include "BeatEngine/Manager/UIManager.h"
 #include "BeatEngine/Manager/AudioManager.h"
-#include "BeatEngine/Manager/GraphicsManager.h"
 
 class AppContext;
 class AppState {
@@ -17,7 +16,6 @@ private:
 	SettingsManager SettingsMgr{};
 	AudioManager AudioMgr{};
 	UIManager UIMgr{};
-    // GraphicsManager GraphicsMgr{};
 public:
     AppState() = default;
     void PrepareManagers(AppContext* context);
@@ -28,5 +26,4 @@ public:
     SettingsManager& GetSettingsMgr();
     AudioManager& GetAudioMgr();
     UIManager& GetUIMgr();
-    // GraphicsManager& GetGraphicsMgr();
 };
