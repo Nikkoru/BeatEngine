@@ -5,33 +5,33 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/UI/UIElement.h"
-#include "BeatEngine/UI/Elements/UIPanel.h"
 
 class Renderer;
+class UIElement;
+class UIPanel;
 class UILayer : public GraphicalElement {
 private:
-	std::shared_ptr<UIElement> m_Root = nullptr;
-	std::shared_ptr<UIPanel> m_BackPanel = nullptr;
+	std::unique_ptr<UIElement> m_Root{ nullptr };
+	std::unique_ptr<UIPanel> m_BackPanel{ nullptr };
 
-	bool m_Hidden = false;
+	bool m_Hidden{ false };
 
-	Vector2f m_Size = { 0, 0 };
-	Vector2f m_Position = { 0, 0 };
+	Vector2f m_Size{ 0, 0 };
+	Vector2f m_Position{ 0, 0 };
 public:
 	UILayer() = default;
 	UILayer(Vector2f size, Vector2f position);
+    ~UILayer() override;
 
 	template <typename TUI> 
 		requires(std::is_base_of_v<UIElement, TUI>)
-	std::shared_ptr<TUI> SetRootElement();
+	TUI* SetRootElement();
 
 	template <typename TUI>
 		requires(std::is_base_of_v<UIElement, TUI>)
-	std::shared_ptr<TUI> GetRootElement();
+	TUI* GetRootElement();
 
 	void SetLayerBackPanel();
-	void SetLayerBackPanel(std::shared_ptr<UIPanel> backPanel);
 	void OnEvent(Optional<Base::Event> event);
 	
 	void Update(float dt);

@@ -15,22 +15,22 @@ class AppContext;
 class AppState;
 class UIManager {
 private:
-	std::unordered_map<std::type_index, std::unordered_map<std::string, std::shared_ptr<UILayer>>> m_Layers;
-	std::unordered_map<std::string, std::shared_ptr<UILayer>> m_GlobalLayers;
+	std::unordered_map<std::type_index, std::unordered_map<std::string, std::unique_ptr<UILayer>>> m_Layers;
+	std::unordered_map<std::string, std::unique_ptr<UILayer>> m_GlobalLayers;
 private:
     AppContext* m_Context{ nullptr };
     AppState* m_State{ nullptr };
 public:
     UIManager() : UIManager(nullptr, nullptr) {}
 	UIManager(AppContext* context, AppState* state);
-	~UIManager() = default;
+	~UIManager();
 
     void SetContext(AppContext* context) { m_Context = context; }
     void SetState(AppState* state) { m_State = state; }
 
 	void OnEvent(Optional<Base::Event> event);
 
-	std::shared_ptr<UILayer> AddLayer(const std::string layerName, bool global = false);
+	UILayer* AddLayer(const std::string layerName, bool global = false);
 	void RemoveLayer(const std::string layerName, bool global = false);
 
 	void RemoveViewLayers(const std::type_index viewID);

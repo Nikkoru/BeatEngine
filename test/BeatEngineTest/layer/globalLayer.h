@@ -10,10 +10,10 @@
 
 class GlobalTestLayerUI : public ViewLayer {
 private:
-	std::shared_ptr<UILayer> m_HUD = nullptr;
+	UILayer* m_HUD = nullptr;
 	std::string m_FPSText;
     std::string m_DeltaText;
-    std::shared_ptr<Font> m_Font = nullptr;
+    Base::AssetHandle<Font> m_Font{ };
     bool m_DrawDebug = false;
 public:
 	GlobalTestLayerUI();

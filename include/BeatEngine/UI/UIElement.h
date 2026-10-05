@@ -6,8 +6,6 @@
 #include <memory>
 #include <functional>
 
-// #include "BeatEngine/Base/Asset.h"
-// #include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
@@ -17,11 +15,6 @@
 #include "BeatEngine/Util/Exception.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Optional.hpp"
-
-/// <summary>
-/// Semi-abstract base class for UI Elements compatible with SFML.
-/// As is compatible with SFML, it can draw its components using the normal <code>window.draw(UIElement)</code> method which each derivated class needs to implement.
-/// </summary>
 
 class UIElement : public GraphicalElement {
 protected:
@@ -37,7 +30,7 @@ protected:
     UIAlignmentV m_VAlignment = UIAlignmentV::Down;
     UIAlignmentH m_HAlignment = UIAlignmentH::Left;
 
-	std::map<std::string, std::shared_ptr<UIElement>> m_Childs;
+	std::map<std::string, std::unique_ptr<UIElement>> m_Childs;
 
 	bool m_Hidden = false;
 	bool m_Active = false;
@@ -51,7 +44,7 @@ protected:
 public:
 	UIElement() = default;
 	UIElement(std::type_index elementID) : m_ID(elementID) {}
-	virtual ~UIElement();
+	virtual ~UIElement() override;
 
 	void SetOnActive(std::function<void()> func);
 	void SetOnDeactive(std::function<void()> func);
@@ -97,30 +90,27 @@ public:
 
 	template<typename TElement, typename... Args>
 		requires(std::is_base_of_v<UIElement, TElement>)
-	inline std::shared_ptr<TElement> AddChild(const std::string& name, Args&&... constructorArgs) {
+	TElement* AddChild(const std::string& name, Args&&... constructorArgs) {
 		for (auto& [childName, element] : m_Childs) {
 			if (childName == name) {
 				Logger::AddError("", "Element \"{}\" already exists in container", name);
 				return nullptr;
 			}
 		}
-		auto element = std::make_shared<TElement>(std::forward<Args>(constructorArgs)...);
+		
+		m_Childs.emplace(name, std::make_unique<TElement>(std::forward<Args>(constructorArgs)...));
 
-		m_Childs.emplace(name, element);
-
-		return element;
+		return static_cast<TElement*>(m_Childs.at(name).get());
 	}
 	template<typename TElement>
 		requires(std::is_base_of_v<UIElement, TElement>)
-	inline std::shared_ptr<TElement> GetChild(const std::string& name) {
-		for (auto& [childName, element] : m_Childs) {
-			if (childName == name) {
-				return std::static_pointer_cast<TElement>(element);
-			}
-		}
+	TElement* GetChild(const std::string& name) {
+        if (!m_Childs.contains(name)) {
+            std::string msg = "Element \"" + name + "\" doesn't exists in container";
+            Logger::AddCritical("", msg);
+            THROW_RUNTIME_ERROR(msg);
+        }
 
-		std::string msg = "Element \"" + name + "\" doesn't exists in container";
-		Logger::AddCritical("", msg);
-		THROW_RUNTIME_ERROR(msg);
-	}
+        return static_cast<TElement*>(m_Childs.at(name).get());
+    }
 };

@@ -20,7 +20,7 @@ class TestView : public Base::View {
 private:
     Camera m_Camera{};
 
-    std::shared_ptr<UILayer> m_HUD = nullptr;
+    UILayer* m_HUD{ nullptr };
 
 	std::wstring m_MusicTitleText;
 	std::wstring m_MusicAlbumText;

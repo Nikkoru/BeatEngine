@@ -26,7 +26,7 @@ GlobalTestLayerUI::GlobalTestLayerUI(AppContext* context, AppState* state) : Vie
 
 void GlobalTestLayerUI::Init() {
     m_HUD = m_State->GetUIMgr().AddLayer("GlobalTestLayerUI", true);
-	m_Font = m_State->GetAssetMgr().Get<Font>("main-font").Get();
+	m_Font = m_State->GetAssetMgr().Get<Font>("main-font");
 
 	auto root = m_HUD->SetRootElement<UI::Button>();
     

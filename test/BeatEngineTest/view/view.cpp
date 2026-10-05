@@ -101,8 +101,8 @@ void TestView::Init() {
     m_HUD = b_mState->GetUIMgr().AddLayer("mainViewUI");
     // m_Text.SetPosition();
 
-    auto button = m_HUD->SetRootElement<UI::Button>();
-    auto progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
+    auto* button = m_HUD->SetRootElement<UI::Button>();
+    auto* progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
 
 	auto playBtn = button->AddChild<UI::Button>("playBtn", m_Font, "Play");
 	playBtn->SetSize({ 80, 30 });

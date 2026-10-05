@@ -5,6 +5,7 @@
 #include "BeatEngine/Graphics/Color.h"
 #include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/VertexArray.hpp"
+#include "BeatEngine/UI/Elements/UIPanel.h"
 #include "BeatEngine/UI/UIElement.h"
 #include "BeatEngine/UI/UILayer.h"
 #include "BeatEngine/Logger.h"
@@ -14,6 +15,8 @@
 
 UIManager::UIManager(AppContext* context, AppState* state)
     : m_Context(context), m_State(state) {}
+
+UIManager::~UIManager() = default;
 
 void UIManager::OnEvent(Optional<Base::Event> event) {
 	for (const auto& [name, layer] : m_GlobalLayers) {
@@ -25,34 +28,31 @@ void UIManager::OnEvent(Optional<Base::Event> event) {
 	}
 }
 
-std::shared_ptr<UILayer> UIManager::AddLayer(const std::string layerName, bool global) {
-	auto layer = std::make_shared<UILayer>();
-	
+UILayer* UIManager::AddLayer(const std::string layerName, bool global) {
 	if (global) {
         if (m_GlobalLayers.contains(layerName)) {
             Logger::AddWarning(typeid(UIManager), "Layer named \"{}\" already exists, returning existing one", layerName);
-            layer = m_GlobalLayers.at(layerName);
         }
-        else 
-		    m_GlobalLayers[layerName] = layer;
+        else {
+		    m_GlobalLayers[layerName] = std::make_unique<UILayer>();
+        }
+        return m_GlobalLayers.at(layerName).get();
     }
 	else {
         if (!m_Layers.contains(m_Context->ActiveView)) {
             Logger::AddDebug(typeid(UIManager), "View \"{}\" doesn't have a entry. Creating and adding layer \"{}\"", m_Context->ActiveView.name(), layerName);
-            m_Layers[m_Context->ActiveView].try_emplace(layerName, layer);
+            m_Layers[m_Context->ActiveView].try_emplace(layerName, std::make_unique<UILayer>());
         }
         else {
             if (!m_Layers.at(m_Context->ActiveView).contains(layerName)) {
-                m_Layers.at(m_Context->ActiveView)[layerName] = layer;
+                m_Layers.at(m_Context->ActiveView)[layerName] = std::make_unique<UILayer>();
             }
             else {
                 Logger::AddWarning(typeid(UIManager), "Layer named \"{}\" already exists, returning existing one", layerName);
-                layer = m_Layers.at(m_Context->ActiveView)[layerName];
             }
         }
+        return m_Layers.at(m_Context->ActiveView).at(layerName).get();
     }
-
-	return layer;
 }
 
 void UIManager::RemoveLayer(const std::string layerName, bool global) {
@@ -92,9 +92,11 @@ void UIManager::RemoveAllLayers() {
 }
 
 void UIManager::OnDraw(Renderer* const renderer) {
-	for (const auto& [name, layer] : m_Layers[m_Context->ActiveView]) {
-        layer->Draw(renderer);
-	}
+    if (m_Layers.contains(m_Context->ActiveView)) {
+        for (const auto& [name, layer] : m_Layers.at(m_Context->ActiveView)) {
+            layer->Draw(renderer);
+        }
+    }
 	for (const auto& [name, layer] : m_GlobalLayers) {
         auto state = RenderState::Default;
         state.DrawInGlobal = true;
@@ -117,6 +119,9 @@ void UIManager::ShowImGuiDebugWindow() {
 
     ImGui::Begin("UIManager Debug");
     if (ImGui::BeginTabBar("uiManagerTabBar")) {
+        if (ImGui::BeginTabItem("Summary")) {
+            ImGui::EndTabItem();
+        }
         if (ImGui::BeginTabItem("Global layers")) {
             for (const auto& [layerName, layer] : m_GlobalLayers) {
                 if (ImGui::TreeNode(layerName.c_str())) {
@@ -130,7 +135,11 @@ void UIManager::ShowImGuiDebugWindow() {
         }
         if (ImGui::BeginTabItem("View layers")) {
             for (const auto& [viewID, layerMap] : m_Layers) {
+                if (viewID == m_Context->ActiveView)
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(ImColor(255, 255, 0, 255)));
                 if (ImGui::TreeNode(viewID.name())) {
+                    if (viewID == m_Context->ActiveView)
+                        ImGui::PopStyleColor();
                     for (const auto& [layerName, layer] : layerMap) {
                         if (ImGui::TreeNode(layerName.c_str())) {
                             ImGui::Text("Root");
@@ -141,6 +150,8 @@ void UIManager::ShowImGuiDebugWindow() {
                     }
                     ImGui::TreePop();
                 }
+                else if (viewID == m_Context->ActiveView)
+                    ImGui::PopStyleColor();
             }
             ImGui::EndTabItem();
         }

@@ -2,14 +2,14 @@
 
 template<typename TUI>
 	requires(std::is_base_of_v<UIElement, TUI>)
-std::shared_ptr<TUI> UILayer::SetRootElement() {
-	m_Root = std::make_shared<TUI>();
+TUI* UILayer::SetRootElement() {
+	m_Root = std::make_unique<TUI>();
 	
-	return std::static_pointer_cast<TUI>(m_Root);
+	return GetRootElement<TUI>();
 }
 
 template<typename TUI>
 	requires(std::is_base_of_v<UIElement, TUI>)
-std::shared_ptr<TUI> UILayer::GetRootElement() {
-	return std::static_pointer_cast<TUI>(m_Root);
+TUI* UILayer::GetRootElement() {
+	return static_cast<TUI*>(m_Root.get());
 }

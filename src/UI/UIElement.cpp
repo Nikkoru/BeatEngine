@@ -7,8 +7,7 @@
 #include "BeatEngine/Graphics/Renderer.h"
 #include <memory>
 
-UIElement::~UIElement() {
-}
+UIElement::~UIElement() = default;
 
 void UIElement::SetOnActive(std::function<void()> func) {
 	this->OnActive = func;

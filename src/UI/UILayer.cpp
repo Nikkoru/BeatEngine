@@ -1,5 +1,8 @@
 #include "BeatEngine/UI/UILayer.h"
+
 #include "BeatEngine/Graphics/Renderer.h"
+#include "BeatEngine/UI/UIElement.h"
+#include "BeatEngine/UI/Elements/UIPanel.h"
 
 UILayer::UILayer(Vector2f size, Vector2f position) {
     // TODO: why is this constructor here even
@@ -7,12 +10,10 @@ UILayer::UILayer(Vector2f size, Vector2f position) {
     (void)position;
 }
 
-void UILayer::SetLayerBackPanel() {
-	m_BackPanel = std::make_shared<UIPanel>();
-}
+UILayer::~UILayer() = default;
 
-void UILayer::SetLayerBackPanel(std::shared_ptr<UIPanel> backPanel) {
-	m_BackPanel = backPanel;
+void UILayer::SetLayerBackPanel() {
+	m_BackPanel = std::make_unique<UIPanel>();
 }
 
 void UILayer::OnEvent(Optional<Base::Event> event) {
