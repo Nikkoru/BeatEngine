@@ -324,7 +324,7 @@ struct TextElement::ShaperImpl {
 
 TextElement::TextElement(Base::AssetHandle<Font> font, String str, unsigned int charSize)
  : m_Text(str), m_Font(font), m_CharacterSize(charSize) {
-    m_PrimitiveType = PrimitiveType::TriangleList;
+     m_Vertices.SetType(PrimitiveType::TriangleList);
 }
 
 void TextElement::SetString(const String str) {
@@ -399,7 +399,7 @@ void TextElement::Draw(Renderer* const mgr, RenderState state) {
     DrawCommand cmd{
         // .projection = mgr.GetMainCamera()->GetProjection(),
         .transform = GetTransform().GetMatrix(),
-        .padding = m_Padding.ToGLMVec2(),
+        .padding = glm::vec2{ 0 },
         .textureID = m_FontTextureID,
         .shaderID = 0
     };

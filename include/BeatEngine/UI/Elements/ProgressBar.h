@@ -31,7 +31,6 @@ namespace UI {
 		void SetBackColor(RGBColor color);
 
 		void OnDraw(Renderer* const mgr, RenderState state = RenderState::Default) override;
-		void OnUninitGraphics(Renderer* const mgr) override;
 
         void SpecificImGuiDebug() override;
 	};

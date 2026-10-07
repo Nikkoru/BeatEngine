@@ -8,6 +8,7 @@
 #include <sndfile.h>
 #include <taglib/tag.h>
 
+#include "BeatEngine/Asset/Font.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Base/Asset.h"
 #include "BeatEngine/Events/AppEvent.hpp"

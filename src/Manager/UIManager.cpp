@@ -207,20 +207,20 @@ void UIManager::DrawDebugElement(UIElement& element) {
         ImGui::TreePop();
     }
 
-    if (ImGui::TreeNode("Vertex")) {
-        for (size_t i = 0; i < element.m_Vertices.GetSize(); i++) {
-            const auto& vertex = element.m_Vertices[i];
-            ImGui::Text("Color:");
-            ImGui::SameLine();
-            auto desc = std::format("Vertex{}", i);
-            ImGui::ColorButton(desc.c_str(), { vertex.Color.R, vertex.Color.G, vertex.Color.B, vertex.Color.A });
-        }
-        ImGui::TreePop();
-    }
-    if (ImGui::TreeNode("Draw data")) {
-        element.DrawImGuiDrawData();
-        ImGui::TreePop();
-    }
+    // if (ImGui::TreeNode("Vertex")) {
+    //     for (size_t i = 0; i < element.m_Vertices.GetSize(); i++) {
+    //         const auto& vertex = element.m_Vertices[i];
+    //         ImGui::Text("Color:");
+    //         ImGui::SameLine();
+    //         auto desc = std::format("Vertex{}", i);
+    //         ImGui::ColorButton(desc.c_str(), { vertex.Color.R, vertex.Color.G, vertex.Color.B, vertex.Color.A });
+    //     }
+    //     ImGui::TreePop();
+    // }
+    // if (ImGui::TreeNode("Draw data")) {
+    //     element.DrawImGuiDrawData();
+    //     ImGui::TreePop();
+    // }
 
     if (ImGui::TreeNode("Specific from type")) {
         element.SpecificImGuiDebug();

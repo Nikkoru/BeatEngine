@@ -81,11 +81,6 @@ public:
 	virtual void OnDraw(Renderer* const mgr, RenderState state ) = 0;
 	void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
 
-    void UninitGraphics(Renderer* const mgr) override;
-    virtual void OnUninitGraphics(Renderer* const mgr) { m_LayoutRect.UninitGraphics(mgr); }
-
-    void DrawImGuiDrawData() override;
-
     virtual void SpecificImGuiDebug() {};
 
 	template<typename TElement, typename... Args>

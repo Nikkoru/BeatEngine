@@ -56,11 +56,6 @@ void UI::ProgressBar::OnDraw(Renderer* const mgr, RenderState state) {
 	m_InnerRect.Draw(mgr, state);
 }
 
-void UI::ProgressBar::OnUninitGraphics(Renderer* const mgr) {
-    m_LayoutRect.UninitGraphics(mgr);
-    m_InnerRect.UninitGraphics(mgr);
-}
-
 void UI::ProgressBar::SpecificImGuiDebug() {
     ImGui::Text("ProgressBar Progress: %f", m_Progress);
     ImGui::Text("ProgressBar MaxValue: %f", m_MaxValue);

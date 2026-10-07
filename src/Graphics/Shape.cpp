@@ -1,11 +1,9 @@
 #include "BeatEngine/Graphics/Shape.hpp"
-#include "BeatEngine/Graphics/RendererData.hpp"
-#include "BeatEngine/Logger.h"
+
 #include <glm/ext/vector_float3.hpp>
 
-void Shape::Draw(Renderer* const mgr, RenderState state) {
-    BaseDraw(mgr, state);
-}
+#include "BeatEngine/Graphics/Renderer.h"
+#include "BeatEngine/Logger.h"
 
 void Shape::UpdateVertex() {
     const auto vertexCount = GetPointCount();
@@ -24,5 +22,20 @@ void Shape::UpdateVertex() {
         m_Vertices[i].UV = GetUV(i);
     }
 
-    m_PrimitiveType = GetPrimitiveType();
+    m_Vertices.SetType(GetPrimitiveType());
+}
+
+void Shape::Draw(Renderer* const mgr, RenderState state) {
+    DrawCommand cmd{
+        .projection = glm::mat4{ 0 },
+        .transform = GetTransform().GetMatrix(),
+        .padding = glm::vec2{ 0 },
+        .textureID = m_Texture ? m_Texture.Get()->GetID() : Texture::NULL_ID,
+        .shaderID = 0
+    };
+
+    state._DrawCommand = std::make_shared<DrawCommand>(cmd);
+    state.DrawCommandSize = sizeof(DrawCommand);
+
+    mgr->DrawVertices(m_Vertices, state);
 }

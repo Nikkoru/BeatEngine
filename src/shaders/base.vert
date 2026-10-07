@@ -11,7 +11,6 @@ layout (location = 2) out vec2 outUV;
 layout (location = 3) flat out uint textureID;
 layout (location = 4) flat out uint shaderID;
 
-
 void main() {
     DrawCommand command = pcs.drawBuffer.command;
 

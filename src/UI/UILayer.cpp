@@ -36,14 +36,6 @@ void UILayer::Draw(Renderer* const mgr, RenderState state) {
     }
 }
 
-void UILayer::UninitGraphics(Renderer* const mgr) {
-    if (m_BackPanel)
-        m_BackPanel->UninitGraphics(mgr);
-
-    if (m_Root)
-        m_Root->UninitGraphics(mgr);
-}
-
 void UILayer::SetVisible(bool visible) {
     this->m_Hidden = !visible;
 }

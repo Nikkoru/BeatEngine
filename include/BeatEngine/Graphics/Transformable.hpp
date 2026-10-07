@@ -4,7 +4,7 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/System/Angle.hpp"
 class Transformable {
-private:
+protected:
     Vector2f m_Origin{};
     Vector2f m_Position{};
     Angle m_Rotation{};

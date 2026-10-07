@@ -27,7 +27,7 @@ protected:
 public:
     Renderer() : Renderer(nullptr) {};
     Renderer(AppContext* context) : m_Context(context) {}
-    virtual ~Renderer() = default;
+    virtual ~Renderer();
 public:
     virtual void Init(VSyncMode vSync = VSyncMode::Disable) = 0;
     virtual void Uninit() = 0;
@@ -41,6 +41,8 @@ public:
     void Close() { m_Window->Close(); }
 
     virtual void SetGlobalShader(std::shared_ptr<Shader> shader) = 0;
+
+    virtual void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) = 0;
 
     virtual void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) = 0;
     virtual void InitVertices(VertexArray& vertices, RenderState state) = 0;

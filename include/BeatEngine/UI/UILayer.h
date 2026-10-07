@@ -36,7 +36,6 @@ public:
 	
 	void Update(float dt);
 	void Draw(Renderer* const mgr, RenderState state = RenderState::Default) override;
-    void UninitGraphics(Renderer* const mgr) override;
 
     void SetVisible(bool visible);
 

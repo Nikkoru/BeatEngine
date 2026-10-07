@@ -89,16 +89,10 @@ TestView::TestView(AppContext* context, AppState* state)
 }
 
 void TestView::Init() {
-    Vector2f size{ static_cast<float>(b_mContext->WindowSize.X), static_cast<float>(b_mContext->WindowSize.Y) };
-    m_Camera.InitOrtho2D(size);
-    // b_mState->GetGraphicsMgr().SetMainCamera(m_Camera);
-
-    m_Font = b_mState->GetAssetMgr().Get<Font>("main-font").Get(); 
-
     auto windowSize = b_mContext->WindowSize;
-    
+    m_Camera.InitOrtho2D(Vector2f{ windowSize });
+    m_Font = b_mState->GetAssetMgr().Get<Font>("main-font").Get(); 
     m_HUD = b_mState->GetUIMgr().AddLayer("mainViewUI");
-    // m_Text.SetPosition();
 
     auto* button = m_HUD->SetRootElement<UI::Button>();
     auto* progressBar = button->AddChild<UI::ProgressBar>("prog", 0, 200);
@@ -170,7 +164,7 @@ void TestView::Init() {
         m_Shape.SetSize(Vector2f{ 100.f, 100.f });
     }
 
-	m_Shape.SetPosition({ size.X / 2 - m_Shape.GetSize().X / 2, size.Y / 2 - m_Shape.GetSize().Y / 2 - 100 });
+	m_Shape.SetPosition({ windowSize.X / 2 - m_Shape.GetSize().X / 2, windowSize.Y / 2 - m_Shape.GetSize().Y / 2 - 100 });
     m_Shape.SetColor(LinearColor::White());
 
     if (funnyTexture) {
@@ -182,12 +176,12 @@ void TestView::Init() {
         m_FunnyShape.SetSize(Vector2f{ 100.f, 100.f });
     }
 
-	m_FunnyShape.SetPosition({ size.X / 2 - m_FunnyShape.GetSize().X / 2, size.Y / 2 - m_FunnyShape.GetSize().Y / 2 + m_Shape.GetSize().Y + 5 - 100 });
+	m_FunnyShape.SetPosition({ windowSize.X / 2 - m_FunnyShape.GetSize().X / 2, windowSize.Y / 2 - m_FunnyShape.GetSize().Y / 2 + m_Shape.GetSize().Y + 5 - 100 });
     m_FunnyShape.SetColor(LinearColor::White());
 
     m_Text = TextElement{ m_Font, "Test", 30 };
     m_Text.SetColor(LinearColor::White());
-    m_Text.SetPosition({ size.X / 2 , size.Y / 2 + 5 - 210 });
+    m_Text.SetPosition({ static_cast<float>(windowSize.X / 2) , static_cast<float>(windowSize.Y / 2 - 205) });
     m_Text.SetLineAlignment(TextElement::LineAlignment::Center);
     m_Text.SetCharacterSize(50);
 
@@ -280,8 +274,8 @@ void TestView::OnDraw(Renderer* const mgr) {
     m_Shape.Draw(mgr);
     m_FunnyShape.Draw(mgr);
 
-    if (b_mContext->ContainsAFlags(AppFlags_ImGui))
-        m_Shape.DrawWindowImGuiDrawData();
+    // if (b_mContext->ContainsAFlags(AppFlags_ImGui))
+    //     m_Shape.DrawWindowImGuiDrawData();
 
     if (m_HUD->GetRootElement<UI::Button>()->HasChild("musicProg")) {
         auto musicProgressBar = m_HUD->GetRootElement<UI::Button>()->GetChild<UI::ProgressBar>("musicProg");

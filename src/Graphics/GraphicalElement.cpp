@@ -5,14 +5,10 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <memory>
 
-void GraphicalElement::BaseDraw(Renderer* const mgr, RenderState state) {
-    glm::mat4 proj{ 0.f };
-    // if (auto camera = mgr.GetMainCamera()) {
-    //     proj = camera->GetProjection();
-    // }
-
+/*
+void GraphicalElement::Draw(Renderer* const mgr, RenderState state) {
     DrawCommand cmd{
-        .projection = proj,
+        .projection = 0,
         .transform = glm::mat4{ 1.f },
         .padding = m_Padding.ToGLMVec2(),
         .textureID = Texture::NULL_ID,
@@ -49,3 +45,4 @@ void GraphicalElement::BaseDrawImGuiDrawData() {
 void GraphicalElement::SetCommand(std::shared_ptr<DrawCommand> cmd) {
     (void)cmd;
 }
+*/

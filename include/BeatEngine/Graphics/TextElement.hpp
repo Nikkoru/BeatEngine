@@ -7,6 +7,7 @@
 #include "BeatEngine/Graphics/Rect.hpp"
 #include "BeatEngine/Graphics/Transformable.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
+#include "BeatEngine/Graphics/VertexArray.hpp"
 #include "BeatEngine/System/String.hpp"
 
 #include <memory>
@@ -82,6 +83,7 @@ private:
     mutable bool m_UpdateGeometry{ false };
     mutable std::vector<ShapedGlyph> m_Glyphs;
     mutable std::shared_ptr<ShaperImpl> m_Shaper;
+    mutable VertexArray m_Vertices;
     mutable VertexArray m_OutlineVertices;
 public:
     TextElement() : TextElement(Base::AssetHandle<Font>{}) {}

@@ -70,6 +70,8 @@ public:
     void UninitVertices(VertexArray& vertices) override;
     void DestroyVerticesData(RendererData* data);
 
+    void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) override {};
+
     void ClearVertexBuffers();
 
     unsigned int GetMaxTextureSize() override;

@@ -7,7 +7,9 @@
 #include "BeatEngine/Graphics/Renderer.h"
 #include <memory>
 
-UIElement::~UIElement() = default;
+UIElement::~UIElement() {
+
+}
 
 void UIElement::SetOnActive(std::function<void()> func) {
 	this->OnActive = func;
@@ -113,7 +115,7 @@ void UIElement::RemoveChild(const std::string& name) {
 	for (auto& [childName, element] : m_Childs) {
 		if (childName == name) {
 			auto it = m_Childs.find(childName);
-            SignalManager::GetInstance()->Send(std::make_shared<AppUninitGraphicsSignal>(*it->second));
+            // SignalManager::GetInstance()->Send(std::make_shared<AppUninitGraphicsSignal>(it->second));
 			m_Childs.erase(it);
 		}
 	}
@@ -138,20 +140,10 @@ void UIElement::Draw(Renderer* const mgr, RenderState state) {
             element->OnDraw(mgr, state);
 }
 
-void UIElement::UninitGraphics(Renderer* const mgr) {
-    OnUninitGraphics(mgr);
-
-    if (m_Childs.empty()) return;
-
-    for (const auto& [childName, element] : m_Childs) {
-        element->UninitGraphics(mgr);
-    }
-}
-
-void UIElement::DrawImGuiDrawData() {
-    m_LayoutRect.DrawImGuiDrawData();
-
-    // for (const auto& [childName, element] : m_Childs) {
-    //     element->DrawImGuiDrawData();
-    // }
-}
+// void UIElement::DrawImGuiDrawData() {
+//     m_LayoutRect.DrawImGuiDrawData();
+//
+//     // for (const auto& [childName, element] : m_Childs) {
+//     //     element->DrawImGuiDrawData();
+//     // }
+// }
