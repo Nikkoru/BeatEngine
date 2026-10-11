@@ -5,13 +5,13 @@ Vector2f RectShape::GetPointPosition(size_t index) {
     switch (index) {
         default:
         case 0:
-            return m_Position;
+            return { 0, 0 };
         case 1:
-            return { m_Position.X, m_Position.Y + m_Size.Y };
+            return { 0, m_Size.Y };
         case 2:
-            return { m_Position.X + m_Size.X, m_Position.Y };
+            return { m_Size.X, 0 };
         case 3:
-            return { m_Position.X + m_Size.X , m_Position.Y + m_Size.Y };
+            return { m_Size.X , m_Size.Y };
     }
 }
 
