@@ -53,14 +53,13 @@ bool ViewManager::Push(std::type_index viewID) {
 		if (ViewFabrics.contains(viewID)) {
             if (!ViewStack.empty())
                 ViewStack.top()->OnSuspend();
+			MainView = viewID;
+            m_Context->ActiveView = MainView;
 			ViewStack.push(ViewFabrics[viewID](m_Context, m_State));
-			MainView = ViewStack.top()->b_ID;
 
 			Logger::AddInfo(typeid(ViewManager), "{} pushed!", viewID.name());
-            m_Context->ActiveView = MainView;
 
 			EventManager::GetInstance()->UpdateMainView(MainView);
-            ViewStack.top()->Init();
 			EventManager::GetInstance()->Send(std::make_shared<EventViewPush>(MainView));
             return true;
 		}

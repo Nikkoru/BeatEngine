@@ -94,9 +94,6 @@ void Application::Run() {
     // auto& graphicsMgr = m_State.GetGraphicsMgr();
 
 
-    if (!viewMgr.HasActiveViews())
-        viewMgr.Push(viewMgr.MainView);
-
     if (m_Renderer == nullptr) {
 #ifdef BEATENGINE_VULKAN_RENDERER
         m_Renderer = std::make_unique<VulkanRenderer>(&m_Context);
@@ -105,10 +102,12 @@ void Application::Run() {
 #else
         THROW_RUNTIME_ERROR("Not renderer defined, define one.");
 #endif
-        // m_Renderer->Init();
     }
 
     m_Context.WindowSize = m_Renderer->GetWindow()->GetSize();
+
+    if (!viewMgr.HasActiveViews())
+        viewMgr.Push(viewMgr.MainView);
 
     while (m_Renderer->IsOpen()) {
         while (auto event = m_Renderer->PollEvent()) {

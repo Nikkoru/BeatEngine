@@ -41,7 +41,6 @@ public:
 	TestView(AppContext* context, AppState* state);
 	~TestView() override = default;
 public:
-    void Init() override;
 	void OnDraw(Renderer* const mgr) override;
 	void OnEvent(Optional<Base::Event> event) override;
 	void OnUpdate(float dt) override;

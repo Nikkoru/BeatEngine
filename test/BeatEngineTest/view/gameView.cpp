@@ -11,9 +11,7 @@ Base::View(typeid(GameView), context, state) {
     auto layer = b_mLayerStack.AttachLayer<GameLayer>();
     layer->SetAppContext(context);
     layer->SetAppState(state);
-}
 
-void GameView::Init() {
     auto font = b_mState->GetAssetMgr().Get<Font>("main-font");
     m_Text = TextElement{ font, "GameView", 30 };
     m_Text.SetPosition(Vector2f{ Vector2u{ b_mContext->WindowSize.X / 2, b_mContext->WindowSize.Y / 2 } });
