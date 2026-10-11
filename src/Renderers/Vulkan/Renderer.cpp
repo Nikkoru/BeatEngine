@@ -321,8 +321,9 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (state._DrawCommand->projection == glm::mat4{ 0 })
         state._DrawCommand->projection = m_MainCamera.GetProjection();
 
-    if (!IsVertexArrayInitialized(vertices))
+    if (!IsVertexArrayInitialized(vertices)) {
         InitVertices(vertices, state);
+    }
 
 	auto* data = GetVertexArrayRendererData(vertices);
     auto* vulkanData = static_cast<VulkanRendererData*>(data);
@@ -647,10 +648,11 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 #ifdef BEATENGINE_DEBUG
     if (m_Context->ContainsAFlags(AppFlags_ImGui) && m_Context->ContainsEFlags(EnvFlags_Debug)) {
         ImGui::Begin("Rendered elements so far");
+        ImGui::PushID(UID());
         if (ImGui::TreeNode(
                 IsVertexArrayHighlight(vertices)
-                ? std::format("Vertex_ID{}", GetVertexArrayID(vertices)).c_str()
-                : std::format("VertexHighlight_ID{}", GetVertexArrayHighlightID(vertices)).c_str()
+                ? "Vertex"
+                : "VertexHighlight"
             )
         ) {
             ImGui::Text("PrimitiveType : %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str()); 
@@ -669,6 +671,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
             }
             ImGui::TreePop();
         }
+        ImGui::PopID();
         ImGui::End();
     }
 

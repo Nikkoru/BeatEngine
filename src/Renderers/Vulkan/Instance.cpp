@@ -35,6 +35,9 @@ void VK::Instance::Init(AppContext* context, std::string appName, uint32_t devic
 
     CheckDeviceCapabilities();
     m_ImageCache.BindlessSetMgr.Init(m_Core.Device, m_MaxSamplerAnisotropy);
+    m_Uninitializers.AddCallback([&]() {
+        m_ImageCache.BindlessSetMgr.Uninit(m_Core.Device);
+    });
 
     {
         const auto black = 0xFF000000;
@@ -362,6 +365,11 @@ ImageID VK::Instance::AddImageToCache(AllocatedImage& image) {
 }
 
 GPUBuffer VK::Instance::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) {
+    if (size <= 0) {
+        AddVulkanLog("Invalid size for buffer, size is less than 0");
+        THROW_RUNTIME_ERROR("Invalid size for buffer, size is less than 0");
+    }
+
     const auto bufferInfo = VkBufferCreateInfo{
         .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
         .pNext = nullptr,
