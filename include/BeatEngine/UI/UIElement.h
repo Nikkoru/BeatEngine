@@ -95,7 +95,7 @@ public:
 		
 		m_Childs.emplace(name, std::make_unique<TElement>(std::forward<Args>(constructorArgs)...));
 
-		return static_cast<TElement*>(m_Childs.at(name).get());
+		return GetChild<TElement>(name);
 	}
 	template<typename TElement>
 		requires(std::is_base_of_v<UIElement, TElement>)

@@ -23,9 +23,9 @@ public:
 	UILayer(Vector2f size, Vector2f position);
     ~UILayer() override;
 
-	template <typename TUI> 
+	template <typename TUI, typename... Args> 
 		requires(std::is_base_of_v<UIElement, TUI>)
-	TUI* SetRootElement();
+	TUI* SetRootElement(Args&&... constructorArgs);
 
 	template <typename TUI>
 		requires(std::is_base_of_v<UIElement, TUI>)
