@@ -93,6 +93,7 @@ void Application::Run() {
     auto& viewMgr = m_State.GetViewMgr();
     // auto& graphicsMgr = m_State.GetGraphicsMgr();
 
+
     if (!viewMgr.HasActiveViews())
         viewMgr.Push(viewMgr.MainView);
 
@@ -106,6 +107,8 @@ void Application::Run() {
 #endif
         // m_Renderer->Init();
     }
+
+    m_Context.WindowSize = m_Renderer->GetWindow()->GetSize();
 
     while (m_Renderer->IsOpen()) {
         while (auto event = m_Renderer->PollEvent()) {

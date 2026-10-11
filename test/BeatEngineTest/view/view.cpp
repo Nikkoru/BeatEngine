@@ -109,7 +109,7 @@ void TestView::Init() {
 	pauseBtn->SetSize({ 80, 30 });
     pauseBtn->SetPosition({ 5, 10 + playBtn->GetPosition().Y + playBtn->GetSize().Y });
 
-    auto gameBtn = button->AddChild<UI::Button>("gameBtn", m_Font, "App");
+    auto gameBtn = button->AddChild<UI::Button>("gameBtn", m_Font, "Game");
     gameBtn->SetSize({ 80, 30 });
     gameBtn->SetPosition({ static_cast<float>(windowSize.Y / 2) - static_cast<float>(gameBtn->GetSize().Y / 2), 100 });
 
