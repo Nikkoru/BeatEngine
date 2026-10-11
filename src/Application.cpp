@@ -16,7 +16,6 @@
 #include "BeatEngine/Graphics/BaseWindow.h"
 
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
-#include "BeatEngine/Settings/AppDebugSettings.hpp"
 #include "BeatEngine/Settings/AppSettings.hpp"
 
 #include "BeatEngine/Signals/AppSignals.hpp"
@@ -693,7 +692,7 @@ void Application::_SubscribeToAppSignals() {
 		signal->Layer = nullptr;
 	});
 
-    SignalManager::GetInstance()->RegisterCallback<AppExitSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
+    SignalManager::GetInstance()->RegisterCallback<AppExitSignal>(typeid(Application), [](const std::shared_ptr<Base::Signal>) {
         EventManager::GetInstance()->Send(std::make_shared<AppExitingEvent>());
         // m_Running = false;
     });
@@ -720,12 +719,12 @@ void Application::_SubscribeToAppSignals() {
             m_Context.AFlags |= AppFlags_ImGui;
     });
 
-    SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppAddFlags>(sig);
         // this->SetFlags(gameSig->Flags);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppRemoveFlags>(sig);
         // this->RemoveFlags(gameSig->Flags);
     });
