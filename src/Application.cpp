@@ -1,5 +1,7 @@
 #include "BeatEngine/Application.hpp"
 
+#include <memory>
+
 #include <freetype/freetype.h>
 #include <freetype/ftsystem.h>
 #include <miniaudio.h>
@@ -26,7 +28,6 @@
 #include "BeatEngine/Manager/SignalManager.h"
 
 #include "version.h"
-#include <memory>
 
 Application::Application(const std::string& name): m_Context(name) {
     m_State.PrepareManagers(&m_Context);
@@ -58,39 +59,9 @@ Application::~Application() {
     m_State.GetSystemMgr().StopSystems();
 }
 
-// void Application::Init() {
-//     Logger::AddInfo(typeid(Application), "Initializing Application");
-//
-//     _InitSettings();
-// 	_InitAudio();
-// 	_InitSystems();
-// 	_InitGraphics();
-// 	_InitAssets();
-// 	_InitUI();
-// 	_InitViews();
-// 	_InitKeybinds();
-//
-// 	_SubscribeToAppEvent();
-// 	_SubscribeToAppSignals();
-// }
-//
-// void Application::Uninit() {
-//     Logger::AddInfo(typeid(Application), "Application in shutdown");
-//
-//     // m_State->KeybindsMgr->Uninit();
-//     m_State.GetViewMgr().Uninit();
-//     m_State.GetUIMgr().Uninit();
-//     m_State.GetAssetMgr().Uninit();
-//     m_State.GetSystemMgr().StopSystems();
-//     m_State.GetAudioMgr().Uninit();
-//     // m_State.GetGraphicsMgr().Close();
-//     // m_SettingsMgr->Uninit();
-// }
-
 void Application::Run() {
 	Logger::AddInfo(typeid(Application), "Application started!");
     auto& viewMgr = m_State.GetViewMgr();
-    // auto& graphicsMgr = m_State.GetGraphicsMgr();
 
 
     if (m_Renderer == nullptr) {
@@ -128,13 +99,7 @@ void Application::Run() {
 
 void Application::Update() {
     Profiler::StartProfile({ typeid(Application), "Update" }, { .0f, 1.0f, .0f, 1.0f });
-    // auto& graphicsMgr = m_State.GetGraphicsMgr();
-    // m_Context.WindowSize = graphicsMgr.GetWindow()->GetSize();
-
-    // if (m_Context->AFlags & ApplicationFlags_CursorChanged) {
-    //     m_Window->setMouseCursor(m_Cursor);
-    //     m_Context->AFlags &= ~ApplicationFlags_CursorChanged;
-    // }
+    m_Context.WindowSize = m_Renderer->GetWindow()->GetSize();
 
 	auto delta = m_MainClock.GetAndReset();
 	auto deltaTime = delta.AsSeconds();
@@ -508,15 +473,15 @@ void Application::_InitAssets() {
         ma_decoder decoder;
         ma_decoder_config config = ma_decoder_config_init(ma_format_f32, 2, 0);
 
-        {
-            ma_decoding_backend_vtable* customBackendVTable[] {
-                ma_decoding_backend_libvorbis
-            };
-
-            config.pCustomBackendUserData = nullptr;
-            config.ppCustomBackendVTables = customBackendVTable;
-            config.customBackendCount = sizeof(customBackendVTable) / sizeof(customBackendVTable[0]);
-        }
+        // {
+        //     ma_decoding_backend_vtable* customBackendVTable[] {
+        //         ma_decoding_backend_libvorbis
+        //     };
+        //
+        //     config.pCustomBackendUserData = nullptr;
+        //     config.ppCustomBackendVTables = customBackendVTable;
+        //     config.customBackendCount = sizeof(customBackendVTable) / sizeof(customBackendVTable[0]);
+        // }
 
         SF_INFO sfInfo{};
         TagLib::FileRef ref;
@@ -615,7 +580,7 @@ void Application::_InitGraphics() {
 
     if (m_Renderer == nullptr)
 #ifdef BEATENGINE_VULKAN_RENDERER
-        m_Renderer = std::make_unique<VulkanRenderer>(&m_Context);
+        m_Renderer = std::make_unique<VulkanRenderer>(&m_Context, nullptr, gameSettings->VSync);
 #elif defined(BEATENGINE_OPENGL_RENDERER)
         m_Renderer = std::make_unique<OpenGLRenderer>(&m_Context);
 #else
@@ -624,13 +589,10 @@ void Application::_InitGraphics() {
     // m_State.GetGraphicsMgr().SetWindowFullscreen(gameSettings->WindowFullScreen);
     // m_State.GetGraphicsMgr().SetFramerateLimit(gameSettings->FpsLimit);
     // m_State.GetGraphicsMgr().Init();
-    m_Renderer->Init();
 
     if (gameSettings->WindowFullScreen) {
-        m_Context.AFlags |= AppFlags_Fullscreen;
+        m_Context.AddAFlags(AppFlags_Fullscreen);
     }
-
-    // m_Context.WindowSize = m_State.GetGraphicsMgr().GetWindow()->GetSize();
 }
 
 void Application::_InitKeybinds() {
@@ -644,40 +606,14 @@ void Application::_SubscribeToAppEvent() {
         
         auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
         
-        bool curFullscreen = m_Context.AFlags & AppFlags_Fullscreen;
+        bool curFullscreen = m_Context.ContainsAFlags(AppFlags_Fullscreen);
 
         if (settings->WindowFullScreen != curFullscreen) {
-            // m_Window->close();
-            // delete m_Window;
-            // if (settings->WindowFullScreen)
-            //     this->m_Window = new sf::RenderWindow(
-            //         sf::VideoMode{}, 
-            //         "BeatEngine Application",
-            //         sf::Style::Default,
-            //         sf::State::Fullscreen 
-            //     );
-            // else {
-            //     this->m_Window = new sf::RenderWindow(
-            //         sf::VideoMode(settings->WindowSize), 
-            //         "BeatEngine Application",
-            //         sf::Style::Default,
-            //         sf::State::Windowed
-            //     );
-            // }
-
             if (settings->WindowFullScreen)
-                m_Context.AFlags |= AppFlags_Fullscreen;
-            else if (m_Context.AFlags & AppFlags_Fullscreen)
-                m_Context.AFlags &= ~AppFlags_Fullscreen;
-        //     m_Window->display();
+                m_Context.AddAFlags(AppFlags_Fullscreen);
+            else if (m_Context.ContainsAFlags(AppFlags_Fullscreen))
+                m_Context.RemoveAFlags(AppFlags_Fullscreen);
         }
-
-        // m_Window->setFramerateLimit(settings->FpsLimit);
-        // if (!settings->WindowFullScreen && m_Window->getSize() != settings->WindowSize) {
-        //     m_Window->setSize(settings->WindowSize);
-        // }
-        // m_Window->setVerticalSyncEnabled(settings->VSync);
-        // m_Window->setMouseCursor(m_Cursor);
     });
 
 }
@@ -705,44 +641,39 @@ void Application::_SubscribeToAppSignals() {
 
         m_Renderer->GetWindow()->SetCursor(m_Cursor);
     });
-    // SignalManager::GetInstance()->RegisterCallback<AppChangeCursorSignal>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
-    //     auto gameSig = std::static_pointer_cast<AppChangeCursorSignal>(sig);
-    //     // m_Cursor = sf::Cursor::createFromSystem(gameSig->NewCursor).value();
-    //     m_Context->AFlags |= AppFlags_CursorChanged;
-    // });
 
     SignalManager::GetInstance()->RegisterCallback<AppToggleImGui>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppToggleImGui>(sig);
-        if (m_Context.AFlags & AppFlags_ImGui)
-            m_Context.AFlags &= ~AppFlags_ImGui;
+        if (m_Context.ContainsAFlags(AppFlags_ImGui))
+            m_Context.RemoveAFlags(AppFlags_ImGui);
         else
-            m_Context.AFlags |= AppFlags_ImGui;
+            m_Context.AddAFlags(AppFlags_ImGui);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<AppAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppAddFlags>(sig);
-        // this->SetFlags(gameSig->Flags);
+        m_Context.AddAFlags(gameSig->Flags);
     });
 
-    SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [](const std::shared_ptr<Base::Signal> sig) {
+    SignalManager::GetInstance()->RegisterCallback<AppRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<AppRemoveFlags>(sig);
-        // this->RemoveFlags(gameSig->Flags);
+        m_Context.RemoveAFlags(gameSig->Flags);
     });
 
     SignalManager::GetInstance()->RegisterCallback<ViewAddFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
-        this->m_Context.VFlags |= gameSig->Flags;
+        this->m_Context.AddVFlags(gameSig->Flags);
     });
 
     SignalManager::GetInstance()->RegisterCallback<ViewRemoveFlags>(typeid(Application), [this](const std::shared_ptr<Base::Signal> sig) {
         auto gameSig = std::static_pointer_cast<ViewAddFlags>(sig);
-        this->m_Context.VFlags &= ~gameSig->Flags;
+        this->m_Context.RemoveVFlags(gameSig->Flags);
     });
 
     SignalManager::GetInstance()->RegisterCallback<AppToggleDrawingDebugInfo>(typeid(Application), [this](const std::shared_ptr<Base::Signal>) {
-            if (m_Context.AFlags & AppFlags_DrawDebugInfo)
-                m_Context.AFlags &= ~AppFlags_DrawDebugInfo;
+            if (m_Context.ContainsAFlags(AppFlags_DrawDebugInfo))
+                m_Context.RemoveAFlags(AppFlags_DrawDebugInfo);
             else
-                m_Context.AFlags |= AppFlags_DrawDebugInfo;
+                m_Context.AddAFlags(AppFlags_DrawDebugInfo);
     });
 }
