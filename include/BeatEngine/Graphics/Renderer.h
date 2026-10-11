@@ -29,8 +29,6 @@ public:
     Renderer(AppContext* context) : m_Context(context) {}
     virtual ~Renderer();
 public:
-    virtual void Init(VSyncMode vSync = VSyncMode::Disable) = 0;
-    virtual void Uninit() = 0;
     virtual void Render() = 0;
     virtual void RenderImGui() {};
     virtual void Display() = 0;

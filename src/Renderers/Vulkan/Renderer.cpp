@@ -15,7 +15,6 @@
 #include <SDL3/SDL_video.h>
 #include <SDL3/SDL_vulkan.h>
 
-#include <thread>
 #include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vulkan_core.h>
 #include <vulkan/vulkan.h>
@@ -92,11 +91,7 @@ VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> wind
         CreateMainCamera();
 }
 
-void VulkanRenderer::Init(VSyncMode vSync) {
-
-}
-
-void VulkanRenderer::Uninit() {
+VulkanRenderer::~VulkanRenderer() {
     AddVulkanLog("Waiting on GPU to shutdown");
 
     m_Instance.WaitIdle();

@@ -8,11 +8,9 @@
 class OpenGLRenderer : public Renderer {
 private:
 public:
-    OpenGLRenderer() = default;
+    OpenGLRenderer();
     ~OpenGLRenderer() override = default;
 public:
-    void Init(VSyncMode vSync) override;
-    void Uninit() override;
     void Render() override;
     void RenderImGui() override;
     void Display() override;
