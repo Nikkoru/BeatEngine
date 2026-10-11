@@ -22,11 +22,11 @@ public:
 private:
     uint32_t m_DeviceIndex{};
 
-    // Vulkan::Core
     VK::Instance m_Instance;
     AllocatedImage m_AllocatedDrawImage{};
     VkCommandBuffer m_ActiveCmd{};
     bool m_Active{ false };
+    bool m_UpdateSwapchain{ false };
 
     struct DrawData {
         GPUBuffer DrawCommandBuffer;
@@ -68,9 +68,7 @@ public:
     void UninitVertices(VertexArray& vertices) override;
     void DestroyVerticesData(RendererData* data);
 
-    void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) override {};
-
-    void ClearVertexBuffers();
+    void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) override;
 
     unsigned int GetMaxTextureSize() override;
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;
@@ -82,14 +80,13 @@ public:
     void DestroyTexture(std::shared_ptr<Texture> texture) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
 
+    void RecreateSwapchain();
+
     const AllocatedImage& GetImageFromID(ImageID id) { return m_Instance.GetImageFromID(id); }
 
     void ShowImGuiRenderTabContent() override;
 
     Optional<Base::Event> PollEvent() const override;
-
-    uint32_t GetFreeBufferIndex(std::type_index viewID); 
-    uint32_t GetFreeHighlightIndex(std::type_index viewID);
 
     void SetDeviceIndex(uint32_t index) { m_DeviceIndex = index; }
 public:

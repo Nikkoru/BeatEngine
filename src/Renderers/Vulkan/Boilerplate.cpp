@@ -132,44 +132,49 @@ uint32_t vkb::GetQueueFamily(VkPhysicalDevice device) {
     return queueFamily;
 }
 
-std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain) {
+std::vector<VkImage> vkb::GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, bool debug) {
     uint32_t imageCount{ 0 };
     std::vector<VkImage> images; 
     VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, nullptr));
     images.resize(imageCount);
     VK_CHECK(vkGetSwapchainImagesKHR(device, swapchain, &imageCount, images.data()));
     
-    auto i = 0;
-    for (const auto& image : images) {
-        AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE, uint64_t(image), std::format("VkImage_Swapchain{}", i));
-        i++;
+
+    if (debug) {
+        auto i = 0;
+        for (const auto& image : images) {
+            AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE, uint64_t(image), std::format("VkImage_Swapchain{}", i));
+            i++;
+        }
     }
 
     return images;
 }
 
-std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format) {
+std::vector<VkImageView> vkb::GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format, bool debug) {
     std::vector<VkImageView> imageViews(images.size());
 
-    for (size_t i = 0; i < images.size(); i++) {
-        VkImageViewCreateInfo info{
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .pNext = nullptr,
-            .flags = 0,
-            .image = images[i],
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            .format = format,
-            .components{},
-            .subresourceRange {
-                .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-                .baseMipLevel{},
-                .levelCount = 1,
-                .baseArrayLayer{},
-                .layerCount = 1,
-            }
-        };
-        VK_CHECK(vkCreateImageView(device, &info, nullptr, &imageViews[i]));
-        AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)imageViews[i], std::format("VkImageView_Swapchain{}", i));
+    if (debug) {
+        for (size_t i = 0; i < images.size(); i++) {
+            VkImageViewCreateInfo info{
+                .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+                .pNext = nullptr,
+                .flags = 0,
+                .image = images[i],
+                .viewType = VK_IMAGE_VIEW_TYPE_2D,
+                .format = format,
+                .components{},
+                .subresourceRange {
+                    .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+                    .baseMipLevel{},
+                    .levelCount = 1,
+                    .baseArrayLayer{},
+                    .layerCount = 1,
+                }
+            };
+            VK_CHECK(vkCreateImageView(device, &info, nullptr, &imageViews[i]));
+            AddNameToVKObject(device, VK_OBJECT_TYPE_IMAGE_VIEW, (uint64_t)imageViews[i], std::format("VkImageView_Swapchain{}", i));
+        }
     }
     return imageViews;
 }

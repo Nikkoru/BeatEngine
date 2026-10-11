@@ -24,6 +24,7 @@
 #include "BeatEngine/Enum/AppFlags.hpp"
 #include "BeatEngine/Events/AppEvent.hpp"
 #include "BeatEngine/Graphics/BaseWindow.h"
+#include "BeatEngine/Graphics/GraphicalElement.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Shader.h"
@@ -128,6 +129,18 @@ void VulkanRenderer::Render() {
         ImGui_ImplVulkan_NewFrame();
     m_Window->OnRender();
 
+    if (m_Instance.NeedsRecreateSwapchain() || m_UpdateSwapchain) {
+        m_UpdateSwapchain = false;
+        if (m_Active)
+            THROW_RUNTIME_ERROR("CommandBuffer is still active when recreating the swapchain.");
+        if (m_Window->GetSize() == Vector2u{ 0, 0 })
+            return;
+
+        m_Instance.DestroyImage(m_AllocatedDrawImage);
+        m_Instance.RecreateSwapchain(m_Window, m_Window->GetSize());
+        m_AllocatedDrawImage = m_Instance.CreateDrawImage(m_Window->GetSize());
+    }
+
     m_ActiveCmd = m_Instance.BeginFrame();
     m_Active = true;
 }
@@ -170,13 +183,6 @@ void VulkanRenderer::Clear() {
 }
 
 void VulkanRenderer::Update() {
-    if (m_Instance.NeedsRecreateSwapchain() && m_Window->GetWindowDriver() != WindowDriver::Wayland) {
-        if (m_Active)
-            THROW_RUNTIME_ERROR("CommandBuffer is still active when recreating the swapchain.");
-        m_Instance.DestroyImage(m_AllocatedDrawImage);
-        m_Instance.RecreateSwapchain(m_Window, m_Window->GetSize());
-        m_AllocatedDrawImage = m_Instance.CreateDrawImage(m_Window->GetSize());
-    }
 }
 
 void VulkanRenderer::SetGlobalShader(std::shared_ptr<Shader> shader) {
@@ -268,6 +274,10 @@ std::shared_ptr<Shader> VulkanRenderer::CreateShader(const std::filesystem::path
     return shader;
 }
 
+void VulkanRenderer::RecreateSwapchain() {
+
+}
+
 void VulkanRenderer::ShowImGuiRenderTabContent() {
     ImGui::Text("Vulkan Renderer");
     ImGui::Text("Frame N°%u", m_Instance.GetCurrentFrameNumber());
@@ -303,10 +313,11 @@ Optional<Base::Event> VulkanRenderer::PollEvent() const {
 
 void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
     if (!event.HasValue()) return;
-    if (auto resizedEvent = event->GetIf<AppResizedEvent>(event); resizedEvent && m_Window->GetWindowDriver() == WindowDriver::Wayland) {
-        m_Instance.RecreateSwapchain(m_Window, resizedEvent->Size);
-        m_Instance.DestroyImage(m_AllocatedDrawImage);
-        m_AllocatedDrawImage = m_Instance.CreateDrawImage(resizedEvent->Size);
+    if (auto resizedEvent = event->GetIf<AppResizedEvent>(event); resizedEvent) {
+        m_UpdateSwapchain = true; 
+        // m_Instance.RecreateSwapchain(m_Window, resizedEvent->Size);
+        // m_Instance.DestroyImage(m_AllocatedDrawImage);
+        // m_AllocatedDrawImage = m_Instance.CreateDrawImage(resizedEvent->Size);
     }
 }
 
@@ -813,30 +824,8 @@ void VulkanRenderer::DestroyVerticesData(RendererData* data) {
     m_Instance.DestroyBuffer(vkData->m_DrawCommandBuffer);
 }
 
-void VulkanRenderer::ClearVertexBuffers() {
-    for (auto& frame : m_RenderFramesData) {
-        for (const auto& drawData : frame) {
-            m_Instance.DestroyBuffer(drawData.VertexBuffer);
-            m_Instance.DestroyBuffer(drawData.DrawCommandBuffer);
-        }
-        frame.clear();
-    }
-}
-
-uint32_t VulkanRenderer::GetFreeBufferIndex(std::type_index viewID) {
-    // if (!m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.contains(viewID))
-    //     m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas[viewID] = {};
-    //
-    // return m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(viewID).size();
-    return 0;
-}
-
-uint32_t VulkanRenderer::GetFreeHighlightIndex(std::type_index viewID) {
-    // if (!m_Highlights.contains(viewID))
-    //     m_Highlights[viewID] = {};
-    //
-    // return m_Highlights.at(viewID).size();
-    return 0;
+void VulkanRenderer::DrawElement(GraphicalElement& element, RenderState state) {
+    element.Draw(this, state);
 }
 
 std::shared_ptr<BaseWindow> VulkanRenderer::GetWindow() const {

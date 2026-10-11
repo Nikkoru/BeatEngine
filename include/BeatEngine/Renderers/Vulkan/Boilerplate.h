@@ -24,8 +24,8 @@ namespace vkb {
     VkSwapchainKHR CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE, VkFormat imageFormat = VK_FORMAT_B8G8R8A8_UNORM);
 
     uint32_t GetQueueFamily(VkPhysicalDevice device);
-    std::vector<VkImage> GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain);
-    std::vector<VkImageView> GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format);
+    std::vector<VkImage> GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, bool debug = false);
+    std::vector<VkImageView> GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format, bool debug = false);
     
     VkImageSubresourceRange GetImageSubresourceRange(VkImageAspectFlags flags);
 

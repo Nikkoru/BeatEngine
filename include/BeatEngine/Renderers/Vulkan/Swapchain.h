@@ -32,7 +32,8 @@ private:
 
     UninitQueue m_Uninitializers;
 public:
-    void Create(const Core& core, std::shared_ptr<BaseWindow> window, unsigned int width, unsigned int height, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM);
+    void Create(const Core& core, Vector2u size, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM, bool debug = false);
+    void Recreate(const Core& core, Vector2u size, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM, bool debug = false);
     void Uninit();
     Vector2u GetExtent() { return m_Extent; }
 
@@ -53,7 +54,7 @@ public:
 
     bool IsOutdated() { return m_Outdated; } 
 private:
-    void CreateCommandBuffers(VkDevice device, uint32_t graphicsQueueFamily);
-    void CreateSync(VkDevice device);
+    void CreateCommandBuffers(VkDevice device, uint32_t graphicsQueueFamily, bool debug = false);
+    void CreateSync(VkDevice device, bool debug = false);
 };
 }

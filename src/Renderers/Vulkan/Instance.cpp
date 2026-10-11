@@ -31,7 +31,7 @@ void VK::Instance::Init(AppContext* context, std::string appName, uint32_t devic
     m_Executor.Init(m_Core.Device, m_Core.GraphicsQueueFamily, m_Core.GraphicsQueue);
 
     auto size = window->GetSize();
-    m_Swapchain.Create(m_Core, window, size.X, size.Y, vSync);
+    m_Swapchain.Create(m_Core, size, vSync);
 
     CheckDeviceCapabilities();
     m_ImageCache.BindlessSetMgr.Init(m_Core.Device, m_MaxSamplerAnisotropy);
@@ -201,10 +201,11 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     m_Core.GraphicsQueueFamily = vkb::GetQueueFamily(m_Core.PhysicalDevice);
     m_Core.Device = vkb::CreateDevice(m_Core.PhysicalDevice, m_Core.GraphicsQueueFamily, extensions, m_Core.DeviceExtensions);
     volkLoadDevice(m_Core.Device);
-
-    AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Core.Device, "VkDevice");
-    AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_PHYSICAL_DEVICE, (uint64_t)m_Core.PhysicalDevice, "VkPhysicalDevice");
-    AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_INSTANCE, (uint64_t)m_Core.Instance, "VkInstance");
+    if (m_Context->ContainsEFlags(EnvFlags_Debug)) {
+        AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_DEVICE, (uint64_t)m_Core.Device, "VkDevice");
+        AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_PHYSICAL_DEVICE, (uint64_t)m_Core.PhysicalDevice, "VkPhysicalDevice");
+        AddNameToVKObject(m_Core.Device, VK_OBJECT_TYPE_INSTANCE, (uint64_t)m_Core.Instance, "VkInstance");
+    }
     vkGetDeviceQueue(m_Core.Device, m_Core.GraphicsQueueFamily, 0, &m_Core.GraphicsQueue);
 
     VmaVulkanFunctions vkFunctions{}; // for stoping the -Wmissing-field-initializers we're going to set the variables from the obj and not a from initializer list
@@ -543,6 +544,14 @@ void VK::Instance::BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout lay
 VkCommandBuffer VK::Instance::BeginFrame() {
     m_Swapchain.BeginFrame(m_Core.Device, GetCurrentFrameIndex());
 
+    if (m_Swapchain.IsOutdated()) {
+        if (m_Context->WindowSize == Vector2u{})
+            return {};
+
+        vkDeviceWaitIdle(m_Core.Device);
+        m_Swapchain.Recreate(m_Core, m_Context->WindowSize);
+    }
+
     const auto& frame = m_Swapchain.GetFrame(GetCurrentFrameIndex());
     const auto& cmd = frame.ActiveCmdBuffer;
     const auto cmdInfo = VkCommandBufferBeginInfo{
@@ -559,13 +568,13 @@ VkCommandBuffer VK::Instance::BeginFrame() {
 void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     const auto [swapchainImage, swapchainImageIndex] = m_Swapchain.AcquireImage(m_Core.Device, GetCurrentFrameIndex());
 
-    if (!swapchainImage || NeedsRecreateSwapchain()) {
-        if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
-            ImGui::Render();
-            ImGui::EndFrame();
-        }
-        return;
-    }
+    // if (!swapchainImage || NeedsRecreateSwapchain()) {
+    //     if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
+    //         ImGui::Render();
+    //         ImGui::EndFrame();
+    //     }
+    //     return;
+    // }
 
     m_Swapchain.ResetFence(m_Core.Device, GetCurrentFrameIndex());
     
@@ -729,10 +738,9 @@ void VK::Instance::WaitIdle() {
     vkDeviceWaitIdle(m_Core.Device);
 }
 
-void VK::Instance::RecreateSwapchain(std::shared_ptr<BaseWindow> window, Vector2u size) {
+void VK::Instance::RecreateSwapchain(std::shared_ptr<BaseWindow>, Vector2u size) {
     WaitIdle();
-    m_Swapchain.Uninit();
-    m_Swapchain.Create(m_Core, window, size.X, size.Y);
+    m_Swapchain.Recreate(m_Core, size);
 }
 
 namespace {

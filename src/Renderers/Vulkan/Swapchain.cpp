@@ -10,7 +10,7 @@
 #include <vulkan/vulkan_core.h>
 
 
-void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window, unsigned int width, unsigned int height, VSyncMode vSync, VkFormat format) {
+void VK::Swapchain::Create(const Core& core, Vector2u size, VSyncMode vSync, VkFormat format, bool debug) {
     if (m_VSync == VSyncMode::None)
         m_VSync = vSync;
 
@@ -38,14 +38,14 @@ void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window,
         auto capabilities = VkSurfaceCapabilitiesKHR{};
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(core.PhysicalDevice, core.Surface, &capabilities);
         if (capabilities.currentExtent.width != UINT32_MAX)
-            width = capabilities.currentExtent.width;
+            size.X = capabilities.currentExtent.width;
         else
-            width = std::clamp(width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
+            size.X = std::clamp(size.X, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
 
         if (capabilities.currentExtent.height != UINT32_MAX)
-            height = capabilities.currentExtent.height;
+            size.Y = capabilities.currentExtent.height;
         else
-            height = std::clamp(height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
+            size.Y = std::clamp(size.Y, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
     }
 
@@ -57,8 +57,8 @@ void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window,
         core.Device, 
         core.PhysicalDevice, 
         core.Surface, 
-        width, 
-        height,
+        size.X,
+        size.Y,
         presentMode,
         oldSwapchain
     );
@@ -91,7 +91,7 @@ void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window,
             vkDestroySwapchainKHR(core.Device, m_Swapchain, nullptr);
         });
 
-    m_Extent = { width, height };
+    m_Extent = size;
     m_Images = vkb::GetSwapchainImages(core.Device, m_Swapchain);
     m_ImageViews = vkb::GetSwapchainImageViews(core.Device, m_Images, m_Format);
 
@@ -100,7 +100,52 @@ void VK::Swapchain::Create(const Core& core, std::shared_ptr<BaseWindow> window,
     CreateCommandBuffers(core.Device, core.GraphicsQueueFamily);
     CreateSync(core.Device);
 
-    AddNameToVKObject(core.Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
+    if (debug)
+        AddNameToVKObject(core.Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
+}
+
+void VK::Swapchain::Recreate(const Core& core, Vector2u size, VSyncMode vSync, VkFormat format, bool debug) {
+    if (m_VSync == VSyncMode::None)
+        m_VSync = vSync;
+
+    VkPresentModeKHR presentMode{};
+    switch (m_VSync) {
+    default:
+    case None:
+        m_VSync = VSyncMode::Disable;
+    case Disable:
+        presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
+        break;
+    case SyncWithFirstRefresh:
+        presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+        break;
+    case SyncWithSecondRefresh:
+        presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
+        break;
+    case Adaptative:
+        presentMode = VK_PRESENT_MODE_FIFO_KHR;
+        break;
+    }
+    m_Format = format;
+    
+    m_Swapchain = vkb::CreateSwapchainKHR(
+        core.Device, 
+        core.PhysicalDevice, 
+        core.Surface, 
+        size.X,
+        size.Y,
+        presentMode,
+        m_Swapchain 
+    );
+
+    m_Extent = size;
+    m_Images = vkb::GetSwapchainImages(core.Device, m_Swapchain);
+    m_ImageViews = vkb::GetSwapchainImageViews(core.Device, m_Images, m_Format);
+
+    m_Outdated = false;
+
+    if (debug)
+        AddNameToVKObject(core.Device, VK_OBJECT_TYPE_SWAPCHAIN_KHR, (uint64_t)m_Swapchain, "VkSwapchainKHR");
 }
 
 void VK::Swapchain::Uninit() {
@@ -165,7 +210,7 @@ void VK::Swapchain::SubmitAndPresent(const VkCommandBuffer cmd, VkQueue graphics
     }
 }
 
-void VK::Swapchain::CreateCommandBuffers(VkDevice device, uint32_t graphicsQueueFamily) {
+void VK::Swapchain::CreateCommandBuffers(VkDevice device, uint32_t graphicsQueueFamily, bool debug) {
     AddVulkanLog("Initializing Command interface");
     VkCommandPoolCreateInfo commandPoolInfo{
         .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
@@ -176,7 +221,8 @@ void VK::Swapchain::CreateCommandBuffers(VkDevice device, uint32_t graphicsQueue
 
     for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
         VK_CHECK(vkCreateCommandPool(device, &commandPoolInfo, nullptr, &m_Frames[i].CommandPool));
-        AddNameToVKObject(device, VK_OBJECT_TYPE_COMMAND_POOL, uint64_t(m_Frames[i].CommandPool), std::format("VkCommandPool_Frame{}", i));
+        if (debug)
+            AddNameToVKObject(device, VK_OBJECT_TYPE_COMMAND_POOL, uint64_t(m_Frames[i].CommandPool), std::format("VkCommandPool_Frame{}", i));
 
         VkCommandBufferAllocateInfo cbAllocInfo{
             .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO, 
@@ -189,7 +235,7 @@ void VK::Swapchain::CreateCommandBuffers(VkDevice device, uint32_t graphicsQueue
     }
 }
 
-void VK::Swapchain::CreateSync(VkDevice device) {
+void VK::Swapchain::CreateSync(VkDevice device, bool debug) {
     VkSemaphoreCreateInfo semaphoreInfo{ 
         .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO,
         .pNext = nullptr,
@@ -208,11 +254,14 @@ void VK::Swapchain::CreateSync(VkDevice device) {
         auto fenceName = std::format("VkFence_Render{}", i);
 
         VK_CHECK(vkCreateFence(device, &fenceInfo, nullptr, &m_Frames[i].RenderFence));
-        AddNameToVKObject(device, VK_OBJECT_TYPE_FENCE, (uint64_t)m_Frames[i].RenderFence, fenceName);
+        if (debug)
+            AddNameToVKObject(device, VK_OBJECT_TYPE_FENCE, (uint64_t)m_Frames[i].RenderFence, fenceName);
         VK_CHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_Frames[i].PresentSemaphore));
-        AddNameToVKObject(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].PresentSemaphore, semaphorePresentName);
+        if (debug)
+            AddNameToVKObject(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].PresentSemaphore, semaphorePresentName);
         VK_CHECK(vkCreateSemaphore(device, &semaphoreInfo, nullptr, &m_Frames[i].RenderSemaphore));
-        AddNameToVKObject(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].RenderSemaphore, semaphoreRenderName);
+        if (debug)
+            AddNameToVKObject(device, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_Frames[i].RenderSemaphore, semaphoreRenderName);
     }
 
     m_Uninitializers.AddCallback([&, device]() {
