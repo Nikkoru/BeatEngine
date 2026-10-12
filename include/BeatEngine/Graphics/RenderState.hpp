@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Graphics/Vector2.h"
 #ifdef _MSC_VER
 #include <compare>
 #endif
@@ -12,24 +13,45 @@ class PushConstants {
 };
 
 struct RenderState {
-    // TODO: give the user more control over how its going to draw things
-    const std::shared_ptr<Shader> VertShader{};
-    const std::shared_ptr<Shader> CompShader{};
-    const std::shared_ptr<Shader> FragShader{};
+    const std::shared_ptr<Shader> vertShader{};
+    const std::shared_ptr<Shader> compShader{};
+    const std::shared_ptr<Shader> fragShader{};
 
-    std::shared_ptr<DrawCommand> _DrawCommand{};
-    size_t DrawCommandSize{};
+    std::shared_ptr<DrawCommand> drawCommand{};
+    size_t drawCommandSize{};
 
-    bool HighlightVertices{ false };
-    LinearColor HighlightColor{ 0.f, 0.f, 1.f, 1.f };
+    bool highlightVertices{ false };
+    LinearColor highlightColor{ 0.f, 0.f, 1.f, 1.f };
 
     // this is used when the primitive type is LineList or LineStrip
-    float LineWidth{ 1.f };
+    float lineWidth{ 1.f };
 
-    std::shared_ptr<PushConstants> _PushConstants{};
-    size_t PushConstantsSize{ sizeof(PushConstants) };
+    std::shared_ptr<PushConstants> pushConstants{};
+    size_t pushConstantsSize{ sizeof(PushConstants) };
 
-    bool DrawInGlobal{ false };
+    bool enableDepthBias{ false };
+    // TODO: make Vector3<T>
+    std::array<float, 3> depthBias{ 0.0f, 0.0f, 0.0f };
+
+    bool enableDepthBounds{ false };
+    Vector2f depthBounds{ 0.0f, 0.0f };
+
+    bool discardRasterization{ false };
+    bool enableDepthTest{ false };
+    bool enableDepthClamp{ false };
+    bool enableStencilTest{ false };
+    bool enableAlphaToCoverage{ false };
+    bool enableBlend{ false };
+    // TODO:
+    // CullMode cullMode{ CullMode::None };
+    // TODO:
+    // FrontFace face{ FrontFace::CounterClockWise };
+    // TODO:
+    // PolygonMode polygonMode{ PolygonMode::Fill };
+    // TODO:
+    // MSAA rasterization{ MSAA::Bit1 };
+    // TODO:
+    // BlendFactorEqu factors{ BlendFactor::SrcAlpha, BlendFactor::OneMinusSrcAlpha, BlendOp::Add };
 
     static const RenderState Default;
 

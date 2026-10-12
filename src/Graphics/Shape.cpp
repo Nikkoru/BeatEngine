@@ -34,8 +34,8 @@ void Shape::Draw(Renderer* const mgr, RenderState state) {
         .shaderID = 0
     };
 
-    state._DrawCommand = std::make_shared<DrawCommand>(cmd);
-    state.DrawCommandSize = sizeof(DrawCommand);
+    state.drawCommand = std::make_shared<DrawCommand>(cmd);
+    state.drawCommandSize = sizeof(DrawCommand);
 
     mgr->DrawVertices(m_Vertices, state);
 }

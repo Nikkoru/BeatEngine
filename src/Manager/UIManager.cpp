@@ -10,7 +10,6 @@
 #include "BeatEngine/UI/UILayer.h"
 #include "BeatEngine/Logger.h"
 #include "imgui.h"
-#include <format>
 #include <memory>
 
 UIManager::UIManager(AppContext* context, AppState* state)
@@ -99,7 +98,6 @@ void UIManager::OnDraw(Renderer* const renderer) {
     }
 	for (const auto& [name, layer] : m_GlobalLayers) {
         auto state = RenderState::Default;
-        state.DrawInGlobal = true;
         layer->Draw(renderer);
 	}
 }

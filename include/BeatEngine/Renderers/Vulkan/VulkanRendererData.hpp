@@ -15,5 +15,4 @@ private:
 public:
     VulkanRendererData() = default;
     ~VulkanRendererData() override = default;
-
 };

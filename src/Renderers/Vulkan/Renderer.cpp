@@ -300,8 +300,8 @@ void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
 void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (vertices.GetSize() <= 0) return;
 
-    if (state._DrawCommand->projection == glm::mat4{ 0 })
-        state._DrawCommand->projection = m_MainCamera.GetProjection();
+    if (state.drawCommand->projection == glm::mat4{ 0 })
+        state.drawCommand->projection = m_MainCamera.GetProjection();
 
     if (!IsVertexArrayInitialized(vertices)) {
         InitVertices(vertices, state);
@@ -329,8 +329,8 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     memcpy(
         cmdBuffer.AllocationInfo.pMappedData,
-        state._DrawCommand.get(),
-        state.DrawCommandSize
+        state.drawCommand.get(),
+        state.drawCommandSize
     );
 
     VkRenderingAttachmentInfo colorInfo{
@@ -437,11 +437,11 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     {
         std::shared_ptr<VulkanShader> vertShader = std::dynamic_pointer_cast<VulkanShader>(m_DefaultVertexShader);
         std::shared_ptr<VulkanShader> fragShader = std::dynamic_pointer_cast<VulkanShader>(m_DefaultFragmentShader);
-        if (state.VertShader) {
-            vertShader = std::dynamic_pointer_cast<VulkanShader>(state.VertShader);
+        if (state.vertShader) {
+            vertShader = std::dynamic_pointer_cast<VulkanShader>(state.vertShader);
         }
-        if (state.FragShader) {
-            fragShader = std::dynamic_pointer_cast<VulkanShader>(state.FragShader);
+        if (state.fragShader) {
+            fragShader = std::dynamic_pointer_cast<VulkanShader>(state.fragShader);
         }
 
         vkCmdBindShadersEXT(m_ActiveCmd, 1, &vertShader->GetStage(), vertShader->GetShaderImpl());
@@ -497,28 +497,29 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
         break;
     }
 
-    vkCmdSetLineWidth(m_ActiveCmd, state.LineWidth);
+    vkCmdSetLineWidth(m_ActiveCmd, state.lineWidth);
     vkCmdSetPrimitiveRestartEnable(m_ActiveCmd, VK_FALSE);
-    vkCmdSetDepthBiasEnable(m_ActiveCmd, VK_TRUE);
-    vkCmdSetDepthBias(m_ActiveCmd, 0.0f, 0.0f, 0.0f);
-    vkCmdSetDepthBoundsTestEnable(m_ActiveCmd, VK_FALSE);
-    vkCmdSetRasterizerDiscardEnable(m_ActiveCmd, VK_FALSE); 
-    vkCmdSetDepthTestEnable(m_ActiveCmd, VK_FALSE);
-    vkCmdSetDepthClampEnableEXT(m_ActiveCmd, VK_FALSE);
+    vkCmdSetDepthBiasEnable(m_ActiveCmd, state.enableDepthBias ? VK_TRUE : VK_FALSE);
+    vkCmdSetDepthBias(m_ActiveCmd, state.depthBias[0], state.depthBias[1], state.depthBias[2]);
+    vkCmdSetDepthBoundsTestEnable(m_ActiveCmd, state.enableDepthBounds ? VK_TRUE : VK_FALSE);
+    vkCmdSetDepthBounds(m_ActiveCmd, state.depthBounds.X, state.depthBounds.Y);
+    vkCmdSetRasterizerDiscardEnable(m_ActiveCmd, state.discardRasterization ? VK_TRUE : VK_FALSE);
+    vkCmdSetDepthTestEnable(m_ActiveCmd, state.enableDepthTest ? VK_TRUE : VK_FALSE);
+    vkCmdSetDepthClampEnableEXT(m_ActiveCmd, state.enableDepthClamp ? VK_TRUE : VK_FALSE);
     vkCmdSetDepthWriteEnable(m_ActiveCmd, VK_FALSE);
-    vkCmdSetStencilTestEnable(m_ActiveCmd, VK_FALSE);
+    vkCmdSetStencilTestEnable(m_ActiveCmd, state.enableStencilTest ? VK_TRUE : VK_FALSE);
     vkCmdSetCullMode(m_ActiveCmd, VK_CULL_MODE_NONE);
     vkCmdSetFrontFace(m_ActiveCmd, VK_FRONT_FACE_COUNTER_CLOCKWISE);
 
     vkCmdSetRasterizationSamplesEXT(m_ActiveCmd, VK_SAMPLE_COUNT_1_BIT);
-    vkCmdSetAlphaToCoverageEnableEXT(m_ActiveCmd, VK_FALSE);
+    vkCmdSetAlphaToCoverageEnableEXT(m_ActiveCmd, state.enableAlphaToCoverage ? VK_TRUE : VK_FALSE);
 
     VkColorBlendEquationEXT blendEquation{};
-    blendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
-    blendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+    blendEquation.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    blendEquation.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
     blendEquation.colorBlendOp        = VK_BLEND_OP_ADD;
     blendEquation.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    blendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    blendEquation.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
     blendEquation.alphaBlendOp       = VK_BLEND_OP_ADD;
 
     vkCmdSetColorBlendEquationEXT(m_ActiveCmd, 0, 1, &blendEquation);
@@ -546,7 +547,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     VkSampleMask sampleMask = 0xFFFFFFFF;
     vkCmdSetSampleMaskEXT(m_ActiveCmd, VK_SAMPLE_COUNT_1_BIT, &sampleMask);
 
-    VkBool32 blendEnable = VK_FALSE;
+    VkBool32 blendEnable = state.enableBlend ? VK_TRUE : VK_FALSE;
     vkCmdSetColorBlendEnableEXT(m_ActiveCmd, 0, 1, &blendEnable);
 
     VkColorComponentFlags colorWriteMask = VK_COLOR_COMPONENT_R_BIT | 
@@ -558,9 +559,9 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 
     std::shared_ptr<PushConstants> pushConstants{};
     uint32_t pushSize;
-    if (state._PushConstants) {
-        pushConstants = state._PushConstants;
-        pushSize = state.PushConstantsSize;
+    if (state.pushConstants) {
+        pushConstants = state.pushConstants;
+        pushSize = state.pushConstantsSize;
     }
     else {
         pushConstants = std::make_shared<DefaultPushConstants>(cmdBuffer.Address);
@@ -685,7 +686,7 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
     SetVertexArrayInitializedStatus(vertices, true);
 
     data->m_DrawCommandBuffer = m_Instance.CreateBuffer(
-        state.DrawCommandSize,
+        state.drawCommandSize,
         VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT
     );
 
@@ -702,10 +703,10 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
     {
         const auto layout = m_Instance.GetBindlessDescSetLayout();
         uint32_t size{};
-        if (state.PushConstantsSize == sizeof(PushConstants))
+        if (state.pushConstantsSize == sizeof(PushConstants))
             size = sizeof(DefaultPushConstants);
         else
-            size = state.PushConstantsSize;
+            size = state.pushConstantsSize;
 
         const auto pushConstantRange = VkPushConstantRange{
             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
