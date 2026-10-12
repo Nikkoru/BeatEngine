@@ -18,7 +18,7 @@
 class AppContext;
 class VulkanRenderer;
 namespace VK {
-class Instance {
+class Context {
 private:
     friend class ::VulkanRenderer;
     AppContext* m_Context{ nullptr };
@@ -44,7 +44,7 @@ private:
 
     uint32_t m_FrameNumber{};
 public:
-    Instance() : m_ImageCache(*this) {}
+    Context() : m_ImageCache(*this) {}
 
     void Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
     void Uninit();

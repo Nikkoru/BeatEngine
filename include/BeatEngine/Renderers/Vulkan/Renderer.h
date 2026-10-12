@@ -7,7 +7,7 @@
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
-#include "BeatEngine/Renderers/Vulkan/Instance.h"
+#include "BeatEngine/Renderers/Vulkan/Context.h"
 
 #include <filesystem>
 #include <memory>
@@ -22,7 +22,7 @@ public:
 private:
     uint32_t m_DeviceIndex{};
 
-    VK::Instance m_Instance;
+    VK::Context m_VKContext;
     AllocatedImage m_AllocatedDrawImage{};
     VkCommandBuffer m_ActiveCmd{};
     bool m_Active{ false };
@@ -51,8 +51,8 @@ private:
 private:
     bool m_StopRendering{ false };
 private:
-    std::shared_ptr<Texture> GetErrorTexture() override { return m_Instance.GetErrorTexture(); }
-    std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_Instance.GetWhiteTexture(); }
+    std::shared_ptr<Texture> GetErrorTexture() override { return m_VKContext.GetErrorTexture(); }
+    std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_VKContext.GetWhiteTexture(); }
 public:
 public:
     void Render() override;
@@ -79,7 +79,7 @@ public:
     void DestroyTexture(std::shared_ptr<Texture> texture) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
 
-    const AllocatedImage& GetImageFromID(ImageID id) { return m_Instance.GetImageFromID(id); }
+    const AllocatedImage& GetImageFromID(ImageID id) { return m_VKContext.GetImageFromID(id); }
 
     void ShowImGuiRenderTabContent() override;
 

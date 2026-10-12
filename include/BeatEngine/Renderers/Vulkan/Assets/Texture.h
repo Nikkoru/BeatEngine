@@ -5,12 +5,12 @@
 #include <vulkan/vulkan_core.h>
 
 namespace VK {
-class Instance;
+class Context;
 }
 
 class VulkanTexture : public Texture {
 private:
-    friend class VK::Instance;
+    friend class VK::Context;
     friend class VulkanRenderer;
     VkDescriptorSet m_ImGuiDrawData{};
 public:

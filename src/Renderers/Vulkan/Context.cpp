@@ -1,4 +1,4 @@
-#include "BeatEngine/Renderers/Vulkan/Instance.h"
+#include "BeatEngine/Renderers/Vulkan/Context.h"
 #include "BeatEngine/Enum/AppFlags.hpp"
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Logger.h"
@@ -25,7 +25,7 @@
 #include <volk.h>
 
 
-void VK::Instance::Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
+void VK::Context::Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync) {
     m_Context = context;
     InitVulkan(window, appName.c_str(), deviceIndex);
     m_Executor.Init(m_Core.Device, m_Core.GraphicsQueueFamily, m_Core.GraphicsQueue);
@@ -105,16 +105,16 @@ void VK::Instance::Init(AppContext* context, std::string appName, uint32_t devic
     });
 }
 
-void VK::Instance::Uninit() {
+void VK::Context::Uninit() {
     m_Uninitializers.Flush();
 }
 
-void VK::Instance::AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
+void VK::Context::AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
     auto image = m_ImageCache.GetImage(textureID);
     AttachImageData(image, pixelData, offset, extent, layer);
 }
 
-void VK::Instance::AttachImageData(AllocatedImage& image, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
+void VK::Context::AttachImageData(AllocatedImage& image, const void* pixelData, Vector2u offset, Vector2u extent, uint32_t layer) {
     int numChannels = 4;
     uint32_t dataSize{};
 
@@ -165,7 +165,7 @@ void VK::Instance::AttachImageData(AllocatedImage& image, const void* pixelData,
 
         vkCmdCopyBufferToImage(cmd, uploadBuffer.Buffer, image.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
         if (image.MipLevels > 1) {
-            Logger::AddWarning(typeid(VK::Instance), "MipMaps are not implemented yet");
+            Logger::AddWarning(typeid(VK::Context), "MipMaps are not implemented yet");
         } else {
             vku::TransitionImage(cmd, image.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
         }
@@ -173,7 +173,7 @@ void VK::Instance::AttachImageData(AllocatedImage& image, const void* pixelData,
     DestroyBuffer(uploadBuffer);
 }
 
-void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex) {
+void VK::Context::InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex) {
     AddVulkanLog("Initializing Vulkan handlers");
     VK_CHECK(volkInitialize());
 
@@ -196,6 +196,7 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
 
     extensions.clear();
     extensions.emplace_back(VK_KHR_SHADER_RELAXED_EXTENDED_INSTRUCTION_EXTENSION_NAME);
+    extensions.emplace_back(VK_EXT_COLOR_WRITE_ENABLE_EXTENSION_NAME);
 
     m_Core.PhysicalDevice = vkb::CreatePhysicalDevice(m_Core.Instance, m_Core.DeviceExtensions, deviceIndex);
     m_Core.GraphicsQueueFamily = vkb::GetQueueFamily(m_Core.PhysicalDevice);
@@ -268,7 +269,7 @@ void VK::Instance::InitVulkan(std::shared_ptr<BaseWindow> window, const char* ap
     });
 }
 
-void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
+void VK::Context::InitImGui(std::shared_ptr<BaseWindow> window) {
     AddVulkanLog("Initializing ImGui Hooks");
 
     VkDescriptorPoolSize poolSizes[] = { 
@@ -359,13 +360,13 @@ void VK::Instance::InitImGui(std::shared_ptr<BaseWindow> window) {
     });
 }
 
-ImageID VK::Instance::AddImageToCache(AllocatedImage& image) {
+ImageID VK::Context::AddImageToCache(AllocatedImage& image) {
     auto id = m_ImageCache.AddImage(image);
     image.CachedID = id;
     return id;
 }
 
-GPUBuffer VK::Instance::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) {
+GPUBuffer VK::Context::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage) {
     if (size <= 0) {
         AddVulkanLog("Invalid size for buffer, size is less than 0");
         THROW_RUNTIME_ERROR("Invalid size for buffer, size is less than 0");
@@ -413,13 +414,13 @@ GPUBuffer VK::Instance::CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaM
     return buf;
 }
 
-void VK::Instance::DestroyBuffer(const GPUBuffer& buffer) {
+void VK::Context::DestroyBuffer(const GPUBuffer& buffer) {
     vmaDestroyBuffer(m_Core.Allocator, buffer.Buffer, buffer.Allocation);
     m_BufferAllocs--;
     Logger::AddDebug(typeid(VulkanRenderer), "Current buffer allocs: {}", m_BufferAllocs);
 }
 
-AllocatedImage VK::Instance::CreateImageRaw(
+AllocatedImage VK::Context::CreateImageRaw(
     VkImageCreateInfo info,
     std::optional<VmaAllocationCreateInfo> customAllocInfo
 ) {
@@ -528,7 +529,7 @@ AllocatedImage VK::Instance::CreateImageRaw(
     return image;
 }
 
-void VK::Instance::BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout layout) {
+void VK::Context::BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout layout) {
     vkCmdBindDescriptorSets(
         cmd,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -541,7 +542,7 @@ void VK::Instance::BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout lay
     );
 }
 
-VkCommandBuffer VK::Instance::BeginFrame() {
+VkCommandBuffer VK::Context::BeginFrame() {
     m_Swapchain.BeginFrame(m_Core.Device, GetCurrentFrameIndex());
 
     if (m_Swapchain.IsOutdated()) {
@@ -565,7 +566,7 @@ VkCommandBuffer VK::Instance::BeginFrame() {
     return cmd;
 }
 
-void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
+void VK::Context::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     const auto [swapchainImage, swapchainImageIndex] = m_Swapchain.AcquireImage(m_Core.Device, GetCurrentFrameIndex());
 
     // if (!swapchainImage || NeedsRecreateSwapchain()) {
@@ -577,15 +578,16 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     // }
 
     m_Swapchain.ResetFence(m_Core.Device, GetCurrentFrameIndex());
-    
+
+
     auto swapchainLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
-    vku::TransitionImage(
-        cmd,
-        drawImage.Image,
-        VK_IMAGE_LAYOUT_GENERAL,
-        VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
-    );
+    // vku::TransitionImage(
+    //     cmd,
+    //     drawImage.Image,
+    //     VK_IMAGE_LAYOUT_GENERAL,
+    //     VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL
+    // );
     vku::TransitionImage(
         cmd, 
         swapchainImage, 
@@ -624,6 +626,8 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     // vku::TransitionImage({}, cmd, drawImage.Image, swapchainLayout, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
     // swapchainLayout = V_IMAGE_LAYOUT_PRESENT_SRC_KHR;
     
+    
+
     if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
@@ -631,7 +635,7 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             ImGui::UpdatePlatformWindows();
     }
-    
+
     VK_CHECK(vkEndCommandBuffer(cmd));
 
     m_Swapchain.SubmitAndPresent(cmd, m_Core.GraphicsQueue, GetCurrentFrameIndex(), swapchainImageIndex);
@@ -639,12 +643,12 @@ void VK::Instance::EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage) {
     m_FrameNumber++;
 }
 
-void VK::Instance::ClearImage(VkCommandBuffer cmd, VkClearColorValue clearColor, VkImageSubresourceRange imageRange) {
+void VK::Context::ClearImage(VkCommandBuffer cmd, VkClearColorValue clearColor, VkImageSubresourceRange imageRange) {
     vku::TransitionImage(cmd, m_Swapchain.GetImage(GetCurrentFrameIndex()), VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
     vkCmdClearColorImage(cmd, m_Swapchain.GetImage(GetCurrentFrameIndex()), VK_IMAGE_LAYOUT_GENERAL, &clearColor, 1, &imageRange);
 }
 
-AllocatedImage VK::Instance::CreateImage(VkImageCreateInfo info, const void* pixelData, bool cache) {
+AllocatedImage VK::Context::CreateImage(VkImageCreateInfo info, const void* pixelData, bool cache) {
     auto image = CreateImageRaw(info);
     if (pixelData) {
         AttachImageData(image, pixelData);
@@ -660,7 +664,7 @@ AllocatedImage VK::Instance::CreateImage(VkImageCreateInfo info, const void* pix
     return image;
 }
 
-void VK::Instance::CopyImageToImage(ImageID srcID, ImageID dstID) {
+void VK::Context::CopyImageToImage(ImageID srcID, ImageID dstID) {
     auto src = m_ImageCache.GetImage(srcID);
     auto dst = m_ImageCache.GetImage(dstID);
 
@@ -669,19 +673,19 @@ void VK::Instance::CopyImageToImage(ImageID srcID, ImageID dstID) {
     });
 }
 
-void VK::Instance::DestroyImage(const ImageID imageID) {
+void VK::Context::DestroyImage(const ImageID imageID) {
     const auto& allocImage = m_ImageCache.GetImage(imageID);
     DestroyImage(allocImage);
 }
 
-void VK::Instance::DestroyImage(const AllocatedImage& image) {
+void VK::Context::DestroyImage(const AllocatedImage& image) {
     vkDestroyImageView(m_Core.Device, image.ImageView, nullptr);
     vmaDestroyImage(m_Core.Allocator, image.Image, image.Allocation);
     m_ImageAllocs--;
     Logger::AddDebug(typeid(VulkanRenderer), "Current image allocs: {}", m_ImageAllocs);
 }
 
-AllocatedImage VK::Instance::CreateDrawImage(Vector2u size) {
+AllocatedImage VK::Context::CreateDrawImage(Vector2u size) {
     assert(size.X > 0 && size.Y > 0);
     const auto extent = VkExtent3D{
         .width = size.X,
@@ -699,7 +703,7 @@ AllocatedImage VK::Instance::CreateDrawImage(Vector2u size) {
     return CreateImage(info, nullptr, false);
 }
 
-void VK::Instance::CheckDeviceCapabilities() {
+void VK::Context::CheckDeviceCapabilities() {
     AddVulkanLog("Checking device capabilities...");
 
     vkGetPhysicalDeviceProperties(m_Core.PhysicalDevice, &m_Core.DeviceProperties);
@@ -734,11 +738,11 @@ void VK::Instance::CheckDeviceCapabilities() {
     }
 }
 
-void VK::Instance::WaitIdle() {
+void VK::Context::WaitIdle() {
     vkDeviceWaitIdle(m_Core.Device);
 }
 
-void VK::Instance::RecreateSwapchain(std::shared_ptr<BaseWindow>, Vector2u size) {
+void VK::Context::RecreateSwapchain(std::shared_ptr<BaseWindow>, Vector2u size) {
     WaitIdle();
     m_Swapchain.Recreate(m_Core, size);
 }
@@ -790,7 +794,7 @@ std::string GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT severity) {
 }
 }
 
-VKAPI_ATTR VkBool32 VKAPI_CALL VK::Instance::DebugCallback(
+VKAPI_ATTR VkBool32 VKAPI_CALL VK::Context::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT severity,
     VkDebugUtilsMessageTypeFlagsEXT type,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,

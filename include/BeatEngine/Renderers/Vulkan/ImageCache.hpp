@@ -6,18 +6,18 @@
 #include <vector>
 
 namespace VK {
-class Instance;
+class Context;
 }
 class ImageCache {
 private:
     std::vector<AllocatedImage> m_Images;
-    VK::Instance& m_Instance;
+    VK::Context& m_Context;
 
     ImageID m_MissingImageID{ NULL_IMAGE_ID };
 public:
     BindlessSetManager BindlessSetMgr{};
 public:
-    ImageCache(VK::Instance& instance);
+    ImageCache(VK::Context& instance);
     ~ImageCache() = default; 
 
     ImageID AddImage(AllocatedImage image);

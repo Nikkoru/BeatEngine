@@ -25,7 +25,7 @@
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageData.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImageCache.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/BindlessSetManager.cpp"
-    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Instance.cpp"
+    "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Context.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/ImmediateExecutor.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Swapchain.cpp"
     "${PROJECT_SOURCE_DIR}/src/Renderers/Vulkan/Renderer.cpp"

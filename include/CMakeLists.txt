@@ -49,7 +49,7 @@ list(APPEND HEADERS
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/ImageData.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/ImageCache.hpp"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/ImmediateExecutor.h"
-    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Instance.h"
+    "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Context.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/UninitQueue.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Boilerplate.h"
     "${PROJECT_SOURCE_DIR}/include/BeatEngine/Renderers/Vulkan/Assets/Texture.h"

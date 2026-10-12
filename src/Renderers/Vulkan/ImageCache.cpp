@@ -1,10 +1,10 @@
 #include "BeatEngine/Renderers/Vulkan/ImageCache.hpp"
 #include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
-#include "BeatEngine/Renderers/Vulkan/Instance.h"
+#include "BeatEngine/Renderers/Vulkan/Context.h"
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Util/Exception.h"
 
-ImageCache::ImageCache(VK::Instance& instance) : m_Instance(instance) {}
+ImageCache::ImageCache(VK::Context& instance) : m_Context(instance) {}
 
 ImageID ImageCache::AddImage(AllocatedImage image) {
     return AddImage(GetFreeImageID(), image);    
@@ -20,7 +20,7 @@ ImageID ImageCache::AddImage(ImageID id, AllocatedImage image) {
         m_Images.push_back(std::move(image));
     }
 
-    BindlessSetMgr.AddImage(m_Instance.GetDevice(), id, image.ImageView);
+    BindlessSetMgr.AddImage(m_Context.GetDevice(), id, image.ImageView);
 
     return id;
 }
@@ -41,6 +41,6 @@ const AllocatedImage& ImageCache::GetImage(ImageID id) {
 
 void ImageCache::DestroyImages() {
     for (const auto& image : m_Images) {
-        m_Instance.DestroyImage(image);
+        m_Context.DestroyImage(image);
     }
 }
