@@ -1,6 +1,5 @@
 #pragma once
 
-#include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
 #include <source_location>
 #include <string>
 #include <vector>

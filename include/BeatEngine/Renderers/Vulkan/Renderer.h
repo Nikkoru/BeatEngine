@@ -66,7 +66,6 @@ public:
     void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) override;
     void InitVertices(VertexArray& vertices, RenderState state) override;
     void UninitVertices(VertexArray& vertices) override;
-    void DestroyVerticesData(RendererData* data);
 
     void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) override;
 
@@ -79,8 +78,6 @@ public:
     void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) override;
     void DestroyTexture(std::shared_ptr<Texture> texture) override;
     std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
-
-    void RecreateSwapchain();
 
     const AllocatedImage& GetImageFromID(ImageID id) { return m_Instance.GetImageFromID(id); }
 

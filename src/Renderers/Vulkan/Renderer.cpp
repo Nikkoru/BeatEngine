@@ -99,21 +99,6 @@ VulkanRenderer::~VulkanRenderer() {
 
     AddVulkanLog("Shutting down the renderer");
 
-    // for (const auto& frameData : m_RenderFramesData) {
-    //     for (const auto& [viewID, drawDatas] : frameData.DrawDatas) {
-    //         for (const auto& drawData : drawDatas) {
-    //             m_Instance.DestroyBuffer(drawData.VertexBuffer);
-    //             m_Instance.DestroyBuffer(drawData.DrawCommandBuffer);
-    //         }
-    //     }
-    // }
-
-    // for (const auto& [viewID, layouts] : m_Layouts) {
-    //     for (const auto& layout : layouts) {
-    //         vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
-    //     }
-    // }
-
     m_Instance.DestroyImage(m_AllocatedDrawImage);
     m_Instance.Uninit();
     m_Window->Uninit();
@@ -178,8 +163,6 @@ void VulkanRenderer::Clear() {
     vku::TransitionImage(m_ActiveCmd, m_AllocatedDrawImage.Image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
     m_Instance.ClearImage(m_ActiveCmd, clearColor, imageRange);
-
-    // ClearVertexBuffers();
 }
 
 void VulkanRenderer::Update() {
@@ -274,10 +257,6 @@ std::shared_ptr<Shader> VulkanRenderer::CreateShader(const std::filesystem::path
     return shader;
 }
 
-void VulkanRenderer::RecreateSwapchain() {
-
-}
-
 void VulkanRenderer::ShowImGuiRenderTabContent() {
     ImGui::Text("Vulkan Renderer");
     ImGui::Text("Frame N°%u", m_Instance.GetCurrentFrameNumber());
@@ -315,9 +294,6 @@ void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
     if (!event.HasValue()) return;
     if (auto resizedEvent = event->GetIf<AppResizedEvent>(event); resizedEvent) {
         m_UpdateSwapchain = true; 
-        // m_Instance.RecreateSwapchain(m_Window, resizedEvent->Size);
-        // m_Instance.DestroyImage(m_AllocatedDrawImage);
-        // m_AllocatedDrawImage = m_Instance.CreateDrawImage(resizedEvent->Size);
     }
 }
 
@@ -334,27 +310,10 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 	auto* data = GetVertexArrayRendererData(vertices);
     auto* vulkanData = static_cast<VulkanRendererData*>(data);
 
-    // auto vertexID = GetVertexArrayID(vertices);
-    //
-    // if (m_RenderFramesData.size() <= vertexID) {
-    //     AddVulkanLog("ID {} out of bounds", vertexID);
-    //     return;
-    // }
-
     auto& cmdBuffer = vulkanData->m_DrawCommandBuffer;
     auto& vertexBuffer = vulkanData->m_VertexBuffer;
 
     if (vertices.GetSize() * sizeof(Vertex) != vertexBuffer.BufferSize && vertices.GetSize() > 0) {
-        // for (unsigned int i = 0; i < FRAME_OVERLAP; ++i) {
-        //     auto& buffer = m_RenderFramesData[i].at(vertexID).VertexBuffer;
-        //
-        //     m_Instance.DestroyBuffer(buffer);
-        //
-        //     buffer = m_Instance.CreateBuffer(
-        //         vertices.GetSize() * sizeof(Vertex),
-        //         VK_BUFFER_USAGE_2_VERTEX_BUFFER_BIT
-        //     );
-        // }
         m_Instance.DestroyBuffer(vertexBuffer);
         vertexBuffer = m_Instance.CreateBuffer(
             vertices.GetSize() * sizeof(Vertex),
@@ -386,9 +345,7 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
         .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
         .clearValue{
             .color = {
-                .float32 = { 0.f, 0.f, 0.f, 1.f },
-                // .int32 = { 0, 0, 0, 1 },
-                // .uint32 = { 0, 0, 0, 1 }
+                .float32 = { 0.f, 0.f, 0.f, 1.f }
             }
         }
     };
@@ -722,42 +679,10 @@ void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
 }
 
 void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
-    // uint32_t vertexID{};
-
-    // auto viewID = state.DrawInGlobal ? typeid(nullptr) : m_Context->ActiveView;
-
-    // if (IsVertexArrayHighlight(vertices))
-    //     vertexID = GetFreeHighlightIndex(viewID);
-    // else
-    //     vertexID = GetFreeBufferIndex(viewID);
 
     std::shared_ptr<VulkanRendererData> data = std::make_shared<VulkanRendererData>();
 
-    // SetVertexArrayID(vertices, vertexID);
     SetVertexArrayInitializedStatus(vertices, true);
-
-    // {
-    //     VkPipelineLayout pipelineLayout{};
-    //     const auto layout = m_Instance.GetBindlessDescSetLayout();
-    //     uint32_t size{};
-    //     if (state.PushConstantsSize == sizeof(PushConstants))
-    //         size = sizeof(DefaultPushConstants);
-    //     else
-    //         size = state.PushConstantsSize;
-    //
-    //     const auto pushConstantRange = VkPushConstantRange{
-    //         .stageFlags = VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
-    //         .offset = 0,
-    //         .size = size
-    //     };
-    //     pipelineLayout = vkb::CreatePipelineLayout(m_Instance.GetDevice(), layout, pushConstantRange);
-    //
-    //     m_Layouts.at(viewID).emplace(m_Layouts.at(viewID).begin() + vertexID, pipelineLayout);
-    // }
-    
-
-        // if (!m_RenderFramesData.at(i).DrawDatas.contains(viewID))
-        //     m_RenderFramesData.at(i).DrawDatas[viewID] = {};
 
     data->m_DrawCommandBuffer = m_Instance.CreateBuffer(
         state.DrawCommandSize,
@@ -793,35 +718,17 @@ void VulkanRenderer::InitVertices(VertexArray& vertices, RenderState state) {
 
     SetVertexArrayRendererData(vertices, data);
     SetVertexArrayDestroyFunc(vertices, [this](RendererData* data) {
-        DestroyVerticesData(data);
+        auto vkData = static_cast<VulkanRendererData*>(data);
+
+        m_Instance.DestroyBuffer(vkData->m_VertexBuffer);
+        m_Instance.DestroyBuffer(vkData->m_DrawCommandBuffer);
+
+
+        vkDestroyPipelineLayout(m_Instance.GetDevice(), vkData->m_Layout, nullptr);
     });
 }
 
-void VulkanRenderer::UninitVertices(VertexArray& vertices) {
-    // if (m_Layouts.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
-    //
-    // auto layout = m_Layouts.at(m_Context->ActiveView).at(GetVertexArrayID(vertices));
-
-    // vkDestroyPipelineLayout(m_Instance.GetDevice(), layout, nullptr);
-
-    for (unsigned int i = 0; i < FRAME_OVERLAP; i++) {
-        // if (!m_RenderFramesData.at(i).DrawDatas.contains(m_Context->ActiveView)) return;
-        // if (m_RenderFramesData.at(i).DrawDatas.at(m_Context->ActiveView).size() <= GetVertexArrayID(vertices)) return;
-        // if (!m_Layouts.contains(m_Context->ActiveView)) return;
-        //
-        // auto& cmdBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).DrawCommandBuffer;
-        // auto& vertexBuffer = m_RenderFramesData.at(m_Instance.GetCurrentFrameIndex()).DrawDatas.at(m_Context->ActiveView).at(GetVertexArrayID(vertices)).VertexBuffer;
-
-        // m_Instance.DestroyBuffer(cmdBuffer);
-        // m_Instance.DestroyBuffer(vertexBuffer);
-    }
-}
-
-void VulkanRenderer::DestroyVerticesData(RendererData* data) {
-    auto vkData = static_cast<VulkanRendererData*>(data);
-
-    m_Instance.DestroyBuffer(vkData->m_VertexBuffer);
-    m_Instance.DestroyBuffer(vkData->m_DrawCommandBuffer);
+void VulkanRenderer::UninitVertices(VertexArray&) {
 }
 
 void VulkanRenderer::DrawElement(GraphicalElement& element, RenderState state) {
