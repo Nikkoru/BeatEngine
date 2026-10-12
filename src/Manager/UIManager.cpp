@@ -66,27 +66,16 @@ void UIManager::RemoveLayer(const std::string layerName, bool global) {
 }
 
 void UIManager::RemoveViewLayers(const std::type_index viewID) {
-    for (const auto& layer : m_Layers.at(viewID)) {
-        // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
-    }
 	m_Layers.erase(viewID);
 }
 
 void UIManager::RemoveGlobalLayers() {
-    for (const auto& layer : m_GlobalLayers) {
-        // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
-    }
 	m_GlobalLayers.clear();
 }
 
 void UIManager::RemoveAllLayers() {
     RemoveGlobalLayers();
 
-    for (const auto& [viewID, layerMap] : m_Layers) {
-        for (const auto& layer : layerMap) {
-            // layer.second->UninitGraphics(m_State->GetGraphicsMgr());
-        }
-    }
 	m_Layers.clear();
 }
 
@@ -174,12 +163,6 @@ void UIManager::Uninit() {
     // }
 }
 
-namespace {
-void DrawVertexArrayImGui(VertexArray& array) {
-    // ImGui::
-} 
-}
-
 void UIManager::DrawDebugElement(UIElement& element) {
     ImGui::Text("Type: %s", element.m_ID.name());
     ImGui::Text("Textures: %zu", element.m_Textures.size());
@@ -199,26 +182,9 @@ void UIManager::DrawDebugElement(UIElement& element) {
         ImGui::Text("Size: (X: %f, Y: %f)", rect.GetSize().X, rect.GetSize().Y);
         auto color = element.m_LayoutRect.GetColor();
         ImGui::Text("Color:");
-        ImGui::SameLine();
         ImGui::ColorButton("##smt", { color.R, color.G, color.B, color.A });
-        // ImGui::Text("Color: (R: %f, G: %f, B: %f, A: %f)", color.R, color.G, color.B, color.A);
         ImGui::TreePop();
     }
-
-    // if (ImGui::TreeNode("Vertex")) {
-    //     for (size_t i = 0; i < element.m_Vertices.GetSize(); i++) {
-    //         const auto& vertex = element.m_Vertices[i];
-    //         ImGui::Text("Color:");
-    //         ImGui::SameLine();
-    //         auto desc = std::format("Vertex{}", i);
-    //         ImGui::ColorButton(desc.c_str(), { vertex.Color.R, vertex.Color.G, vertex.Color.B, vertex.Color.A });
-    //     }
-    //     ImGui::TreePop();
-    // }
-    // if (ImGui::TreeNode("Draw data")) {
-    //     element.DrawImGuiDrawData();
-    //     ImGui::TreePop();
-    // }
 
     if (ImGui::TreeNode("Specific from type")) {
         element.SpecificImGuiDebug();
