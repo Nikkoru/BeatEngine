@@ -1,60 +1,65 @@
 #pragma once
 
-#include "BeatEngine/Graphics/BaseWindow.h"
-#include "BeatEngine/Graphics/VSyncMode.h"
-#include "BeatEngine/Graphics/Vector2.h"
-#include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
-#include "BeatEngine/Renderers/Vulkan/Core.h"
 #include "BeatEngine/Renderers/Vulkan/FrameData.h"
+#include "BeatEngine/Renderers/Vulkan/QueueInfo.hpp"
+#include <vector>
 
-#include <array>
-#include <cstdint>
 #include <vulkan/vulkan_core.h>
-
 
 namespace VK {
 class Swapchain {
 private:
-    VkSwapchainKHR m_Swapchain{ VK_NULL_HANDLE };
-    std::vector<VkImage> m_Images;
-	std::vector<VkImageView> m_ImageViews;
+    VkPhysicalDevice m_PhysicalDevice{};
+    VkDevice m_Device{};
 
-    VkFormat m_Format{ VK_FORMAT_B8G8R8A8_UNORM };
-    Vector2u m_Extent{};
-    AllocatedImage m_DrawImage;
-    std::array<FrameData, FRAME_OVERLAP> m_Frames;
+    VkSwapchainKHR m_Swapchain{};
+    VkFormat m_Format{};
+    VkSurfaceKHR m_Surface{};
+    VkCommandPool m_CmdPool{};
 
-    VSyncMode m_VSync{ None };
+    uint32_t m_ImageIndex{};
+    uint32_t m_ResourceIndex{};
 
-    uint32_t m_ActiveImageIndex{};
+    struct SwapchainImage {
+        VkImage image{};
+VkImageView imageView{};
+        VkSemaphore presentSemaphore{}; // signal when rendering done, waited by present 
+    };
+    struct InFlightSlot {
+        VkSemaphore acquireSemaphore{}; // signal when acquire image from swapchai
+    };
+
+    std::vector<SwapchainImage> m_Images;
+    std::vector<InFlightSlot> m_InFlightSlots;
+
+    uint32_t m_ImageCount = 3;
+    uint32_t m_FramesInFlight = FRAME_OVERLAP;
 
     bool m_Outdated{ false };
-
-    UninitQueue m_Uninitializers;
 public:
-    void Create(const Core& core, Vector2u size, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM, bool debug = false);
-    void Recreate(const Core& core, Vector2u size, VSyncMode vSync = Disable, VkFormat format = VK_FORMAT_B8G8R8A8_UNORM, bool debug = false);
-    void Uninit();
-    Vector2u GetExtent() { return m_Extent; }
+    Swapchain() = default;
+    ~Swapchain() = default;
 
-    const std::vector<VkImage>& GetImages() { return m_Images; }
-    VkImage& GetImage(uint32_t imageIndex) { return m_Images[imageIndex]; }
-    VkImageView& GetImageView(uint32_t imageIndex) { return m_ImageViews[imageIndex]; }
-    size_t GetImagesSize() { return m_Images.size(); }
+    void Init(VkPhysicalDevice physicalDevice, VkDevice device, const QueueInfo& info, VkSurfaceKHR surface);
 
-    VkFormat GetFormat() { return m_Format; }
+    void RequestRebuild() { m_Outdated = false; }
+    bool IsOutdated() { return m_Outdated; }
+    VkImage GetImage() const { return m_Images[m_ImageIndex].image; }
+    VkImageView GetImageView() const { return m_Images[m_ImageIndex].imageView; }
+    VkFormat GetFormat() const { return m_Format; }
 
-    void BeginFrame(VkDevice device, size_t frameIndex) const;
-    void ResetFence(VkDevice device, size_t frameIndex) const;
+    uint32_t GetImageCount() const { return m_ImageCount; }
+    uint32_t GetFramesInFlight() const { return m_FramesInFlight; }
+    uint32_t GetImageIndex() const { return m_ImageIndex; }
+    uint32_t GetResourceIndex() const { return m_ResourceIndex; }
 
-    std::pair<VkImage, uint32_t> AcquireImage(VkDevice device, size_t frameIndex);
-    void SubmitAndPresent(const VkCommandBuffer cmd, VkQueue graphicsQueue, size_t frameIndex, uint32_t imageIndex);
+    VkSemaphore GetAcquireSemaphore() const { return m_InFlightSlots[m_ResourceIndex].acquireSemaphore; }
+    VkSemaphore GetPresentSemaphore() const { return m_Images[m_ImageIndex].presentSemaphore; }
 
-    FrameData& GetFrame(uint32_t index) { return m_Frames[index]; }
-
-    bool IsOutdated() { return m_Outdated; } 
+    VkResult AcquireNextImage(VkDevice device);
+    void PresentFrame(VkQueue queue);
 private:
-    void CreateCommandBuffers(VkDevice device, uint32_t graphicsQueueFamily, bool debug = false);
-    void CreateSync(VkDevice device, bool debug = false);
+    VkSurfaceFormat2KHR _SelectSurfaceFormat(std::vector<VkSurfaceFormat2KHR>& formats);
+    VkPresentModeKHR _SelectPresentMode(std::vector<VkPresentModeKHR>& modes);
 };
 }

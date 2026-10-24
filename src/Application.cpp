@@ -19,6 +19,9 @@
 
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Settings/AppSettings.hpp"
+#ifdef BEATENGINE_DEBUG
+#include "BeatEngine/Settings/AppDebugSettings.hpp"
+#endif // BEATENGINE_DEBUG
 
 #include "BeatEngine/Signals/AppSignals.hpp"
 #include "BeatEngine/Signals/ViewSignals.h"

@@ -396,16 +396,16 @@ void TextElement::Draw(Renderer* const mgr, RenderState state) {
 
     UpdateGeometryIfNeed(mgr);
 
-    DrawCommand cmd{
-        // .projection = mgr.GetMainCamera()->GetProjection(),
-        .transform = GetTransform().GetMatrix(),
-        .padding = glm::vec2{ 0 },
-        .textureID = m_FontTextureID,
-        .shaderID = 0
-    };
+    // DrawCommand cmd{
+    //     // .projection = mgr.GetMainCamera()->GetProjection(),
+    //     .transform = GetTransform().GetMatrix(),
+    //     .padding = glm::vec2{ 0 },
+    //     .textureID = m_FontTextureID,
+    //     .shaderID = 0
+    // };
 
-    state.drawCommand = std::make_shared<DrawCommand>(cmd);
-    state.drawCommandSize = sizeof(DrawCommand);
+    // state.drawCommand = std::make_shared<DrawCommand>(cmd);
+    // state.drawCommandSize = sizeof(DrawCommand);
 
     m_OutlineVertices.SetType(PrimitiveType::TriangleList);
     m_Vertices.SetType(PrimitiveType::TriangleList);

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Renderers/Vulkan/QueueInfo.hpp"
 #include <source_location>
 #include <string>
 #include <vector>
@@ -18,17 +19,18 @@ void AddNameToVKObject(VkDevice device, VkObjectType type, uint64_t objectHandle
 
 namespace vkb {
     VkInstance CreateInstance(std::string appName, uint32_t apiVersion, std::vector<const char*> pInstExt = {}, std::vector<const char*> pInstLayers = {});
-    VkPhysicalDevice CreatePhysicalDevice(VkInstance instance, std::vector<VkExtensionProperties>& availableExts, uint32_t deviceIndex = 0, VkPhysicalDeviceProperties* props = nullptr);
-    VkDevice CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily, std::vector<const char*>& requestedExts, std::vector<VkExtensionProperties>& deviceExts);
-    VkSwapchainKHR CreateSwapchainKHR(VkDevice device, VkPhysicalDevice physicalDevice, VkSurfaceKHR surface, unsigned int width, unsigned int height, VkPresentModeKHR presentMode = VK_PRESENT_MODE_FIFO_KHR, VkSwapchainKHR oldSwapchain = VK_NULL_HANDLE, VkFormat imageFormat = VK_FORMAT_B8G8R8A8_UNORM);
+    VkPhysicalDevice CreatePhysicalDevice(VkInstance instance, std::vector<VkExtensionProperties>& availableExts, uint32_t deviceIndex = -1, VkPhysicalDeviceProperties* props = nullptr);
+    VkDevice CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily, void* pNextChain, std::vector<const char*> requestedExts);
 
-    uint32_t GetQueueFamily(VkPhysicalDevice device);
+    QueueInfo GetQueueFamily(VkPhysicalDevice device, VkQueueFlagBits flags);
     std::vector<VkImage> GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, bool debug = false);
     std::vector<VkImageView> GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format, bool debug = false);
     
     VkImageSubresourceRange GetImageSubresourceRange(VkImageAspectFlags flags);
 
     VkPipelineLayout CreatePipelineLayout(VkDevice device, VkDescriptorSetLayout descLayout, VkPushConstantRange range);
+
+    VkCommandPool CreateCommandPool(VkDevice device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags = 0);
 }
 
 namespace vku {
@@ -43,11 +45,17 @@ namespace vki {
     VkRenderingAttachmentInfo GetRenderingAttachmentInfo(VkImageView target, VkClearValue* clear, VkImageLayout layout);
     VkRenderingInfo GetRenderingInfo(VkExtent2D extent, VkRenderingAttachmentInfo* colorAttachment, VkRenderingAttachmentInfo* depthAttachment);
 
-    VkSubmitInfo2 GetSubmitInfo(const VkCommandBufferSubmitInfo* cmdInfo, const VkSemaphoreSubmitInfo* signalSemaphoreInfo, const VkSemaphoreSubmitInfo* waitSemaphoreInfo);
+    VkSubmitInfo2 GetSubmitInfo(
+        const VkCommandBufferSubmitInfo* cmdInfo,
+        const VkSemaphoreSubmitInfo* signalSemaphoreInfo = nullptr, 
+        uint32_t signalCount = 0,
+        const VkSemaphoreSubmitInfo* waitSemaphoreInfo = nullptr,
+        uint32_t waitCount = 0
+    );
     VkCommandBufferSubmitInfo GetCommandBufferSubmitInfo(VkCommandBuffer cmd);
     VkCommandPoolCreateInfo GetCommandPoolCreateInfo(VkCommandPoolCreateFlags flags, uint32_t queueFamilyIndex);
     VkCommandBufferAllocateInfo GetCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount);
-    VkSemaphoreSubmitInfo GetSemaphoreSubmitInfo(VkPipelineStageFlags2 stageFlags, VkSemaphore semaphore);
+    VkSemaphoreSubmitInfo GetSemaphoreSubmitInfo(VkPipelineStageFlags2 stageFlags, VkSemaphore semaphore, uint64_t value = 1);
 
     VkPipelineInputAssemblyStateCreateInfo GetPipelineInputAssemblyStateInfo(VkPrimitiveTopology topology, VkPipelineInputAssemblyStateCreateFlags flags, VkBool32 primitiveRestartEnable);
 }

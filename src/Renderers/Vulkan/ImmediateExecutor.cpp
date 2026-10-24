@@ -53,7 +53,7 @@ void VK::ImmediateExecutor::ImmediateSumbit(std::function<void(VkCommandBuffer)>
     VK_CHECK(vkEndCommandBuffer(cmd));
 
     const auto cmdInfo = vki::GetCommandBufferSubmitInfo(cmd);
-    const auto submit = vki::GetSubmitInfo(&cmdInfo, nullptr, nullptr);
+    const auto submit = vki::GetSubmitInfo(&cmdInfo);
 
     VK_CHECK(vkQueueSubmit2(m_Queue, 1, &submit, m_ImmFence));
 

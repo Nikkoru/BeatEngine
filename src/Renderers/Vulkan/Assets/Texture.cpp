@@ -15,11 +15,12 @@ VulkanTexture& VulkanTexture::operator=(VulkanTexture other) {
 }
 
 ImTextureID VulkanTexture::GetImGuiTexture(Renderer* const mgr) {
+    (void)mgr;
     if (m_ImGuiDrawData == VkDescriptorSet{}) {
-        auto renderer = dynamic_cast<VulkanRenderer*>(mgr);
-        auto image = renderer->GetImageFromID(m_CacheID);
+        // auto renderer = dynamic_cast<VulkanRenderer*>(mgr);
+        // auto image = renderer->GetImageFromID(m_CacheID);
 
-        m_ImGuiDrawData = ImGui_ImplVulkan_AddTexture(image.Linear, image.ImageView, VK_IMAGE_LAYOUT_GENERAL);
+        // m_ImGuiDrawData = ImGui_ImplVulkan_AddTexture(image.Linear, image.ImageView, VK_IMAGE_LAYOUT_GENERAL);
     }
 
     return (ImTextureID)m_ImGuiDrawData;

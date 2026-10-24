@@ -20,7 +20,7 @@ Game::Game(int argc, char** argv)
 
     auto window = std::make_shared<SDLWindow>();
     window->SetInitFlags(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD);
-    window->SetWindowFlags(SDL_WINDOW_RESIZABLE);
+    window->SetWindowFlags(SDL_WINDOW_RESIZABLE | SDL_WINDOW_VULKAN);
     window->SetTitle("BE");
     window->SetSize({ 1280, 720 });
 

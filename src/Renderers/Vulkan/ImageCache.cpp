@@ -40,7 +40,7 @@ const AllocatedImage& ImageCache::GetImage(ImageID id) {
 };
 
 void ImageCache::DestroyImages() {
-    for (const auto& image : m_Images) {
-        m_Context.DestroyImage(image);
-    }
+    // for (const auto& image : m_Images) {
+    //     m_Context.DestroyImage(image);
+    // }
 }

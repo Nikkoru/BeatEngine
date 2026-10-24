@@ -26,16 +26,16 @@ void Shape::UpdateVertex() {
 }
 
 void Shape::Draw(Renderer* const mgr, RenderState state) {
-    DrawCommand cmd{
-        .projection = glm::mat4{ 0 },
-        .transform = GetTransform().GetMatrix(),
-        .padding = glm::vec2{ 0 },
-        .textureID = m_Texture ? m_Texture.Get()->GetID() : Texture::NULL_ID,
-        .shaderID = 0
-    };
+    // DrawCommand cmd{
+    //     .projection = glm::mat4{ 0 },
+    //     .transform = GetTransform().GetMatrix(),
+    //     .padding = glm::vec2{ 0 },
+    //     .textureID = m_Texture ? m_Texture.Get()->GetID() : Texture::NULL_ID,
+    //     .shaderID = 0
+    // };
 
-    state.drawCommand = std::make_shared<DrawCommand>(cmd);
-    state.drawCommandSize = sizeof(DrawCommand);
+    // state.drawCommand = std::make_shared<DrawCommand>(cmd);
+    // state.drawCommandSize = sizeof(DrawCommand);
 
     mgr->DrawVertices(m_Vertices, state);
 }

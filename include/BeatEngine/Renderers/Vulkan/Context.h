@@ -1,115 +1,78 @@
 #pragma once
 
-#include "BeatEngine/Graphics/BaseWindow.h"
-#include "BeatEngine/Renderers/Vulkan/AllocatedImage.h"
-#include "BeatEngine/Renderers/Vulkan/Assets/Texture.h"
-#include "BeatEngine/Renderers/Vulkan/Core.h"
-#include "BeatEngine/Renderers/Vulkan/FrameData.h"
-#include "BeatEngine/Renderers/Vulkan/GPUBuffer.h"
-#include "BeatEngine/Renderers/Vulkan/ImageCache.hpp"
-#include "BeatEngine/Renderers/Vulkan/ImmediateExecutor.h"
-#include "BeatEngine/Renderers/Vulkan/Swapchain.h"
-#include "BeatEngine/Renderers/Vulkan/UninitQueue.h"
-#include <memory>
-#include <optional>
-#include <vulkan/vk_platform.h>
+#include "BeatEngine/Renderers/Vulkan/QueueInfo.hpp"
+#include <vector>
+
 #include <vulkan/vulkan_core.h>
 
 class AppContext;
 class VulkanRenderer;
 namespace VK {
+struct DeviceExtension {
+    const char* name = nullptr;
+    bool required = false;
+    void* featureStruct = nullptr;
+};
+struct ContextCreateConfig {
+    std::vector<const char*> instanceExtensions;
+    std::vector<const char*> instanceLayers;
+    std::vector<DeviceExtension> deviceExtensions;
+
+    uint32_t apiVersion = VK_API_VERSION_1_3; 
+};
+
 class Context {
 private:
-    friend class ::VulkanRenderer;
-    AppContext* m_Context{ nullptr };
-    Core m_Core{};
-    Swapchain m_Swapchain{};
+    ContextCreateConfig m_Config{};
+    uint32_t m_ApiVersion{};
+    uint32_t m_GpuApiVersion{}; 
 
-    ImageCache m_ImageCache;
+    VkInstance m_Instance{};
+    VkPhysicalDevice m_PhysicalDevice{};
+    VkDevice m_Device{};
+    std::vector<QueueInfo> m_Queues;
+    VkDebugUtilsMessengerEXT m_Callback{};
+    std::vector<VkExtensionProperties> m_AvailableInstanceExtensions;
+    std::vector<VkExtensionProperties> m_AvailableDeviceExtensions;
 
-    ImmediateExecutor m_Executor{};
-
-    UninitQueue m_Uninitializers{};
-
-    std::shared_ptr<VulkanTexture> m_ErrorTexture{};
-    std::shared_ptr<VulkanTexture> m_WhiteTexture{};
-
-    float m_MaxSamplerAnisotropy{};
-
-    VkSampleCountFlagBits m_SupportedSampleCounts{};
-    VkSampleCountFlagBits m_HighestSupportedSample{};
-
-    uint16_t m_ImageAllocs{};
-    uint16_t m_BufferAllocs{};
-
-    uint32_t m_FrameNumber{};
+    VkPhysicalDeviceFeatures2 m_DeviceFeatures{};
+    VkPhysicalDeviceVulkan11Features m_Features11{};
+    VkPhysicalDeviceVulkan12Features m_Features12{};
+    VkPhysicalDeviceVulkan13Features m_Features13{};
+    VkPhysicalDeviceVulkan14Features m_Features14{};
 public:
-    Context() : m_ImageCache(*this) {}
+    Context() = default; 
+    ~Context() = default;
 
-    void Init(AppContext* context, std::string appName, uint32_t deviceIndex, std::shared_ptr<BaseWindow> window, VSyncMode vSync = Disable);
+    void Init(const ContextCreateConfig& config);
     void Uninit();
 
-    void AttachImageData(ImageID textureID, const void* pixelData, Vector2u offset = { 0, 0 }, Vector2u extent = { 0, 0 }, uint32_t layer = 0);
-    void AttachImageData(AllocatedImage& texture, const void* pixelData, Vector2u offset = { 0, 0 }, Vector2u extent = { 0, 0 }, uint32_t layer = 0);
+    VkDevice GetDevice() const { return m_Device; }
+    VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+    VkInstance GetInstance() const { return m_Instance; }
+    const QueueInfo& GetGraphicsQueue() { return m_Queues[0]; };
+    uint32_t GetApiVersion() const { return m_ApiVersion; }
+    uint32_t GetGpuApiVersion() const { return m_GpuApiVersion; }
 
-    const AllocatedImage& GetImageFromID(ImageID id) { return m_ImageCache.GetImage(id); }
-
-    uint16_t GetImageAllocations() { return m_ImageAllocs; }
-    uint16_t GetBufferAllocations() { return m_BufferAllocs; }
-
-    VkCommandBuffer BeginFrame();
-    void EndFrame(VkCommandBuffer cmd, AllocatedImage& drawImage);
-    void ClearImage(VkCommandBuffer cmd, VkClearColorValue clearColor, VkImageSubresourceRange imageRange);
-
-    AllocatedImage CreateImage(VkImageCreateInfo info, const void* pixelData, bool cache = true);
-    void CopyImageToImage(ImageID srcID, ImageID dstID);
-    void DestroyImage(const ImageID imageID);
-    void DestroyImage(const AllocatedImage& image);
-    AllocatedImage CreateDrawImage(Vector2u size);
-
-    VkPhysicalDeviceProperties& GetDeviceProperties() { return m_Core.DeviceProperties; }
-    VkDevice GetDevice() { return m_Core.Device; }
-
-    uint32_t GetCurrentFrameIndex() const { return m_FrameNumber % FRAME_OVERLAP; }
-    uint32_t GetCurrentFrameNumber() const { return m_FrameNumber; }
-
-    std::shared_ptr<VulkanTexture> GetErrorTexture() { return m_ErrorTexture; }
-    std::shared_ptr<VulkanTexture> GetWhiteTexture() { return m_WhiteTexture; }
-
-    void CheckDeviceCapabilities();
-
-    void WaitIdle();
-
-    bool NeedsRecreateSwapchain() { return m_Swapchain.IsOutdated(); }
-    Vector2u GetSwapchainExtent() { return m_Swapchain.GetExtent(); }
-    VkFormat GetSwapchainFormat() { return m_Swapchain.GetFormat(); }
-    size_t GetSwapchainImagesSize() { return m_Swapchain.GetImagesSize(); }
-    VkImage& GetSwapchainImage() { return m_Swapchain.GetImage(GetCurrentFrameIndex()); }
-    VkImageView& GetSwapchainImageView() { return m_Swapchain.GetImageView(GetCurrentFrameIndex()); }
-    void RecreateSwapchain(std::shared_ptr<BaseWindow> window, Vector2u size);
-
-    ImageID AddImageToCache(AllocatedImage& image);
-
-    GPUBuffer CreateBuffer(size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage = VMA_MEMORY_USAGE_AUTO);
-    void DestroyBuffer(const GPUBuffer& buffer);
-
-    VkDescriptorSetLayout GetBindlessDescSetLayout() { return m_ImageCache.BindlessSetMgr.GetSetLayout(); }
-    void BindBindlessDescSet(VkCommandBuffer cmd, VkPipelineLayout layout);
+    QueueInfo GetQueue(VkQueueFlagBits flags) const;
 private:
-    void InitVulkan(std::shared_ptr<BaseWindow> window, const char* appName, uint32_t deviceIndex);
-    void InitImGui(std::shared_ptr<BaseWindow> window);
+    void _InitInstance();
+    void _SelectPhysicalDevice();
+    void _InitLogicalDevice();
 
-    AllocatedImage CreateImageRaw(
-        VkImageCreateInfo info, 
-        std::optional<VmaAllocationCreateInfo> customAllocInfo = std::nullopt
-    );
+    void _GetAvailableInstanceExtensions();
+    void _GetAvailableDeviceExtensions();
 
+    bool _InstanceExtensionIsAvailable(const char* name);
+    bool _DeviceExtensionIsAvailable(const char* name);
 
+#ifdef BEATENGINE_DEBUG
     static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(
         VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-        VkDebugUtilsMessageTypeFlagsEXT type,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData
+        VkDebugUtilsMessageTypeFlagsEXT,
+        const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+        void*
     );
+#endif // BEATENGINE_DEBUG
 };
 }

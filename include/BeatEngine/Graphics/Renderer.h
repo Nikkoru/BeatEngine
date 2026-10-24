@@ -43,8 +43,6 @@ public:
     virtual void DrawElement(GraphicalElement& element, RenderState state = RenderState::Default) = 0;
 
     virtual void DrawVertices(VertexArray& vertices, RenderState state = RenderState::Default) = 0;
-    virtual void InitVertices(VertexArray& vertices, RenderState state) = 0;
-    virtual void UninitVertices(VertexArray& vertices) = 0;
 
     virtual void ProcessEvent(Optional<Base::Event> event) = 0;
 

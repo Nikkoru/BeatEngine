@@ -13,14 +13,11 @@ class PushConstants {
 };
 
 struct RenderState {
-    const std::shared_ptr<Shader> vertShader{};
-    const std::shared_ptr<Shader> compShader{};
-    const std::shared_ptr<Shader> fragShader{};
+    Shader* vertShader{};
+    Shader* compShader{};
+    Shader* fragShader{};
 
-    std::shared_ptr<DrawCommand> drawCommand{};
-    size_t drawCommandSize{};
-
-    bool highlightVertices{ false };
+    // bool highlightVertices{ false };
     LinearColor highlightColor{ 0.f, 0.f, 1.f, 1.f };
 
     // this is used when the primitive type is LineList or LineStrip
@@ -42,6 +39,7 @@ struct RenderState {
     bool enableStencilTest{ false };
     bool enableAlphaToCoverage{ false };
     bool enableBlend{ false };
+
     // TODO:
     // CullMode cullMode{ CullMode::None };
     // TODO:
