@@ -1,7 +1,8 @@
 #include "BeatEngine/ImGui/MultiPlot.h"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/Util/Helper.h"
-#include "imgui.h"
+
+#include <imgui.h>
 
 ImU32 InvertColorU32(ImU32 in)
 {

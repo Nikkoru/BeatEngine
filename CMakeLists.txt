@@ -87,6 +87,7 @@ if(USE_SDL_WINDOW AND NOT USE_GLFW_WINDOW)
             SDL3::SDL3
     ) 
 
+
     message(STATUS "Using SDL backend.")
 elseif(USE_GLFW_WINDOW AND NOT USE_SDL_WINDOW)
     target_compile_definitions(${PROJECT_NAME} PRIVATE BEATENGINE_GLFW_WINDOW)
@@ -107,6 +108,16 @@ if(USE_OPENGL_RENDERER AND NOT USE_VULKAN_RENDERER)
     target_include_directories(${PROJECT_NAME} PRIVATE "${GLAD_INCLUDE_DIR}")
     target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
 
+    list(APPEND SOURCES
+        "${IMGUI_DIR}/backends/imgui_impl_opengl2.cpp"
+        "${IMGUI_DIR}/backends/imgui_impl_opengl3.cpp"
+    )
+    list(APPEND HEADERS
+        "${IMGUI_DIR}/backends/imgui_impl_opengl2.h"
+        "${IMGUI_DIR}/backends/imgui_impl_opengl3.h"
+        "${IMGUI_DIR}/backends/imgui_impl_opengl3_loader.h"
+    )
+
     target_link_libraries(${PROJECT_NAME}
         PUBLIC
             ${OPENGL_LIBRARIES}
@@ -125,6 +136,7 @@ elseif(USE_VULKAN_RENDERER AND NOT USE_OPENGL_RENDERER OR ON)
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}")
         target_include_directories(${PROJECT_NAME} PRIVATE "${Vulkan_INCLUDE_DIRS}/volk")
         target_include_directories(${PROJECT_NAME} PRIVATE "${IMGUI_DIR}")
+
 
         if(NOT CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 			target_link_libraries(${PROJECT_NAME}

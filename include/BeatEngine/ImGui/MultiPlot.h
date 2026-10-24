@@ -3,6 +3,10 @@
 #include <cfloat>
 #include <imgui_internal.h>
 
+// impl retrieved from meemknight/ourCraft project, source files:
+// https://github.com/meemknight/ourCraft/blob/master/thirdparty/imgui-docking/imgui/multiPlot.h
+// https://github.com/meemknight/ourCraft/blob/master/thirdparty/imgui-docking/imgui/multiPlot.cpp
+
 ImU32 InvertColorU32(ImU32 in);
 
 void PlotMultiEx(
@@ -45,5 +49,3 @@ void PlotMultiHistograms(
     float scale_max,
     ImVec2 graph_size);
 
-// https://github.com/meemknight/ourCraft/blob/master/thirdparty/imgui-docking/imgui/multiPlot.h
-// https://github.com/meemknight/ourCraft/blob/master/thirdparty/imgui-docking/imgui/multiPlot.cpp

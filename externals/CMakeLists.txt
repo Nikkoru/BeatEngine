@@ -28,22 +28,6 @@ if(NOT ImGui_POPULATED)
 endif()
 
 set(IMGUI_DIR ${imgui_SOURCE_DIR} PARENT_SCOPE)
-list(APPEND SOURCES
-    ${imgui_SOURCE_DIR}/imgui.cpp
-    ${imgui_SOURCE_DIR}/imgui_demo.cpp
-    ${imgui_SOURCE_DIR}/imgui_draw.cpp
-    ${imgui_SOURCE_DIR}/imgui_tables.cpp
-    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
-)
-
-list(APPEND HEADERS
-    ${imgui_SOURCE_DIR}/imconfig.h
-    ${imgui_SOURCE_DIR}/imgui.h
-    ${imgui_SOURCE_DIR}/imgui_internal.h
-    ${imgui_SOURCE_DIR}/imstb_rectpack.h
-    ${imgui_SOURCE_DIR}/imstb_textedit.h
-    ${imgui_SOURCE_DIR}/imstb_truetype.h
-)
 
 FetchContent_Declare(freetype
     GIT_REPOSITORY https://gitlab.freedesktop.org/freetype/freetype
