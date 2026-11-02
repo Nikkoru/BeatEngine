@@ -30,6 +30,8 @@ private:
     VK::Context m_VKContext;
     VK::Allocator m_Allocator;
     VK::Swapchain m_Swapchain;
+    
+    UninitQueue m_Uninitializers{};
 
     VkSurfaceKHR m_Surface{}; 
     VkSemaphore m_FrameTimelineSemaphore{};
@@ -49,7 +51,7 @@ private:
     VertexID m_ActiveItem{};
 
     struct DrawData {
-        VertexArray vertices;
+        VertexArray* vertices;
         VulkanRendererData* data;
         RenderState state;
         VulkanShader* shader{ nullptr };

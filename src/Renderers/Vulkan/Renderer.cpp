@@ -131,7 +131,6 @@ VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> wind
     m_Allocator.Init(m_VKContext, &m_Executor);
 
     _CreateFrameSubmission(m_Swapchain.GetFramesInFlight());
-    _CreateImGuiDescriptorPool();
     _InitImGui();
 
     _CreateDefaultShaders();
@@ -145,6 +144,15 @@ VulkanRenderer::~VulkanRenderer() {
     vkDeviceWaitIdle(m_VKContext.GetDevice());
 
     AddVulkanLog("Shutting down the renderer");
+    
+    m_Uninitializers.Flush();
+
+    m_Allocator.Destroy(m_VKContext);
+    m_Swapchain.Uninit(m_VKContext.GetDevice());
+    m_Executor.Uninit();
+    vkDestroySurfaceKHR(m_VKContext.GetInstance(), m_Surface, nullptr);
+    m_Window->Uninit();
+    m_VKContext.Uninit();
 }
 
 void VulkanRenderer::Render() {
@@ -350,11 +358,23 @@ void VulkanRenderer::ProcessEvent(Optional<Base::Event> event) {
 void VulkanRenderer::DrawVertices(VertexArray& vertices, RenderState state) {
     if (!IsVertexArrayInitialized(vertices)) {
         SetVertexArrayRendererData(vertices, std::make_shared<VulkanRendererData>());
+        SetVertexArrayDestroyFunc(vertices, [&](RendererData* data) {
+            auto vkData = dynamic_cast<VulkanRendererData*>(data);
+            if (vkData->m_VertexBuffer.Buffer != VK_NULL_HANDLE) {
+                m_Allocator.DestroyBuffer(vkData->m_VertexBuffer);
+                vkData->m_VertexBuffer.Buffer = VK_NULL_HANDLE;
+            }
+
+            if (vkData->m_DrawBuffer.Buffer != VK_NULL_HANDLE) {
+                m_Allocator.DestroyBuffer(vkData->m_DrawBuffer);
+                vkData->m_DrawBuffer.Buffer = VK_NULL_HANDLE;
+            }
+        });
         SetVertexArrayInitializedStatus(vertices, true);
     }
 
     auto* vkData = static_cast<VulkanRendererData*>(GetVertexArrayRendererData(vertices));
-    m_ItemsToDraw.emplace_back(vertices, vkData, state);
+    m_ItemsToDraw.emplace_back(&vertices, vkData, state);
     m_ActiveItem = m_ItemsToDraw.size() - 1;
 }
 
@@ -389,6 +409,7 @@ void VulkanRenderer::_CreateFrameSubmission(uint32_t frameCount) {
     VK_CHECK(vkCreateSemaphore(dev, &semaphoreCreateInfo, nullptr, &m_FrameTimelineSemaphore));
     AddNameToVKObject(dev, VK_OBJECT_TYPE_SEMAPHORE, (uint64_t)m_FrameTimelineSemaphore, "m_FrameTimelineSemaphore");
 
+
     const uint32_t queueFamily = m_VKContext.GetGraphicsQueue().familyIndex;
 
     for (uint32_t i = 0; i < frameCount; i++) {
@@ -405,6 +426,14 @@ void VulkanRenderer::_CreateFrameSubmission(uint32_t frameCount) {
 
         VK_CHECK(vkAllocateCommandBuffers(dev, &cmdAllocInfo, &m_FrameData[i].cmdBuffer));
     }
+
+    m_Uninitializers.AddCallback([&]() {
+        AddVulkanLog("Destroying frame submission objects");
+
+        vkDestroySemaphore(m_VKContext.GetDevice(), m_FrameTimelineSemaphore, nullptr);
+        for (auto& frameData : m_FrameData)
+            vkDestroyCommandPool(m_VKContext.GetDevice(), frameData.cmdPool, nullptr);
+    });
 }
 
 void VulkanRenderer::_CreateImGuiDescriptorPool() {
@@ -444,6 +473,11 @@ void VulkanRenderer::_CreateImGuiDescriptorPool() {
     };
 
     VK_CHECK(vkCreateDescriptorPool(m_VKContext.GetDevice(), &poolInfo, nullptr, &m_UIDescriptorPool));
+
+    m_Uninitializers.AddCallback([&]() {
+        AddVulkanLog("Destroying ImGui descriptor pool");
+        vkDestroyDescriptorPool(m_VKContext.GetDevice(), m_UIDescriptorPool, nullptr);
+    });
 }
 
 void VulkanRenderer::_InitImGui() {
@@ -477,6 +511,13 @@ void VulkanRenderer::_InitImGui() {
     };
     ImGui_ImplVulkan_Init(&info);
     ImGui::GetIO().ConfigFlags = ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
+
+    m_Uninitializers.AddCallback([&]() {
+        AddVulkanLog("Destroying ImGui Hooks");
+
+        ImGui_ImplVulkan_Shutdown();
+        m_Window->UninitImGui();
+    });
 }
 
 bool VulkanRenderer::_PrepareForRendering() {
@@ -529,6 +570,12 @@ void VulkanRenderer::_CreateDefaultShaders() {
     m_DefaultShader.AddDescLayout(m_Allocator.GetBindlessDescSetLayout());
     if (!m_DefaultShader.LoadFromCompiledFile(m_VKContext.GetDevice(), { "shaders/base.vert.spv", "shaders/base.frag.spv" }))
         THROW_RUNTIME_ERROR("Failed to create shader!");
+
+    m_Uninitializers.AddCallback([&]() {
+        AddVulkanLog("Destroying default shaders");
+
+        m_DefaultShader.Destroy(m_VKContext.GetDevice(), m_Allocator);
+    });
 }
 
 void VulkanRenderer::_CreateFallbackTextures() {
@@ -591,9 +638,18 @@ void VulkanRenderer::_CreateFallbackTextures() {
             &pixel
         )
     );
+
+    m_Uninitializers.AddCallback([&]() {
+        AddVulkanLog("Destroying fallback textures");
+
+        m_Allocator.DestroyImage(m_ErrorTexture->GetID());
+        m_Allocator.DestroyImage(m_WhiteTexture->GetID());
+    });
 }
 
 void VulkanRenderer::_RenderFrameData() {
+    // TODO: Use Batch Rendering strategy
+
     VulkanShader* prevShader = nullptr;
     RenderState prevState = RenderState::Default;
     PrimitiveType prevType = PrimitiveType::None;
@@ -688,15 +744,15 @@ void VulkanRenderer::_RenderFrameData() {
 
         curShader->Bind(m_ActiveCmd);
 
-        if (item.vertices.GetType() != prevType || first) {
+        if (item.vertices->GetType() != prevType || first) {
             first = false;
-            prevType = item.vertices.GetType();
-            _SetPrimitiveType(item.vertices.GetType());
+            prevType = item.vertices->GetType();
+            _SetPrimitiveType(item.vertices->GetType());
         }
 
-        auto bufSize = item.vertices.GetSize() * sizeof(Vertex);
+        auto bufSize = item.vertices->GetSize() * sizeof(Vertex);
 
-        if (bufSize != item.data->m_VertexBuffer.BufferSize && !item.vertices.IsEmpty()) {
+        if (bufSize != item.data->m_VertexBuffer.BufferSize && !item.vertices->IsEmpty()) {
             if (item.data->m_VertexBuffer.Buffer != VK_NULL_HANDLE)
                 m_Allocator.DestroyBuffer(item.data->m_VertexBuffer);
             item.data->m_VertexBuffer = m_Allocator.CreateBuffer(
@@ -707,13 +763,13 @@ void VulkanRenderer::_RenderFrameData() {
         if (item.data->m_VertexBuffer.Buffer == VK_NULL_HANDLE) continue;
         memcpy(
             item.data->m_VertexBuffer.AllocationInfo.pMappedData,
-            item.vertices.GetData(),
+            item.vertices->GetData(),
             bufSize 
         );
 
         _SetVertexBindings(item);
 
-        vkCmdDraw(m_ActiveCmd, item.vertices.GetSize(), item.state.drawCount, 0, 0);
+        vkCmdDraw(m_ActiveCmd, item.vertices->GetSize(), item.state.drawCount, 0, 0);
     }
     vkCmdEndRendering(m_ActiveCmd);
 
@@ -1006,7 +1062,7 @@ void VulkanRenderer::_ImGuiCreateItemDrawWindow() {
         ImGui::PushID(i);
         if (ImGui::TreeNode("Item")) {
             if (ImGui::TreeNode("VertexArray")) {
-                auto& vertices = item.vertices;
+                auto& vertices = *item.vertices;
                 ImGui::Text("Type: %s", PrimitiveTypeUtils::ToString(vertices.GetType()).c_str());
                 ImGui::Text("Count: %zu", vertices.GetSize());
                 if (ImGui::TreeNode("Vertices")) {

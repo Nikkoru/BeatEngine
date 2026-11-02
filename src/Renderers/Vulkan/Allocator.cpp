@@ -37,7 +37,10 @@ void Allocator::Init(const Context& ctx, ImmediateExecutor* executor) {
 }
 
 void Allocator::Destroy(const Context& ctx) {
+    AddVulkanLog("Destroying allocator (img: {}, buf: {})", m_ImageAllocs, m_BufferAllocs);
 
+    m_ImageCache.BindlessSetMgr.Uninit(ctx.GetDevice());
+    vmaDestroyAllocator(m_Allocator);
 }
 
 GPUBuffer Allocator::CreateBuffer(size_t size, VkBufferUsageFlags bufUsage, VmaMemoryUsage memUsage) {

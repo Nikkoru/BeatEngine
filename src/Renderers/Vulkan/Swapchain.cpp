@@ -119,6 +119,8 @@ void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const Que
 }
 
 void Swapchain::Uninit(VkDevice device) {
+    AddVulkanLog("Destroying Swapchain");
+
     vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
     for(auto& slot : m_InFlightSlots) {
         vkDestroySemaphore(device, slot.acquireSemaphore, nullptr);

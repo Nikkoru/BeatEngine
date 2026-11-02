@@ -58,6 +58,8 @@ public:
 
     bool LoadFromCompiledFile(VkDevice device, const std::vector<std::filesystem::path>& paths);
 
+    void Destroy(VkDevice device, VK::Allocator& alloc);
+
     VkShaderEXT const* GetShaderVertImpl();
     VkShaderEXT const* GetShaderFragImpl();
     VkShaderEXT const* GetShaderCompImpl();

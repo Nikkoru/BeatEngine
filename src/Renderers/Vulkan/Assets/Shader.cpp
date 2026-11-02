@@ -218,10 +218,29 @@ bool VulkanShader::LoadFromCompiledFile(VkDevice device, const std::vector<std::
             break;
         }
         _CreateShader(device, shader, data.get(), stage, nextStage);
-        _CreateLayout(device);
         m_Stages |= stage;
     }
+
+    _CreateLayout(device);
     return true;
+}
+
+void VulkanShader::Destroy(VkDevice device, VK::Allocator& alloc) {
+    vkDestroyPipelineLayout(device, m_Layout, nullptr);
+    vkDestroyDescriptorPool(device, m_Pool, nullptr);
+
+    if (!m_Buffers.empty()) {
+        for (auto& [_, buf] : m_Buffers) {
+            alloc.DestroyBuffer(buf); 
+        }
+    }
+
+    if (m_ShaderVertImpl)
+        vkDestroyShaderEXT(device, m_ShaderVertImpl, nullptr);
+    if (m_ShaderFragImpl)
+        vkDestroyShaderEXT(device, m_ShaderFragImpl, nullptr);
+    if (m_ShaderCompImpl)
+        vkDestroyShaderEXT(device, m_ShaderCompImpl, nullptr);
 }
 
 VkShaderEXT const* VulkanShader::GetShaderVertImpl() {

@@ -32,6 +32,14 @@ void Context::Init(const ContextCreateConfig& config) {
     _InitLogicalDevice();
 }
 
+void Context::Uninit() {
+    AddVulkanLog("Uninitializing Vulkan handlers");
+
+    vkDestroyDebugUtilsMessengerEXT(m_Instance, m_Callback, nullptr);
+    vkDestroyDevice(m_Device, nullptr);
+    vkDestroyInstance(m_Instance, nullptr);
+}
+
 void Context::InitImGui() {
 
 }
