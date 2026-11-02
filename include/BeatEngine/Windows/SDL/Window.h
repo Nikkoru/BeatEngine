@@ -59,6 +59,8 @@ public:
     void OnRender() override;
     void OnDisplay() override;
 
+    void ImGuiNewFrame() override;
+
     void ImGuiWindowContent() override;
 public:
     void SetInitFlags(SDL_InitFlags flags);

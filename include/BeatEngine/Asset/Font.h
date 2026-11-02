@@ -70,7 +70,7 @@ public:
 	Font& operator=(const Font& other);
 	Font& operator=(const Font&& other) noexcept;
 
-    static std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> CreateFontFT(const std::filesystem::path& path);
+    static std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> CreateFontFT(const std::vector<std::filesystem::path>& paths);
     static void DestroyFont(const Base::AssetHandle<Font>& font, Renderer* const renderer);
 
     bool IsLoaded() const { return m_FTLibrary && m_FTStreamRec.descriptor.pointer && m_FTStroker && m_FTFace; }
@@ -78,7 +78,7 @@ public:
     const Glyph& GetGlyphByID(Renderer* const mgr, uint32_t charID, unsigned int charSize, bool bold, float outlineThickness = 0) const;
     const Glyph& GetGlyph(Renderer* const mgr, char32_t codePoint, unsigned int charSize, bool bold, float outlineThickness = 0) const;
 
-    const Texture* GetTexture(Renderer* const mgr, unsigned int charSize) const { return LoadPage(mgr, charSize).texture.get(); }
+    Texture* GetTexture(Renderer* const mgr, unsigned int charSize) const { return LoadPage(mgr, charSize).texture.get(); }
     float GetUnderlinePosition(unsigned int charSize) const;
     float GetUnderlineThickness(unsigned int charSize) const;
     float GetLineSpacing(unsigned int charSize) const;

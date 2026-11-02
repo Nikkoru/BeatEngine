@@ -57,7 +57,8 @@ Font& Font::operator=(const Font&& other) noexcept {
 	return *this;
 }
 
-std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> Font::CreateFontFT(const std::filesystem::path& path) {
+std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> Font::CreateFontFT(const std::vector<std::filesystem::path>& paths) {
+    auto& path = paths[0];
     auto name = path.stem().string();
     auto font = std::make_shared<Font>();
     

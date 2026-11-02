@@ -7,26 +7,26 @@
 
 namespace VK {
 class Context;
+class Allocator;
 }
 class ImageCache {
 private:
     std::vector<AllocatedImage> m_Images;
-    VK::Context& m_Context;
 
     ImageID m_MissingImageID{ NULL_IMAGE_ID };
 public:
     BindlessSetManager BindlessSetMgr{};
 public:
-    ImageCache(VK::Context& instance);
+    ImageCache() = default;
     ~ImageCache() = default; 
 
-    ImageID AddImage(AllocatedImage image);
-    ImageID AddImage(ImageID id, AllocatedImage image);
-    const AllocatedImage& GetImage(ImageID id);
+    ImageID AddImage(VkDevice device, AllocatedImage image);
+    ImageID AddImage(VkDevice device, ImageID id, AllocatedImage image);
+    AllocatedImage& GetImage(ImageID id);
 
     void SetMissingImageID(ImageID id) { m_MissingImageID = id; }
 
     ImageID GetFreeImageID() { return m_Images.size(); }
 
-    void DestroyImages(); 
+    void DestroyImages(VK::Allocator& allocator); 
 };

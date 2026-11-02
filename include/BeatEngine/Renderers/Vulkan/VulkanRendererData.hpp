@@ -7,11 +7,8 @@ class VulkanRenderer;
 class VulkanRendererData : public RendererData {
 private:
     friend class VulkanRenderer;
-
     GPUBuffer m_VertexBuffer{};
-    GPUBuffer m_DrawCommandBuffer{};
-
-    VkPipelineLayout m_Layout{};
+    GPUBuffer m_DrawBuffer{};
 public:
     VulkanRendererData() = default;
     ~VulkanRendererData() override = default;

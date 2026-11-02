@@ -22,13 +22,17 @@ namespace vkb {
     VkPhysicalDevice CreatePhysicalDevice(VkInstance instance, std::vector<VkExtensionProperties>& availableExts, uint32_t deviceIndex = -1, VkPhysicalDeviceProperties* props = nullptr);
     VkDevice CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily, void* pNextChain, std::vector<const char*> requestedExts);
 
-    QueueInfo GetQueueFamily(VkPhysicalDevice device, VkQueueFlagBits flags);
+    QueueInfo GetQueue(VkPhysicalDevice device, VkQueueFlagBits flags);
     std::vector<VkImage> GetSwapchainImages(VkDevice device, VkSwapchainKHR swapchain, bool debug = false);
     std::vector<VkImageView> GetSwapchainImageViews(VkDevice device, std::vector<VkImage>& images, VkFormat format, bool debug = false);
     
     VkImageSubresourceRange GetImageSubresourceRange(VkImageAspectFlags flags);
 
-    VkPipelineLayout CreatePipelineLayout(VkDevice device, VkDescriptorSetLayout descLayout, VkPushConstantRange range);
+    VkPipelineLayout CreatePipelineLayout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descLayout,
+        const std::vector<VkPushConstantRange>& range
+    );
 
     VkCommandPool CreateCommandPool(VkDevice device, uint32_t queueFamilyIndex, VkCommandPoolCreateFlags flags = 0);
 }

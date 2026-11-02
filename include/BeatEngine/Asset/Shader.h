@@ -4,6 +4,8 @@
 #include "BeatEngine/Base/Asset.h"
 
 #include <filesystem>
+#include <unordered_map>
+#include <vector>
 #include <map>
 
 class Shader : public Base::Asset {
@@ -17,15 +19,24 @@ public:
         static std::map<Type, std::string> TypeStrings;
         static std::string ToString(Type type);
     };
+    struct SSBO {
+        void* data;
+        size_t size;
+        uint32_t binding = -1;
+    };
 protected:
-    std::shared_ptr<ShaderData> m_Data;
-    Type m_Type;
+    std::map<Type, std::shared_ptr<ShaderData>> m_Data;
+    std::unordered_map<std::string, SSBO> m_SSBOs;
 public:
     Shader() = default;
-    ~Shader() override = default;
+    virtual ~Shader() override = default;
 public:
-    virtual bool GetFileContents(const std::filesystem::path path) = 0;
-    void SetType(Type type);
-
-    Type GetType();
+    template<typename TStruct>
+    void AddSSBO(TStruct& obj, const std::string& name, uint32_t binding = -1);
+    const SSBO& GetSSBO(const std::string& name) const;
+    bool ContainsSSBO(const std::string& name) const;
+protected:
+    virtual void NewSSBO() = 0;
 };
+
+#include "BeatEngine/Asset/Shader.inl"

@@ -70,5 +70,7 @@ public:
     virtual void OnRender() {};
     virtual void OnDisplay() {};
 
+    virtual void ImGuiNewFrame() {};
+
     virtual void ImGuiWindowContent() {};
 };

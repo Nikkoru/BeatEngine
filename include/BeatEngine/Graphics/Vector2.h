@@ -28,7 +28,7 @@ public:
     constexpr Vector2<T> ComponentWiseDivision(Vector2<T> other);
     constexpr Vector2<T> ComponentWiseMultiplication(Vector2<T> other);
     // constexpr Vector2<T> operator=(ImVec2 vec);
-    constexpr bool operator<=>(const Vector2<T>& other) const = default;
+    constexpr auto operator<=>(const Vector2<T>& other) const = default;
 };
 
 using Vector2i = Vector2<int>;

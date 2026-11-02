@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Graphics/Transform.hpp"
 #include "BeatEngine/Graphics/Vector2.h"
 #ifdef _MSC_VER
 #include <compare>
@@ -7,21 +8,19 @@
 
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Graphics/Color.h"
-#include "BeatEngine/Graphics/DrawCommand.hpp"
+// #include "BeatEngine/Graphics/DrawCommand.hpp"
 
 class PushConstants {
 };
 
 struct RenderState {
-    Shader* vertShader{};
-    Shader* compShader{};
-    Shader* fragShader{};
-
-    // bool highlightVertices{ false };
+// bool highlightVertices{ false };
     LinearColor highlightColor{ 0.f, 0.f, 1.f, 1.f };
 
     // this is used when the primitive type is LineList or LineStrip
     float lineWidth{ 1.f };
+
+    uint32_t drawCount{ 1 };
 
     std::shared_ptr<PushConstants> pushConstants{};
     size_t pushConstantsSize{ sizeof(PushConstants) };
@@ -40,6 +39,8 @@ struct RenderState {
     bool enableAlphaToCoverage{ false };
     bool enableBlend{ false };
 
+    Transform transform{};
+
     // TODO:
     // CullMode cullMode{ CullMode::None };
     // TODO:
@@ -53,9 +54,27 @@ struct RenderState {
 
     static const RenderState Default;
 
-#ifndef _MSC_VER
-    bool operator<=>(const RenderState& other) const = default;
-#else
-    std::partial_ordering operator<=>(const RenderState& other) const = default;
-#endif
+// #ifndef _MSC_VER
+//     bool operator<=>(const RenderState& other) const = default;
+// #else
+//     std::partial_ordering operator<=>(const RenderState& other) const = default;
+// #endif
+    constexpr bool operator==(const RenderState& other) {
+        return
+            highlightColor == other.highlightColor &&
+            lineWidth == other.lineWidth &&
+            drawCount == other.drawCount &&
+            pushConstants == other.pushConstants &&
+            pushConstantsSize == other.pushConstantsSize && 
+            enableDepthBias == other.enableDepthBias &&
+            depthBias == other.depthBias &&
+            enableDepthBounds == other.enableDepthBounds &&
+            depthBounds == other.depthBounds &&
+            discardRasterization == other.discardRasterization &&
+            enableDepthTest == other.enableDepthTest &&
+            enableStencilTest == other.enableStencilTest &&
+            enableAlphaToCoverage == other.enableAlphaToCoverage &&
+            enableBlend == other.enableBlend;
+    }
+    constexpr bool operator!=(const RenderState& other) { return !(*this == other); }
 };

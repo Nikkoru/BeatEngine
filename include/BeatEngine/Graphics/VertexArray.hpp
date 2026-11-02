@@ -63,7 +63,7 @@ public:
     void Reserve(size_t size) { m_Vertices.reserve(size); }
 
     void Clear() { m_Vertices.clear(); }
-    bool IsEmpty() { return m_Vertices.empty(); }
+    bool IsEmpty() const { return m_Vertices.empty(); }
 
     void Replace(Vertex& vertex, size_t pos) { if (pos >= GetSize()) return; m_Vertices.at(pos) = vertex; }
 
@@ -81,5 +81,5 @@ public:
 public:
     void SetType(PrimitiveType type) { m_Type = type; }
 
-    PrimitiveType GetType() { return m_Type; }
+    PrimitiveType GetType() const { return m_Type; }
 };

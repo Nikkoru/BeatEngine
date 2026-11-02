@@ -30,7 +30,6 @@ public:
     virtual ~Renderer();
 public:
     virtual void Render() = 0;
-    virtual void RenderImGui() {};
     virtual void Display() = 0;
     virtual void Clear() = 0;
     virtual void Update() = 0;
@@ -55,7 +54,10 @@ public:
     virtual void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) = 0;
     virtual void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) = 0;
     virtual void DestroyTexture(std::shared_ptr<Texture> texture) = 0;
-    virtual std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) = 0;
+    virtual std::shared_ptr<Shader> CreateShader(const std::vector<std::filesystem::path>& paths) = 0;
+
+    virtual void BindShaderToObject(Shader* shader) = 0;
+    virtual void BindTextureToObject(Texture* texture) = 0;
 
     void SetMainCamera(const Camera& camera) { m_MainCamera = camera; };
     void CreateMainCamera() { m_MainCamera.InitOrtho2D(Vector2f{ m_Window->GetSize() }); }

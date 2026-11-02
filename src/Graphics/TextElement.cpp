@@ -396,16 +396,7 @@ void TextElement::Draw(Renderer* const mgr, RenderState state) {
 
     UpdateGeometryIfNeed(mgr);
 
-    // DrawCommand cmd{
-    //     // .projection = mgr.GetMainCamera()->GetProjection(),
-    //     .transform = GetTransform().GetMatrix(),
-    //     .padding = glm::vec2{ 0 },
-    //     .textureID = m_FontTextureID,
-    //     .shaderID = 0
-    // };
-
-    // state.drawCommand = std::make_shared<DrawCommand>(cmd);
-    // state.drawCommandSize = sizeof(DrawCommand);
+    state.transform = GetTransform();
 
     m_OutlineVertices.SetType(PrimitiveType::TriangleList);
     m_Vertices.SetType(PrimitiveType::TriangleList);
@@ -414,12 +405,16 @@ void TextElement::Draw(Renderer* const mgr, RenderState state) {
         mgr->DrawVertices(m_OutlineVertices, state);
 
     mgr->DrawVertices(m_Vertices, state);
+
+    auto font = m_Font.Get();
+    mgr->BindTextureToObject(font->GetTexture(mgr, m_CharacterSize));
 }
 
 void TextElement::UpdateGeometryIfNeed(Renderer* const mgr) {
     auto font = m_Font.Get();
     if (!font) return;
 
+    if (font->GetTexture(mgr, m_CharacterSize) == nullptr) return;
     if (!m_UpdateGeometry && font->GetTexture(mgr, m_CharacterSize)->m_CacheID == m_FontTextureID) return;
 
     m_FontTextureID = font->GetTexture(mgr, m_CharacterSize)->m_CacheID;

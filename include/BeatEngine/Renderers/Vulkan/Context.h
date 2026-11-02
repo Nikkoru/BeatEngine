@@ -34,6 +34,7 @@ private:
     VkDebugUtilsMessengerEXT m_Callback{};
     std::vector<VkExtensionProperties> m_AvailableInstanceExtensions;
     std::vector<VkExtensionProperties> m_AvailableDeviceExtensions;
+    VkPhysicalDeviceProperties m_DeviceProperties{};
 
     VkPhysicalDeviceFeatures2 m_DeviceFeatures{};
     VkPhysicalDeviceVulkan11Features m_Features11{};
@@ -47,18 +48,25 @@ public:
     void Init(const ContextCreateConfig& config);
     void Uninit();
 
+    void InitImGui();
+
     VkDevice GetDevice() const { return m_Device; }
     VkPhysicalDevice GetPhysicalDevice() const { return m_PhysicalDevice; }
+    VkPhysicalDeviceProperties& GetDeviceProperties() { return m_DeviceProperties; }
     VkInstance GetInstance() const { return m_Instance; }
     const QueueInfo& GetGraphicsQueue() { return m_Queues[0]; };
     uint32_t GetApiVersion() const { return m_ApiVersion; }
     uint32_t GetGpuApiVersion() const { return m_GpuApiVersion; }
+
+    VkPhysicalDeviceProperties GetPhysicalDeviceProperties() const { return m_DeviceProperties; }
 
     QueueInfo GetQueue(VkQueueFlagBits flags) const;
 private:
     void _InitInstance();
     void _SelectPhysicalDevice();
     void _InitLogicalDevice();
+
+    void _PopulateFeatures();
 
     void _GetAvailableInstanceExtensions();
     void _GetAvailableDeviceExtensions();

@@ -82,24 +82,26 @@ Game::Game(int argc, char** argv)
 		{
 			typeid(Font),
 			{
-				"assets/fonts/main-font.ttf"
+				{ "assets/fonts/main-font.ttf" }
 			}
 		},
 		{
 			typeid(Sound),
 			{
-				"assets/sounds/test-sound.mp3"
+				{ "assets/sounds/test-sound.mp3" }
 			}
 		},
         {
             typeid(AudioStream),
-            paths
+            { paths }
         },
         {
             typeid(Shader),
             {
-                "assets/shaders/shader.frag"
-                "assets/shaders/shader.vert"
+                {
+                    "assets/shaders/shader.frag",
+                    "assets/shaders/shader.vert"
+                }
             }
         },
 	});

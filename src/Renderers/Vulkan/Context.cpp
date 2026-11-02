@@ -32,12 +32,20 @@ void Context::Init(const ContextCreateConfig& config) {
     _InitLogicalDevice();
 }
 
+void Context::InitImGui() {
+
+}
+
 QueueInfo Context::GetQueue(VkQueueFlagBits flags) const {
-    return vkb::GetQueueFamily(m_PhysicalDevice, flags);
+    return vkb::GetQueue(m_PhysicalDevice, flags);
 }
 
 void Context::_InitInstance() {
-    vkEnumerateInstanceVersion(&m_ApiVersion);
+    if (m_Config.apiVersion != 0)
+        m_ApiVersion = m_Config.apiVersion;
+    else
+        vkEnumerateInstanceVersion(&m_ApiVersion);
+    AddVulkanLog("Using API version: {}.{}.{}", VK_VERSION_MAJOR(m_ApiVersion), VK_VERSION_MINOR(m_ApiVersion), VK_VERSION_PATCH(m_ApiVersion));
     _GetAvailableInstanceExtensions();
 
     std::vector<const char*> instanceExtensions = m_Config.instanceExtensions;
@@ -74,12 +82,14 @@ void Context::_InitInstance() {
 }
 
 void Context::_SelectPhysicalDevice() {
-    m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance, m_AvailableDeviceExtensions);
+    m_PhysicalDevice = vkb::CreatePhysicalDevice(m_Instance, m_AvailableDeviceExtensions, -1, &m_DeviceProperties);
 }
 
 void Context::_InitLogicalDevice() {
     m_Queues.clear();
     m_Queues.emplace_back(GetQueue(VK_QUEUE_GRAPHICS_BIT));
+
+    _PopulateFeatures();
 
     pNextChainPushFront(&m_Features11, &m_Features12);
     pNextChainPushFront(&m_Features11, &m_Features13);
@@ -97,16 +107,46 @@ void Context::_InitLogicalDevice() {
         }
         else {
             AddVulkanLog("Optional extension {} is not available, skipping", ext.name);
+            continue;
         }
 
-        if (ext.featureStruct) {
+        if (ext.featureStruct != nullptr) {
             pNextChainPushFront(&m_Features11, ext.featureStruct);
         }
     }
+    m_DeviceFeatures = VkPhysicalDeviceFeatures2{
+        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+        .pNext = nullptr,
+        .features{}
+    };
 
     m_DeviceFeatures.pNext = &m_Features11;
+    vkGetPhysicalDeviceFeatures2(m_PhysicalDevice, &m_DeviceFeatures);
 
     m_Device = vkb::CreateDevice(m_PhysicalDevice, m_Queues[0].familyIndex, &m_DeviceFeatures, deviceExtensions);
+    vkGetDeviceQueue(m_Device, m_Queues[0].familyIndex, m_Queues[0].queueIndex, &m_Queues[0].queue);
+}
+
+void Context::_PopulateFeatures() {
+    m_Features11.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+    m_Features11.pNext = nullptr;
+
+    m_Features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+    m_Features12.pNext = nullptr;
+    m_Features12.descriptorIndexing = true;
+    m_Features12.shaderSampledImageArrayNonUniformIndexing = true;
+    m_Features12.descriptorBindingSampledImageUpdateAfterBind = true;
+    m_Features12.descriptorBindingStorageImageUpdateAfterBind = true;
+    m_Features12.descriptorBindingPartiallyBound = true;
+    m_Features12.descriptorBindingVariableDescriptorCount = true;
+    m_Features12.runtimeDescriptorArray = true;
+    m_Features12.bufferDeviceAddress = true;
+    m_Features12.timelineSemaphore = true;
+
+    m_Features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+    m_Features13.pNext = nullptr;
+    m_Features13.synchronization2 = true;        
+    m_Features13.dynamicRendering = true;
 }
 
 void Context::_GetAvailableInstanceExtensions() {
@@ -141,13 +181,71 @@ bool Context::_DeviceExtensionIsAvailable(const char* name) {
     return false;
 }
 
+namespace {
+std::string GetDebugSeverityStr(VkDebugUtilsMessageSeverityFlagBitsEXT severity) {
+    switch (severity) {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        return "Verbose";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+        return "Info";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        return "Warning";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+        return "Error";
+    default:
+        return "Invalid";
+    }
+}
+
+std::string GetDebugSeverityColorStr(VkDebugUtilsMessageSeverityFlagBitsEXT severity) {
+    switch (severity) {
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+        return "\e[30;47m";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+        return "\e[30;106m";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+        return "\e[0;103m";
+    case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+        return "\e[0;101m";
+    default:
+        return "\033[0m";
+    }
+}
+
+std::string GetDebugTypeStr(VkDebugUtilsMessageTypeFlagsEXT severity) {
+    switch (severity) {
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT:
+        return "General";
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT:
+        return "Validation";
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT:
+        return "Performance";
+    case VK_DEBUG_UTILS_MESSAGE_TYPE_DEVICE_ADDRESS_BINDING_BIT_EXT:
+        return "Device Address Binding";
+    default:
+        return "Invalid";
+    }
+}
+}
+
 #ifdef BEATENGINE_DEBUG
 VKAPI_ATTR VkBool32 VKAPI_CALL Context::DebugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-    VkDebugUtilsMessageTypeFlagsEXT,
+    VkDebugUtilsMessageTypeFlagsEXT type,
     const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
     void*
 ) {
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "{}", callbackData->pMessage);
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Type = {}", GetDebugTypeStr(type));
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Severity = {}{}\033[0m", GetDebugSeverityColorStr(severity), GetDebugSeverityStr(severity));
+    Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "    Objects: {}", callbackData->objectCount);
+    for (uint32_t i = 0; i < callbackData->objectCount; i++) {
+        auto name = "No name available";
+        if (callbackData->pObjects[i].pObjectName)
+            name = callbackData->pObjects[i].pObjectName;
+
+        Logger::AddLog("\x1b[0;41mVulkan Debug\033[0m", "", "        {:#x} ({})", callbackData->pObjects[i].objectHandle, name);
+    }
     return VK_FALSE;
 }
 #endif // BEATENGINE_DEBUG

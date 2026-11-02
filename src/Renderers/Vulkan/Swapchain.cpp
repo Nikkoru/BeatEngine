@@ -1,5 +1,6 @@
 #include "BeatEngine/Renderers/Vulkan/Swapchain.h"
 #include "BeatEngine/Renderers/Vulkan/Boilerplate.h"
+#include "BeatEngine/Renderers/Vulkan/Core.h"
 
 #include <algorithm>
 #include <cassert>
@@ -7,6 +8,8 @@
 
 namespace VK {
 void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const QueueInfo& info, VkSurfaceKHR surface) {
+    m_Queue = info;
+
     m_Surface = surface;
 
     const VkPhysicalDeviceSurfaceInfo2KHR surfaceInfo2{
@@ -113,6 +116,26 @@ void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const Que
       VK_CHECK(vkCreateSemaphore(device, &semaphoreCreateInfo, nullptr, &m_InFlightSlots[i].acquireSemaphore));
       // DBG_VK_NAME(m_inFlightSlots[i].acquireSemaphore);
     }
+}
+
+void Swapchain::Uninit(VkDevice device) {
+    vkDestroySwapchainKHR(device, m_Swapchain, nullptr);
+    for(auto& slot : m_InFlightSlots) {
+        vkDestroySemaphore(device, slot.acquireSemaphore, nullptr);
+    }
+    for(auto& image : m_Images) {
+        vkDestroyImageView(device, image.imageView, nullptr);
+        vkDestroySemaphore(device, image.presentSemaphore, nullptr);
+    }
+}
+
+void Swapchain::Reinit(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) {
+    vkQueueWaitIdle(m_Queue.queue);
+
+    m_ResourceIndex = 0;
+    m_Outdated = false;
+    Uninit(device);
+    Init(physicalDevice, device, m_Queue, surface);
 }
 
 VkResult Swapchain::AcquireNextImage(VkDevice device) {

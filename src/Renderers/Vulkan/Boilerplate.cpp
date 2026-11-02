@@ -123,7 +123,7 @@ VkPhysicalDevice vkb::CreatePhysicalDevice(VkInstance instance, std::vector<VkEx
     return device;
 }
 
-QueueInfo vkb::GetQueueFamily(VkPhysicalDevice device, VkQueueFlagBits flags) {
+QueueInfo vkb::GetQueue(VkPhysicalDevice device, VkQueueFlagBits flags) {
     uint32_t queueFamilyCount = 0;
     vkGetPhysicalDeviceQueueFamilyProperties2(device, &queueFamilyCount, nullptr);
     std::vector<VkQueueFamilyProperties2> queueFamilies(queueFamilyCount, { .sType = VK_STRUCTURE_TYPE_QUEUE_FAMILY_PROPERTIES_2 });
@@ -201,54 +201,12 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .pQueuePriorities = &qfpriorities
     };
 
-	//    VkPhysicalDeviceVulkan12Features features12{}; // for stoping the -Wmissing-field-initializers we're going to set the variables from the obj and not from a initializer list
-	//    features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-	//    features12.pNext = nullptr;
-	//    features12.descriptorIndexing = true;
-	//    features12.shaderSampledImageArrayNonUniformIndexing = true;
-	//    features12.descriptorBindingSampledImageUpdateAfterBind = true;
-	//    features12.descriptorBindingStorageImageUpdateAfterBind = true;
-	//    features12.descriptorBindingPartiallyBound = true;
-	//    features12.descriptorBindingVariableDescriptorCount = true;
-	//    features12.runtimeDescriptorArray = true;
-	//    features12.bufferDeviceAddress = true;
-	//
-	//    VkPhysicalDeviceVulkan13Features features13{};
-	//    features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-	//    features13.pNext = &features12;
-	//    features13.synchronization2 = true;        
-	//    features13.dynamicRendering = true;
-	//
 	VkPhysicalDeviceFeatures features{}; 
 	   features.imageCubeArray = VK_TRUE;
 	   features.geometryShader = VK_TRUE;
 	   features.depthClamp = VK_TRUE;
 	   features.samplerAnisotropy = VK_TRUE;
 	   features.largePoints = VK_TRUE;
-	//
-	//    auto shaderRelaxedFeatures = VkPhysicalDeviceShaderRelaxedExtendedInstructionFeaturesKHR{
-	//        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_RELAXED_EXTENDED_INSTRUCTION_FEATURES_KHR,
-	//        .pNext = &features13,
-	//        .shaderRelaxedExtendedInstruction = VK_TRUE
-	//    };
-	//
-	//    VkPhysicalDeviceShaderObjectFeaturesEXT shaderFeatures {
-	//        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SHADER_OBJECT_FEATURES_EXT,
-	//        .pNext = &shaderRelaxedFeatures,
-	//        .shaderObject = VK_TRUE
-	//    };
-	//    VkPhysicalDeviceColorWriteEnableFeaturesEXT colorFeatures {
-	//        .sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_COLOR_WRITE_ENABLE_FEATURES_EXT,
-	//        .pNext = &shaderFeatures,
-	//        .colorWriteEnable = VK_TRUE
-	//    };
-	//    requestedExts.emplace_back(
-	//        VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-	//
-    requestedExts.emplace_back(VK_EXT_SHADER_OBJECT_EXTENSION_NAME);
-
-    requestedExts.emplace_back(VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME);
-
 
     VkDeviceCreateInfo deviceInfo{
         .sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
@@ -260,7 +218,7 @@ VkDevice vkb::CreateDevice(VkPhysicalDevice physicalDevice, uint32_t queueFamily
         .ppEnabledLayerNames{},
         .enabledExtensionCount = static_cast<uint32_t>(requestedExts.size()),
         .ppEnabledExtensionNames = requestedExts.data(),
-        .pEnabledFeatures = &features,
+        .pEnabledFeatures = nullptr,
     };
 
     VK_CHECK(vkCreateDevice(physicalDevice, &deviceInfo, nullptr, &device));
@@ -277,16 +235,20 @@ VkImageSubresourceRange vkb::GetImageSubresourceRange(VkImageAspectFlags flags) 
     };
 }
 
-VkPipelineLayout vkb::CreatePipelineLayout(VkDevice device, VkDescriptorSetLayout descLayout, VkPushConstantRange range) {
+VkPipelineLayout vkb::CreatePipelineLayout(
+        VkDevice device,
+        const std::vector<VkDescriptorSetLayout>& descLayout,
+        const std::vector<VkPushConstantRange>& range
+) {
 
     const auto info = VkPipelineLayoutCreateInfo{
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
         .pNext = nullptr,
         .flags{},
-        .setLayoutCount = 1,
-        .pSetLayouts = &descLayout,
-        .pushConstantRangeCount = 1,
-        .pPushConstantRanges = &range
+        .setLayoutCount = static_cast<uint32_t>(descLayout.size()),
+        .pSetLayouts = descLayout.data(),
+        .pushConstantRangeCount = static_cast<uint32_t>(range.size()),
+        .pPushConstantRanges = range.data()
     };
 
     VkPipelineLayout layout;

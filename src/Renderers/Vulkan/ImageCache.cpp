@@ -4,13 +4,12 @@
 #include "BeatEngine/Renderers/Vulkan/Renderer.h"
 #include "BeatEngine/Util/Exception.h"
 
-ImageCache::ImageCache(VK::Context& instance) : m_Context(instance) {}
 
-ImageID ImageCache::AddImage(AllocatedImage image) {
-    return AddImage(GetFreeImageID(), image);    
+ImageID ImageCache::AddImage(VkDevice device, AllocatedImage image) {
+    return AddImage(device, GetFreeImageID(), image);    
 }
 
-ImageID ImageCache::AddImage(ImageID id, AllocatedImage image) {
+ImageID ImageCache::AddImage(VkDevice device, ImageID id, AllocatedImage image) {
     Logger::AddDebug(typeid(VulkanRenderer), "Adding image to id {}", id);
     image.CachedID = id;
 
@@ -20,27 +19,27 @@ ImageID ImageCache::AddImage(ImageID id, AllocatedImage image) {
         m_Images.push_back(std::move(image));
     }
 
-    BindlessSetMgr.AddImage(m_Context.GetDevice(), id, image.ImageView);
+    BindlessSetMgr.AddImage(device, id, image.ImageView);
 
     return id;
 }
 
-const AllocatedImage& ImageCache::GetImage(ImageID id) {
+AllocatedImage& ImageCache::GetImage(ImageID id) {
     if (id == NULL_IMAGE_ID) {
-        Logger::AddCritical(typeid(VulkanRenderer), "ID is NULL_IMAGE_ID");
-        THROW_RUNTIME_ERROR("requested ID for ImageCache is NULL_IMAGE_ID");
+        Logger::AddWarning(typeid(VulkanRenderer), "ID is NULL_IMAGE_ID");
+        return m_Images[0];
     }
 
     if (m_Images.size() <= id) {
-        Logger::AddCritical(typeid(VulkanRenderer), "requested ID ({}) is not available!, cached images: {}", id, m_Images.size());
-        THROW_RUNTIME_ERROR("Requested ID for ImageCache is not valid");
+        Logger::AddError(typeid(VulkanRenderer), "requested ID ({}) is not available!, cached images: {}", id, m_Images.size());
+        return m_Images[m_MissingImageID];
     }
 
     return m_Images[id];
 };
 
-void ImageCache::DestroyImages() {
-    // for (const auto& image : m_Images) {
-    //     m_Context.DestroyImage(image);
-    // }
+void ImageCache::DestroyImages(VK::Allocator& allocator) {
+    for (const auto& image : m_Images) {
+        allocator.DestroyImage(image);
+    }
 }

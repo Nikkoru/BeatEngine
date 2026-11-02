@@ -84,10 +84,11 @@ void Application::Run() {
 
     while (m_Renderer->IsOpen()) {
         while (auto event = m_Renderer->PollEvent()) {
-         if (event->Is<AppExitingEvent>()) {
+            if (event->Is<AppExitingEvent>()) {
                 m_Renderer->Close();
                 break;
             }
+            m_Renderer->ProcessEvent(event);
             m_GlobalLayers.OnEvent(event);
             if (viewMgr.OnEvent(event)) {
                 break;
@@ -191,6 +192,7 @@ void Application::DrawImGuiDebug() {
     static bool drawSystemMgr = false;
     static bool drawUIMgr = false;
     static bool drawViewMgr = false;
+    static bool drawImGuiDemo = false;
 
     ImGui::Begin("BeatEngine Application Debug Window", nullptr, ImGuiWindowFlags_MenuBar);
 
@@ -206,6 +208,8 @@ void Application::DrawImGuiDebug() {
         if (ImGui::BeginMenu("Behaviour")) {
             if (ImGui::MenuItem("Profiler Window", NULL, profWindow))
                 profWindow = !profWindow;
+            if (ImGui::MenuItem("ImGui Demo Window", NULL, drawImGuiDemo))
+                drawImGuiDemo = !drawImGuiDemo;
             ImGui::EndMenu();
         }
         if (ImGui::BeginMenu("Managers")) {
@@ -367,6 +371,9 @@ void Application::DrawImGuiDebug() {
     }
     ImGui::End();
 
+    if (drawImGuiDemo)
+        ImGui::ShowDemoWindow(&drawImGuiDemo);
+
     if (drawAudioMgr)
         m_State.GetAudioMgr().ShowImGuiDebugWindow();
     if (drawAssetMgr)
@@ -421,15 +428,16 @@ void Application::_InitSystems() {
 void Application::_InitAssets() {
 	Logger::AddDebug(typeid(Application), "Initializing assets...");
     auto& assetMgr = m_State.GetAssetMgr();
-    assetMgr.SetLoadCallback<Texture>([&](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
-        auto texture = m_Renderer->CreateTexture(path);
+    assetMgr.SetLoadCallback<Texture>([&](const std::vector<fs::path>& paths) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+        auto texture = m_Renderer->CreateTexture(paths[0]);
         return std::make_pair(
             static_cast<Base::AssetHandle<void>>(Base::AssetHandle<Texture>{ texture, typeid(Texture) }),
             texture
         );
     });
 
-    assetMgr.SetLoadCallback<Sound>([](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+    assetMgr.SetLoadCallback<Sound>([](const std::vector<fs::path>& paths) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+        auto& path = paths[0];
 		std::string name = path.stem().string();
 
         ma_result result;
@@ -469,7 +477,8 @@ void Application::_InitAssets() {
             sound
         );
     });
-    assetMgr.SetLoadCallback<AudioStream>([](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+    assetMgr.SetLoadCallback<AudioStream>([](const std::vector<fs::path>& paths) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+        auto& path = paths[0];
 		std::string name = path.stem().string();
 
         ma_result result;
@@ -543,17 +552,8 @@ void Application::_InitAssets() {
         );
     });
 
-    assetMgr.SetLoadCallback<Shader>([&](const fs::path& path) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
-        auto typeExt = path.extension().string();
-        Shader::Type type{};
-        if (typeExt.contains("frag"))
-            type = Shader::Type::Fragment;
-        else if (typeExt.contains("vert"))
-            type = Shader::Type::Vertex;
-        else if (typeExt.contains("comp"))
-            type = Shader::Type::Compute;
-
-        auto shader = m_Renderer->CreateShader(path, type);
+    assetMgr.SetLoadCallback<Shader>([&](const std::vector<fs::path>& paths) -> std::pair<Base::AssetHandle<void>, std::shared_ptr<Base::Asset>> {
+        auto shader = m_Renderer->CreateShader(paths);
         return std::make_pair(
             static_cast<Base::AssetHandle<void>>(
                 Base::AssetHandle<Shader>(shader, typeid(Shader))

@@ -37,11 +37,11 @@ void OpenGLRenderer::SetGlobalShader(std::shared_ptr<Shader>) {
 }
 
 std::shared_ptr<Texture> OpenGLRenderer::CreateTexture(const std::filesystem::path&) {
-    return {};
+    return nullptr;
 }
 
-std::shared_ptr<Shader> OpenGLRenderer::CreateShader(const std::filesystem::path&, Shader::Type) {
-    return {};
+std::shared_ptr<Shader> OpenGLRenderer::CreateShader(const std::vector<std::filesystem::path>&) {
+    return nullptr;
 }
 
 

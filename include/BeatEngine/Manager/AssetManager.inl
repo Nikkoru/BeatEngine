@@ -31,7 +31,7 @@ void AssetManager::SetUnloadCallback(AssetUnloadCallback callback) {
 
 template <typename TAsset>
     requires(std::is_base_of_v<Base::Asset, TAsset>)
-Base::AssetHandle<TAsset> AssetManager::Load(const fs::path& path, std::type_index viewID) {
+Base::AssetHandle<TAsset> AssetManager::Load(const std::vector<fs::path>& path, std::type_index viewID) {
     return Base::AssetHandle<TAsset>::Cast(_DoLoad(typeid(TAsset), path, viewID));
 }
 template <typename TAsset>

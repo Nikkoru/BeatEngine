@@ -76,7 +76,7 @@ TestView::TestView(AppContext* context, AppState* state)
 		if (b_mState->GetAssetMgr().Has("test-music", typeid(TestView)))
 			musicHandle = b_mState->GetAssetMgr().Get<AudioStream>("test-music", typeid(TestView));
 		else
-			musicHandle = b_mState->GetAssetMgr().Load<AudioStream>("assets/music/test-music.mp3", typeid(TestView));
+			musicHandle = b_mState->GetAssetMgr().Load<AudioStream>({"assets/music/test-music.mp3"}, typeid(TestView));
         
         if (musicHandle)
             b_mState->GetAudioMgr().AddStream(musicHandle.Get());
@@ -93,8 +93,8 @@ TestView::TestView(AppContext* context, AppState* state)
 	pauseBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<PauseAudioStreamSignal>("test-music")); });
     gameBtn->SetOnLClick([]() { SignalManager::GetInstance()->Send(std::make_shared<ViewPushSignal>(typeid(GameView))); });
     
-    auto texture = b_mState->GetAssetMgr().Load<Texture>("assets/textures/texture.png", typeid(TestView));
-    auto funnyTexture = b_mState->GetAssetMgr().Load<Texture>("assets/textures/four.jpeg", typeid(TestView));
+    auto texture = b_mState->GetAssetMgr().Load<Texture>({"assets/textures/texture.png"}, typeid(TestView));
+    auto funnyTexture = b_mState->GetAssetMgr().Load<Texture>({"assets/textures/four.jpeg"}, typeid(TestView));
 
     if (texture) {
 		m_Shape.SetTexture(texture);
@@ -122,7 +122,7 @@ TestView::TestView(AppContext* context, AppState* state)
 
     m_Text = TextElement{ m_Font, "Test", 30 };
     m_Text.SetColor(LinearColor::White());
-    m_Text.SetPosition({ static_cast<float>(windowSize.X / 2) , static_cast<float>(windowSize.Y / 2 - 205) });
+    m_Text.SetPosition({ static_cast<float>(windowSize.X / 2), static_cast<float>(windowSize.Y / 2 - 205) });
     m_Text.SetLineAlignment(TextElement::LineAlignment::Center);
     m_Text.SetCharacterSize(50);
 

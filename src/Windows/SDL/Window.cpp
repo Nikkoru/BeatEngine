@@ -68,10 +68,6 @@ void SDLWindow::Init(AppContext* context) {
         driverName = "No video driver";
     }
 
-    // if (m_Context->ContainsAFlags(AppFlags_ImGui)) {
-    //     InitImGui();
-    // }
-
 
     AddSDLLog("Window created. Size = ({}, {}), Driver = {}, Title = {}", m_SavedSize.X, m_SavedSize.Y, driverName, m_SavedTitle);
     LogActiveFlags();
@@ -226,7 +222,7 @@ Optional<Base::Event> SDLWindow::PollEvent() {
 
         switch (e.type) {
             case SDL_EVENT_QUIT:
-                return AppExitingEvent();
+                return AppExitingEvent{};
             case SDL_EVENT_WINDOW_RESIZED:
                 EventManager::GetInstance()->Send(std::make_shared<AppResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
                 return AppResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
@@ -303,7 +299,10 @@ void SDLWindow::OnRender() {
 }
 
 void SDLWindow::OnDisplay() {
+}
 
+void SDLWindow::ImGuiNewFrame() {
+    ImGui_ImplSDL3_NewFrame();
 }
 
 void SDLWindow::ImGuiWindowContent() {

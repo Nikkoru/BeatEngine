@@ -116,16 +116,16 @@ void AssetManager::ShowImGuiDebugWindow(Renderer* const renderer) {
     if (ImGui::Button("Load For Global")) {
         switch (selectedType) {
             case AssetType::AudioStream:
-                Load<AudioStream>(buf);
+                Load<AudioStream>({ buf });
                 break;
             case AssetType::Sound:
-                Load<Sound>(buf);
+                Load<Sound>({ buf });
                 break;
             case AssetType::Texture:
-                Load<Texture>(buf);
+                Load<Texture>({ buf });
                 break;
             case AssetType::Font:
-                Load<Font>(buf);
+                Load<Font>({ buf });
                 break;
             case AssetType::VertexShader:
                 // LoadShader(buf, Shader::Type::Vertex);
@@ -145,16 +145,16 @@ void AssetManager::ShowImGuiDebugWindow(Renderer* const renderer) {
         auto activeView = m_Context->ActiveView;
         switch (selectedType) {
             case AssetType::AudioStream:
-                Load<AudioStream>(buf, activeView);
+                Load<AudioStream>({ buf }, activeView);
                 break;
             case AssetType::Sound:
-                Load<Sound>(buf, activeView);
+                Load<Sound>({ buf }, activeView);
                 break;
             case AssetType::Texture:
-                Load<Texture>(buf, activeView);
+                Load<Texture>({ buf }, activeView);
                 break;
             case AssetType::Font:
-                Load<Font>(buf, activeView);
+                Load<Font>({ buf }, activeView);
                 break;
             case AssetType::VertexShader:
                 // LoadShader(buf, Shader::Type::Vertex, activeView);
@@ -283,19 +283,21 @@ void AssetManager::ApplySelections(ImGuiMultiSelectIO* io, std::vector<UID>& ids
     }
 }
 
-Base::AssetHandle<void> AssetManager::_DoLoad(std::type_index assetType, const fs::path& path, std::type_index viewID) {
-    if (!fs::exists(path)) {
-        Logger::AddError(typeid(AssetManager), "Path \"{}\" doesn't exists", path.string());
-        return {};
-    }
-    if (!fs::is_regular_file(path)) {
-        Logger::AddError(typeid(AssetManager), "Path \"{}\" is not a regular file", path.string());
-        return {};
+Base::AssetHandle<void> AssetManager::_DoLoad(std::type_index assetType, const std::vector<fs::path>& paths, std::type_index viewID) {
+    for (const auto& path : paths) {
+        if (!fs::exists(path)) {
+            Logger::AddError(typeid(AssetManager), "Path \"{}\" doesn't exist", path.string());
+            return {};
+        }
+        if (!fs::is_regular_file(path)) {
+            Logger::AddError(typeid(AssetManager), "Path \"{}\" is not a regular file", path.string());
+            return {};
+        }
     }
 
     auto global = viewID == typeid(nullptr);
     std::string assetTypeName = assetType.name();
-    auto assetName = path.stem().string();
+    auto assetName = paths[0].stem().string();
 
     if (global && m_GlobalAssets.contains(assetName)) {
         Logger::AddWarning(typeid(AssetManager), "Asset \"{}\" is already loaded. Retuning existing one", assetName);
@@ -309,11 +311,11 @@ Base::AssetHandle<void> AssetManager::_DoLoad(std::type_index assetType, const f
     }
 
     if (!m_LoadCallbacks.contains(assetType)) {
-        auto msg = std::format("Load failed for file in \"{}\": Theres no callback available for this type -> {}", path.string(), assetTypeName);
+        auto msg = std::format("Load failed for file \"{}\": Theres no callback available for this type -> {}", assetName, assetTypeName);
         Logger::AddCritical(typeid(AssetManager), msg);
         THROW_RUNTIME_ERROR(msg);
     }
-    auto [handle, ptr] = m_LoadCallbacks.at(assetType)(path);
+    auto [handle, ptr] = m_LoadCallbacks.at(assetType)(paths);
     auto slot = Slot{ handle, ptr, assetType };
     if (global)
         m_GlobalAssets[assetName] = slot;
@@ -428,12 +430,12 @@ void AssetManager::ShowAssetBrowser(Renderer* const renderer) {
 
                         drawList->AddRectFilled(boxMin, boxMax, iconBgColor);
 
-                        if (assetType == typeid(Texture)) {
-                            auto texture = Base::AssetHandle<Texture>::Cast(assetData).Get();
-                            ImVec2 padBoxMin = { boxMin.x - 3, boxMin.y - 3 };
-                            ImVec2 padBoxMax = { boxMax.x - 3, boxMax.y - 3 };
-                            drawList->AddImage(texture->GetImGuiTexture(renderer), padBoxMin, padBoxMax);
-                        }
+                        // if (assetType == typeid(Texture)) {
+                        //     auto texture = Base::AssetHandle<Texture>::Cast(assetData).Get();
+                        //     ImVec2 padBoxMin = { boxMin.x - 3, boxMin.y - 3 };
+                        //     ImVec2 padBoxMax = { boxMax.x - 3, boxMax.y - 3 };
+                        //     drawList->AddImage(texture->GetImGuiTexture(renderer), padBoxMin, padBoxMax);
+                        // }
 
                         std::string typeLabel;
 
@@ -447,20 +449,20 @@ void AssetManager::ShowAssetBrowser(Renderer* const renderer) {
                             typeLabel = "Texture";
                         else if (assetType == typeid(Shader)) {
                             auto asset = Base::AssetHandle<Shader>::Cast(assetData).Get();
-                            auto type = asset->GetType();
-                            char shaderType;
-                            switch (type) {
-                                case Shader::Type::Compute:
-                                    shaderType = 'C';
-                                    break;
-                                case Shader::Type::Fragment:
-                                    shaderType = 'F';
-                                    break;
-                                case Shader::Type::Vertex:
-                                    shaderType = 'V';
-                                    break;
-                            }
-                            typeLabel = std::format("Shader{}", shaderType);
+                            // auto type = asset->GetType();
+                            // char shaderType;
+                            // switch (type) {
+                            //     case Shader::Type::Compute:
+                            //         shaderType = 'C';
+                            //         break;
+                            //     case Shader::Type::Fragment:
+                            //         shaderType = 'F';
+                            //         break;
+                            //     case Shader::Type::Vertex:
+                            //         shaderType = 'V';
+                            //         break;
+                            // }
+                            typeLabel = std::format("Shader");
                         }
                         else {
                             typeLabel = "Unknown";

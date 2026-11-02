@@ -20,6 +20,8 @@
 #include <vk_mem_alloc.h>
 #include <shaderc/shaderc.hpp>
 
+
+
 class VulkanRenderer : public Renderer {
 public: 
     VulkanRenderer(AppContext* ctx = nullptr, std::shared_ptr<BaseWindow> window = nullptr, uint32_t idx = 0);
@@ -29,38 +31,40 @@ private:
     VK::Allocator m_Allocator;
     VK::Swapchain m_Swapchain;
 
-    // ImageCache m_Cache;
-
     VkSurfaceKHR m_Surface{}; 
     VkSemaphore m_FrameTimelineSemaphore{};
 
-    VulkanShader m_DefaultVertShader{};
-    VulkanShader m_DefaultFragShader{};
+    class DefaultPushConstants : public PushConstants {
+    public:
+        VkDeviceAddress CommandBuffer;
+    public:
+        DefaultPushConstants(VkDeviceAddress cmd) : CommandBuffer(cmd) {}
+    };
 
-    // (SSBO)
-    GPUBuffer m_VertexBuffer{};
-    GPUBuffer m_DrawCmdBuffer{};
+    VulkanShader m_DefaultShader{};
+    std::unique_ptr<VulkanTexture> m_ErrorTexture{};
+    std::unique_ptr<VulkanTexture> m_WhiteTexture{};
 
-    using VertexID = uint32_t;
+    using VertexID = size_t;
     VertexID m_ActiveItem{};
 
     struct DrawData {
         VertexArray vertices;
+        VulkanRendererData* data;
         RenderState state;
-        VulkanRendererData data{};
+        VulkanShader* shader{ nullptr };
+        VulkanTexture* texture{ nullptr };
     };
 
     std::vector<DrawData> m_ItemsToDraw;
 
-
-    std::unique_ptr<VulkanTexture> m_ErrorTexture{};
-    std::unique_ptr<VulkanTexture> m_WhiteTexture{};
+    VkDescriptorPool m_UIDescriptorPool{};
 
     VkClearColorValue m_ClearValue{ { .0f, .0f, .0f, 1.f } };
 
-    uint64_t m_FrameCount{};
+    uint64_t m_FrameCount{1};
 
-    // for cmpute
+    // for compute
     VkPipelineLayout m_ComputePipelineLayout{};
     VkPipeline m_ComputePipeline{};
 
@@ -72,12 +76,12 @@ private:
         VkCommandBuffer cmdBuffer;
         uint64_t lastSignalValue;
     };
+
     std::vector<FrameData> m_FrameData;
 
     bool m_Rendering{ true };
 public:
     void Render() override;
-    void RenderImGui() override;
     void Clear() override;
     void Display() override;
     void Update() override;
@@ -97,7 +101,10 @@ public:
     void UpdateTexture(std::shared_ptr<Texture> texture, const void* pixelData) override { UpdateTexture(texture, pixelData, texture->GetSize(), { 0, 0 }); };
     void UpdateTexture(std::shared_ptr<Texture> dstTexture, std::shared_ptr<Texture> srcTexture) override;
     void DestroyTexture(std::shared_ptr<Texture> texture) override;
-    std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
+    std::shared_ptr<Shader> CreateShader(const std::vector<std::filesystem::path>& paths) override;
+
+    void BindShaderToObject(Shader* shader) override;
+    void BindTextureToObject(Texture* shader) override;
 
     void ShowImGuiRenderTabContent() override;
 
@@ -106,14 +113,30 @@ public:
 private:
     void _CreateFrameSubmission(uint32_t frameCount);
     void _CreateImGuiDescriptorPool();
+    void _RenderImGui();
     void _InitImGui();
 
     void _CreateDefaultShaders();
+    void _CreateFallbackTextures();
 
     bool _PrepareForRendering(); 
     void _RenderFrameData();
+    void _SetVertexBindings(const DrawData& item);
+    void _PreparePipelineBarrierForRendering();
+    void _PreparePipelineBarrierForPresenting();
+    void _PreparePipelineBarrierForImGui();
+    void _SetRenderState(const RenderState& state);
+    void _SetPrimitiveType(PrimitiveType type);
     void _BeginCmdRecording();
     void _EndCmdRecording();
+
+    GPUBuffer _ShaderCreateBuffer(size_t size, VkBufferUsageFlags flags);
+    void _ShaderCreateDescriptorLayout(const VkDescriptorSetLayoutCreateInfo& info, VkDescriptorSetLayout* layout);
+    void _ShaderCreateDescriptorPool(const VkDescriptorPoolCreateInfo& info, VkDescriptorPool* pool);
+    void _ShaderAllocDescriptorSet(const VkDescriptorSetAllocateInfo& info, VkDescriptorSet* set);
+    void _ShaderUpdateDescriptorSet(size_t count, const VkWriteDescriptorSet& write);
+
+    void _ImGuiCreateItemDrawWindow();
 
     void _PrepareForImGui();
     void _EndFrame();

@@ -12,7 +12,6 @@ public:
     ~OpenGLRenderer() override = default;
 public:
     void Render() override;
-    void RenderImGui() override;
     void Display() override;
     void Clear() override;
     void Update() override;
@@ -20,7 +19,7 @@ public:
     void SetGlobalShader(std::shared_ptr<Shader> shader) override;
 
     std::shared_ptr<Texture> CreateTexture(const std::filesystem::path& path) override;
-    std::shared_ptr<Shader> CreateShader(const std::filesystem::path& path, Shader::Type type) override;
+    std::shared_ptr<Shader> CreateShader(const std::vector<std::filesystem::path>& paths) override;
 
     Optional<Base::Event> PollEvent() const override;
 };

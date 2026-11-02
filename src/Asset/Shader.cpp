@@ -10,10 +10,10 @@ std::string Shader::TypeUtils::ToString(Type type) {
     return TypeStrings.at(type);
 }
 
-void Shader::SetType(Type type) {
-    m_Type = type;    
+const Shader::SSBO& Shader::GetSSBO(const std::string& name) const {
+    return m_SSBOs.at(name);
 }
 
-Shader::Type Shader::GetType() {
-    return m_Type;
+bool Shader::ContainsSSBO(const std::string& name) const {
+    return m_SSBOs.contains(name);
 }

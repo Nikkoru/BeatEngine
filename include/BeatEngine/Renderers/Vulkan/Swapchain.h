@@ -12,6 +12,8 @@ private:
     VkPhysicalDevice m_PhysicalDevice{};
     VkDevice m_Device{};
 
+    QueueInfo m_Queue{};
+
     VkSwapchainKHR m_Swapchain{};
     VkFormat m_Format{};
     VkSurfaceKHR m_Surface{};
@@ -41,6 +43,8 @@ public:
     ~Swapchain() = default;
 
     void Init(VkPhysicalDevice physicalDevice, VkDevice device, const QueueInfo& info, VkSurfaceKHR surface);
+    void Uninit(VkDevice device);
+    void Reinit(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface);
 
     void RequestRebuild() { m_Outdated = false; }
     bool IsOutdated() { return m_Outdated; }
