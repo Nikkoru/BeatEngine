@@ -216,72 +216,73 @@ Cursor SDLWindow::CreateCursor() const {
 
 Optional<Base::Event> SDLWindow::PollEvent() {
     SDL_Event e;
-    while (SDL_PollEvent(&e)) {
+    if (SDL_PollEvent(&e)) {
         if (m_Context->ContainsAFlags(AppFlags_ImGui))
             ImGui_ImplSDL3_ProcessEvent(&e);
 
         switch (e.type) {
-            case SDL_EVENT_QUIT:
-                return AppExitingEvent{};
-            case SDL_EVENT_WINDOW_RESIZED:
-                EventManager::GetInstance()->Send(std::make_shared<AppResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
-                return AppResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
-            case SDL_EVENT_KEY_DOWN:
-                if (e.key.key == SDLK_PIPE) {
-                        SignalManager::GetInstance()->Send(std::make_shared<AppToggleDrawingDebugInfo>());
-               }
+        case SDL_EVENT_QUIT:
+            return AppExitingEvent{};
+        case SDL_EVENT_WINDOW_RESIZED:
+            EventManager::GetInstance()->Send(std::make_shared<AppResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
+            return AppResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
+        case SDL_EVENT_KEY_DOWN:
+            if (e.key.key == SDLK_PIPE) {
+                    SignalManager::GetInstance()->Send(std::make_shared<AppToggleDrawingDebugInfo>());
+           }
 
-                else if (e.key.key == SDLK_G)
-                    if (e.key.mod & SDL_KMOD_CTRL || e.key.mod & SDL_KMOD_LCTRL || e.key.mod & SDL_KMOD_RCTRL) {
-                        SignalManager::GetInstance()->Send(std::make_shared<AppToggleImGui>());
-                    }
-                break;
-            case SDL_EVENT_MOUSE_MOTION:
-                return MouseMovedEvent{{ static_cast<int>(e.motion.x), static_cast<int>(e.motion.y) }};
-            case SDL_EVENT_MOUSE_BUTTON_DOWN:
-                {
-                    Mouse::Button btn{};
-                    switch (e.button.button) {
-                        case SDL_BUTTON_LEFT:
-                            btn = Mouse::Button::Left;
-                            break;
-                        case SDL_BUTTON_MIDDLE:
-                            btn = Mouse::Button::Middle;
-                            break;
-                        case SDL_BUTTON_RIGHT:
-                            btn = Mouse::Button::Right;
-                            break;
-                        case SDL_BUTTON_X1:
-                            btn = Mouse::Button::Extra1;
-                            break;
-                        case SDL_BUTTON_X2:
-                            btn = Mouse::Button::Extra1;
-                            break;
-                    }
-                    return MouseButtonDownEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
+            else if (e.key.key == SDLK_G)
+                if (e.key.mod & SDL_KMOD_CTRL || e.key.mod & SDL_KMOD_LCTRL || e.key.mod & SDL_KMOD_RCTRL) {
+                    SignalManager::GetInstance()->Send(std::make_shared<AppToggleImGui>());
                 }
-            case SDL_EVENT_MOUSE_BUTTON_UP:
+            break;
+        case SDL_EVENT_MOUSE_MOTION:
+            return MouseMovedEvent{{ static_cast<int>(e.motion.x), static_cast<int>(e.motion.y) }};
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            {
                 Mouse::Button btn{};
                 switch (e.button.button) {
-                    case SDL_BUTTON_LEFT:
-                        btn = Mouse::Button::Left;
-                        break;
-                    case SDL_BUTTON_MIDDLE:
-                        btn = Mouse::Button::Middle;
-                        break;
-                    case SDL_BUTTON_RIGHT:
-                        btn = Mouse::Button::Right;
-                        break;
-                    case SDL_BUTTON_X1:
-                        btn = Mouse::Button::Extra1;
-                        break;
-                    case SDL_BUTTON_X2:
-                        btn = Mouse::Button::Extra1;
-                        break;
+                case SDL_BUTTON_LEFT:
+                    btn = Mouse::Button::Left;
+                    break;
+                case SDL_BUTTON_MIDDLE:
+                    btn = Mouse::Button::Middle;
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    btn = Mouse::Button::Right;
+                    break;
+                case SDL_BUTTON_X1:
+                    btn = Mouse::Button::Extra1;
+                    break;
+                case SDL_BUTTON_X2:
+                    btn = Mouse::Button::Extra1;
+                    break;
+                }
+                return MouseButtonDownEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
+            }
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            {
+                Mouse::Button btn{};
+                switch (e.button.button) {
+                case SDL_BUTTON_LEFT:
+                    btn = Mouse::Button::Left;
+                    break;
+                case SDL_BUTTON_MIDDLE:
+                    btn = Mouse::Button::Middle;
+                    break;
+                case SDL_BUTTON_RIGHT:
+                    btn = Mouse::Button::Right;
+                    break;
+                case SDL_BUTTON_X1:
+                    btn = Mouse::Button::Extra1;
+                    break;
+                case SDL_BUTTON_X2:
+                    btn = Mouse::Button::Extra1;
+                    break;
                 }
                 return MouseButtonUpEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
+            }
         }
-
     } 
 
     return std::nullopt;

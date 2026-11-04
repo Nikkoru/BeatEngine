@@ -3,19 +3,16 @@
 #include "BeatEngine/Base/Event.h"
 #include "BeatEngine/Graphics/Vector2.h"
 
-class AppSettingsChangedEvent : public Base::Event {
-public:
+struct AppSettingsChangedEvent : Base::Event {
     AppSettingsChangedEvent() : Base::Event(typeid(AppSettingsChangedEvent)) {}
 };
 
-class AppResizedEvent : public Base::Event {
-public:
+struct AppResizedEvent : Base::Event {
     Vector2u Size; 
-public:
+
     AppResizedEvent(Vector2u newSize) : Base::Event(typeid(AppResizedEvent)), Size(newSize) {} 
 };
 
-class AppExitingEvent : public Base::Event {
-public:
+struct AppExitingEvent : Base::Event {
     AppExitingEvent() : Base::Event(typeid(AppExitingEvent)) {}
 };

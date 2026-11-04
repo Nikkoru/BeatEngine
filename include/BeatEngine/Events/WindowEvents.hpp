@@ -2,7 +2,19 @@
 
 #include "BeatEngine/Base/Event.h"
 
-class WindowResizedEvent : public Base::Event {
+struct WindowResizedEvent : Base::Event {
 
+};
+
+struct WindowMovedEvent : Base::Event {
+
+};
+
+struct WindowMaximizedEvent : Base::Event {
+
+};
+
+struct WindowMinimizedEvent : Base::Event {
+    
 };
 
