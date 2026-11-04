@@ -8,6 +8,8 @@
 
 namespace VK {
 void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const QueueInfo& info, VkSurfaceKHR surface) {
+    AddVulkanLog("Initializing Swapchain");
+
     m_Queue = info;
 
     m_Surface = surface;
@@ -44,6 +46,12 @@ void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const Que
     const VkSurfaceFormat2KHR surfaceFormat2 = _SelectSurfaceFormat(formats);
     const VkPresentModeKHR    presentMode    = _SelectPresentMode(presentModes);
 
+    if (m_Extent == Vector2u{}) {
+        m_Extent = {
+            capabilities2.surfaceCapabilities.currentExtent.width,
+            capabilities2.surfaceCapabilities.currentExtent.height 
+        };
+    }
     uint32_t minImageCount       = capabilities2.surfaceCapabilities.minImageCount;
     uint32_t preferredImageCount = std::max(m_ImageCount, minImageCount);
 
@@ -63,7 +71,7 @@ void Swapchain::Init(VkPhysicalDevice physicalDevice, VkDevice device, const Que
         .minImageCount    = m_ImageCount,
         .imageFormat      = surfaceFormat2.surfaceFormat.format,
         .imageColorSpace  = surfaceFormat2.surfaceFormat.colorSpace,
-        .imageExtent      = capabilities2.surfaceCapabilities.currentExtent,
+        .imageExtent      = { m_Extent.X, m_Extent.Y },
         .imageArrayLayers = 1,
         .imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
         .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
@@ -132,6 +140,7 @@ void Swapchain::Uninit(VkDevice device) {
 }
 
 void Swapchain::Reinit(VkPhysicalDevice physicalDevice, VkDevice device, VkSurfaceKHR surface) {
+    AddVulkanLog("Swachain is outdated. Reinitializating");
     vkQueueWaitIdle(m_Queue.queue);
 
     m_ResourceIndex = 0;

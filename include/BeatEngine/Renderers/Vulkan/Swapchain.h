@@ -1,5 +1,6 @@
 #pragma once
 
+#include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/FrameData.h"
 #include "BeatEngine/Renderers/Vulkan/QueueInfo.hpp"
 #include <vector>
@@ -34,10 +35,12 @@ VkImageView imageView{};
     std::vector<SwapchainImage> m_Images;
     std::vector<InFlightSlot> m_InFlightSlots;
 
+    Vector2u m_Extent{};
+
     uint32_t m_ImageCount = 3;
     uint32_t m_FramesInFlight = FRAME_OVERLAP;
 
-    bool m_Outdated{ false };
+    bool m_Outdated{ true };
 public:
     Swapchain() = default;
     ~Swapchain() = default;
@@ -62,6 +65,8 @@ public:
 
     VkResult AcquireNextImage(VkDevice device);
     void PresentFrame(VkQueue queue);
+
+    void SetExtent(Vector2u size) { m_Extent = size; RequestRebuild(); }
 private:
     VkSurfaceFormat2KHR _SelectSurfaceFormat(std::vector<VkSurfaceFormat2KHR>& formats);
     VkPresentModeKHR _SelectPresentMode(std::vector<VkPresentModeKHR>& modes);

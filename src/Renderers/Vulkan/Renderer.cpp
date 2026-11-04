@@ -127,6 +127,7 @@ VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> wind
     SDL_Vulkan_CreateSurface(dynamic_cast<SDLWindow*>(m_Window.get())->GetWindowImpl(), m_VKContext.GetInstance(), nullptr, &m_Surface);
 
     m_Executor.Init(m_VKContext.GetDevice(), m_VKContext.GetGraphicsQueue().familyIndex, m_VKContext.GetGraphicsQueue().queue);
+    m_Swapchain.SetExtent(m_Window->GetSize());
     m_Swapchain.Init(m_VKContext.GetPhysicalDevice(), m_VKContext.GetDevice(), m_VKContext.GetGraphicsQueue(), m_Surface);
     m_Allocator.Init(m_VKContext, &m_Executor);
 
@@ -140,6 +141,8 @@ VulkanRenderer::VulkanRenderer(AppContext* ctx, std::shared_ptr<BaseWindow> wind
 }
 
 VulkanRenderer::~VulkanRenderer() {
+    AddVulkanLog("Waiting on Queue to shutdown");
+    vkQueueWaitIdle(m_VKContext.GetGraphicsQueue().queue);
     AddVulkanLog("Waiting on GPU to shutdown");
     vkDeviceWaitIdle(m_VKContext.GetDevice());
 
