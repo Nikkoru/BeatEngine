@@ -32,7 +32,7 @@ void GlobalTestLayerUI::Init() {
     auto exitBtn = root->AddChild<UI::Button>("exitBtn");
     auto toggleVSyncBtn = root->AddChild<UI::Button>("vSyncToggle");
     auto toggleFullscreenBtn = root->AddChild<UI::Button>("fullscreenToggle");
-    auto settings = std::static_pointer_cast<AppSettings>(m_State->GetSettingsMgr().GetSettings(typeid(AppSettings)));
+    auto settings = static_cast<AppSettings*>(m_State->GetSettingsMgr().GetSettings(typeid(AppSettings)));
 
 	root->SetFont(m_Font);
 	root->SetSize({80, 30});
@@ -41,7 +41,6 @@ void GlobalTestLayerUI::Init() {
     root->SetOnLClick([&]() {
         settings->FpsLimit = 120;
 
-        m_State->GetSettingsMgr().SetSettings(typeid(AppSettings), settings);
         // SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(AppSettings), settings));
     });
 
@@ -68,7 +67,7 @@ void GlobalTestLayerUI::Init() {
         else
             toggleVSyncBtn->SetText("VSync Off");
 
-        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(AppSettings), settings));
+        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(AppSettings), std::make_shared<AppSettings>(*settings)));
     });
 
     toggleFullscreenBtn->SetFont(m_Font);
@@ -86,7 +85,7 @@ void GlobalTestLayerUI::Init() {
         else
             toggleFullscreenBtn->SetText("In windows");
 
-        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(AppSettings), settings));
+        SignalManager::GetInstance()->Send(std::make_shared<SetSettingsSignal>(typeid(AppSettings), std::make_shared<AppSettings>(*settings)));
     });
 
     UpdatePositions();

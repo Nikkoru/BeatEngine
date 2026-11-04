@@ -13,7 +13,7 @@ namespace Base {
 
 		Settings() : m_ID(typeid(Settings)), m_SettingsTag() {}
 
-		virtual ~Settings() {}
+		virtual ~Settings() = default; 
 
 		std::string GetTag() { return m_SettingsTag; }
 		std::type_index GetID() const { return m_ID; }

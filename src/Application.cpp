@@ -113,6 +113,10 @@ void Application::Update() {
 		return;
 	}
 
+    auto settings = static_cast<AppSettings*>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
+    if (m_Renderer->GetFramerateLimit() != settings->FpsLimit)
+        m_Renderer->SetFramerateLimit(settings->FpsLimit);
+
     m_Renderer->Update();
 	
     m_State.GetSystemMgr().Update(deltaTime);
@@ -579,7 +583,7 @@ void Application::_InitGraphics() {
 	Logger::AddDebug(typeid(Application), "Initializing Graphics...");
 
 	auto settings = m_State.GetSettingsMgr().GetSettings(typeid(AppSettings));
-	auto gameSettings = std::static_pointer_cast<AppSettings>(settings);
+	auto gameSettings = static_cast<AppSettings*>(settings);
 
     if (m_Renderer == nullptr)
 #ifdef BEATENGINE_VULKAN_RENDERER
@@ -607,7 +611,7 @@ void Application::_SubscribeToAppEvent() {
 
     EventManager::GetInstance()->Subscribe<AppSettingsChangedEvent>([this](std::shared_ptr<Base::Event>) {
         
-        auto settings = std::static_pointer_cast<AppSettings>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
+        auto settings = static_cast<AppSettings*>(m_State.GetSettingsMgr().GetSettings(typeid(AppSettings)));
         
         bool curFullscreen = m_Context.ContainsAFlags(AppFlags_Fullscreen);
 

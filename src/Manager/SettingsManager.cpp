@@ -38,7 +38,7 @@ void SettingsManager::ReadConfig(fs::path path) {
 		std::string buf = iniData;
 		char* const bufEnd = buf.data() + iniSize;
 
-        std::shared_ptr<Base::Settings> settings = nullptr;
+        Base::Settings* settings = nullptr;
 
 		// memcpy(buf, iniData, iniSize);
 
@@ -81,10 +81,10 @@ void SettingsManager::WriteConfig(fs::path path) {
 	file.close();
 }
 
-std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::string tag) {
+Base::Settings* SettingsManager::GetSettings(std::string tag) {
 	for (auto& [id, settings] : m_Settings) {
 		if (tag == settings->GetTag())
-			return settings;
+			return settings.get();
 	}
 
 	std::string msg = "Unable to get settings with tag: \"" + tag + "\"";
@@ -92,10 +92,10 @@ std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::string tag) {
 	THROW_RUNTIME_ERROR(msg);
 }
 
-std::shared_ptr<Base::Settings> SettingsManager::GetSettings(std::type_index settingsID) {
+Base::Settings* SettingsManager::GetSettings(std::type_index settingsID) {
 	for (auto& [id, settings] : m_Settings) {
 		if (id == settingsID)
-			return settings;
+			return settings.get();
 	}
 
 	std::string msg = std::format("Unable to get: \"{}\"", settingsID.name());
@@ -128,6 +128,7 @@ void SettingsManager::SetSettings(std::string tag, std::shared_ptr<Base::Setting
 	Logger::AddCritical(typeid(SettingsManager), msg);
 	THROW_RUNTIME_ERROR(msg);
 }
+
 
 void SettingsManager::SetDefaults() {
 	Logger::AddInfo(typeid(SettingsManager), "Setting defaults...");

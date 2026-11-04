@@ -38,15 +38,23 @@ public:
 	template<typename TSettings>
 		requires(std::is_base_of_v<Base::Settings, TSettings>)
 	void RegisterSettingsData(); 
-    std::shared_ptr<Base::Settings> GetSettings(std::string tag);
-    std::shared_ptr<Base::Settings> GetSettings(std::type_index id);
+    Base::Settings* GetSettings(std::string tag);
+    Base::Settings* GetSettings(std::type_index id);
 
     template<typename TSettings>
         requires(std::is_base_of_v<Base::Settings, TSettings>)
     bool HasSettings();
 
-	void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
-	void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);
+    template<typename TSettings>
+        requires(std::is_base_of_v<Base::Settings, TSettings>)
+	void SetSettings(std::type_index settingsID, const TSettings& settings);
+
+    template<typename TSettings>
+        requires(std::is_base_of_v<Base::Settings, TSettings>)
+	void SetSettings(std::string tag, const TSettings& settings);
+
+    void SetSettings(std::type_index settingsID, std::shared_ptr<Base::Settings> settings);
+    void SetSettings(std::string tag, std::shared_ptr<Base::Settings> settings);
 
 	void SetDefaults();
 public:
