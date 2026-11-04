@@ -3,6 +3,7 @@
 #include "BeatEngine/Asset/Shader.h"
 #include "BeatEngine/Asset/Texture.h"
 #include "BeatEngine/Graphics/BaseWindow.h"
+#include "BeatEngine/Graphics/FramePacer.hpp"
 #include "BeatEngine/Graphics/Renderer.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Renderers/Vulkan/Assets/Shader.h"
@@ -32,6 +33,7 @@ private:
     VK::Swapchain m_Swapchain;
     
     UninitQueue m_Uninitializers{};
+    FramePacer m_Pacer{};
 
     VkSurfaceKHR m_Surface{}; 
     VkSemaphore m_FrameTimelineSemaphore{};

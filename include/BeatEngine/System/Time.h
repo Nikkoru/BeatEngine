@@ -29,11 +29,20 @@ public:
     static constexpr Time FromSeconds(float seconds);
     static constexpr Time FromMilliseconds(int32_t milliseconds);
     static constexpr Time FromMicroseconds(int64_t microseconds);
-#ifndef _MSC_VER
-    constexpr bool operator<=>(const Time& right) const = default;
-#else
-	constexpr std::partial_ordering operator<=>(const Time& right) const = default;
-#endif
+
+    constexpr auto operator<=>(const Time& right) const = default;
+    constexpr Time operator-(const Time& right) const { return m_Duration - right.m_Duration; }
+    constexpr Time operator+(const Time& right) const { return m_Duration + right.m_Duration; }
+
+    template<typename Rep, typename Period>
+    constexpr Time operator-(const std::chrono::duration<Rep, Period>& right) const { return m_Duration - right; }
+    template<typename Rep, typename Period>
+    constexpr Time operator+(const std::chrono::duration<Rep, Period>& right) const { return m_Duration + right; }
 };
+
+template<typename Rep, typename Period>
+Time operator-(const std::chrono::duration<Rep, Period>& left, const Time& right) { return left - right.GetDuration(); }
+template<typename Rep, typename Period>
+Time operator+(const std::chrono::duration<Rep, Period>& left, const Time& right) { return left + right.GetDuration(); }
 
 #include "BeatEngine/System/Time.inl"

@@ -156,6 +156,9 @@ VulkanRenderer::~VulkanRenderer() {
 }
 
 void VulkanRenderer::Render() {
+    if (m_TargetFps > 0 && !m_vSync)
+        m_Pacer.PaceFrame(m_TargetFps);
+
     Profiler::StartProfile({ typeid(VulkanRenderer), "Render" }, {1.f, 1.f, 1.f, 1.f});
     ImGui_ImplVulkan_NewFrame();
     m_Window->ImGuiNewFrame();
@@ -326,6 +329,13 @@ void VulkanRenderer::ShowImGuiRenderTabContent() {
             ImGui::EndTabItem();
         }
         if (ImGui::BeginTabItem("Renderer")) {
+            ImGui::Text("Frame count: %lu", m_FrameCount);
+            ImGui::SeparatorText("Base");
+            if (m_vSync)
+                ImGui::TextColored({ 0.f, 1.f, 0.f, 1.f }, "VSync");
+            else
+                ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "VSync");
+            ImGui::Text("Target FPS: %u", m_TargetFps);
             ImGui::SeparatorText("Alloc");
             ImGui::Text("Image: %zu", m_Allocator.GetImageAllocations());
             ImGui::Text("Buffer: %zu", m_Allocator.GetBufferAllocations());

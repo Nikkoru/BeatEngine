@@ -26,7 +26,7 @@ constexpr std::chrono::microseconds Time::GetDuration() const {
 
 template<typename Rep, typename Period>
 constexpr Time::Time(const std::chrono::duration<Rep, Period>& duration)
-    : m_Duration(duration) {
+    : m_Duration(std::chrono::duration_cast<std::chrono::microseconds>(duration)) {
 }
 
 template<typename Rep, typename Period>

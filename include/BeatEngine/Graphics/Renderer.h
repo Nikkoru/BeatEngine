@@ -21,7 +21,7 @@ protected:
     bool m_Profile{ false };
 
     unsigned int m_TargetFps{ 0 };
-    VSyncMode m_vSyncMode{ Default };
+    bool m_vSync{ false };
 
     Camera m_MainCamera{};
 public:
