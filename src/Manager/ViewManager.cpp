@@ -10,7 +10,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 #include "BeatEngine/Base/View.h"
 #include "BeatEngine/Base/Event.h"
-#include "BeatEngine/Events/ViewEvent.h"
+#include "BeatEngine/Events/ViewEvent.hpp"
 #include "BeatEngine/Logger.h"
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/AppState.hpp"
@@ -94,7 +94,7 @@ void ViewManager::Pop() {
 
 bool ViewManager::OnEvent(Optional<Base::Event> event) {
 	if (!ViewStack.empty()) {
-		    ViewStack.top()->OnEvent(event);
+        ViewStack.top()->OnEvent(event);
 		return true;
 	}
 	else {

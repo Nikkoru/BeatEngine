@@ -18,7 +18,7 @@
 #include "BeatEngine/Manager/EventManager.h"
 // #include "BeatEngine/Manager/SignalManager.h"
 // #include "BeatEngine/Signals/AudioSignals.h"
-#include "BeatEngine/Events/AudioEvent.h"
+#include "BeatEngine/Events/AudioEvent.hpp"
 // #include "BeatEngine/Signals/AppSignals.h"
 // #include "BeatEngine/Signals/ViewSignals.h"
 #include "BeatEngine/Signals/AudioSignals.h"
@@ -221,6 +221,8 @@ void TestView::OnDraw(Renderer* const mgr) {
 }
 
 void TestView::OnEvent(Optional<Base::Event> event) {
+    Logger::AddDebug(typeid(TestView), "Catched event! type: {}", event->ID.name());
+
     (void)event;
 	m_HUD->OnEvent(event);
 	//

@@ -2,7 +2,7 @@
 
 #include "BeatEngine/Asset/AudioStream.h"
 #include "BeatEngine/Enum/LogType.h"
-#include "BeatEngine/Events/AudioEvent.h"
+#include "BeatEngine/Events/AudioEvent.hpp"
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/AppState.hpp"
 #include "BeatEngine/Manager/EventManager.h"

@@ -1,6 +1,6 @@
 #include "BeatEngine/UI/UIClickeable.h"
 #include "BeatEngine/Base/Event.h"
-#include "BeatEngine/Events/MouseEvents.h"
+#include "BeatEngine/Events/MouseEvents.hpp"
 
 #include "BeatEngine/Manager/SignalManager.h"
 #include "BeatEngine/Signals/AppSignals.hpp"

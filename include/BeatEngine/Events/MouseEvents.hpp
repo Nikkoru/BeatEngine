@@ -23,3 +23,7 @@ struct MouseButtonUpEvent : Base::Event {
 
     MouseButtonUpEvent(Mouse::Button button, Vector2i pos) : Base::Event(typeid(MouseButtonUpEvent)),Button(button), Position(pos) {}
 };
+
+struct MouseWheelEvent : Base::Event {
+    MouseWheelEvent() : Base::Event(typeid(MouseWheelEvent)) {}
+};

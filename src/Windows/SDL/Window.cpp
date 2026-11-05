@@ -2,8 +2,11 @@
 #include "BeatEngine/AppContext.hpp"
 #include "BeatEngine/Enum/AppFlags.hpp"
 #include "BeatEngine/Events/AppEvent.hpp"
-#include "BeatEngine/Events/MouseEvents.h"
 #include "BeatEngine/AppContext.hpp"
+#include "BeatEngine/Events/GamepadEvents.hpp"
+#include "BeatEngine/Events/KeyboardEvents.hpp"
+#include "BeatEngine/Events/MouseEvents.hpp"
+#include "BeatEngine/Events/WindowEvents.hpp"
 #include "BeatEngine/Graphics/VSyncMode.h"
 #include "BeatEngine/Graphics/Vector2.h"
 #include "BeatEngine/Manager/SignalManager.h"
@@ -221,21 +224,43 @@ Optional<Base::Event> SDLWindow::PollEvent() {
             ImGui_ImplSDL3_ProcessEvent(&e);
 
         switch (e.type) {
+        default:
+            return std::nullopt;
         case SDL_EVENT_QUIT:
             return AppExitingEvent{};
+        case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+            return WindowCloseRequestedEvent{};
         case SDL_EVENT_WINDOW_RESIZED:
             EventManager::GetInstance()->Send(std::make_shared<AppResizedEvent>(Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) }));
             return AppResizedEvent{ Vector2u{ static_cast<unsigned int>(e.window.data1), static_cast<unsigned int>(e.window.data2) } };
+        case SDL_EVENT_WINDOW_MOVED:
+            return WindowMovedEvent{};
+        case SDL_EVENT_WINDOW_MAXIMIZED:
+            return WindowMaximizedEvent{};
+        case SDL_EVENT_WINDOW_MINIMIZED:
+            return WindowMinimizedEvent{};
+        case SDL_EVENT_WINDOW_FOCUS_GAINED:
+            return WindowFocusGainedEvent{};
+        case SDL_EVENT_WINDOW_FOCUS_LOST:
+            return WindowFocusLostEvent{};
+        case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+            return WindowEnterFullScreenEvent{};
+        case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+            return WindowExitFullScreenEvent{};
+
         case SDL_EVENT_KEY_DOWN:
             if (e.key.key == SDLK_PIPE) {
-                    SignalManager::GetInstance()->Send(std::make_shared<AppToggleDrawingDebugInfo>());
-           }
+                SignalManager::GetInstance()->Send(std::make_shared<AppToggleDrawingDebugInfo>());
+            }
 
             else if (e.key.key == SDLK_G)
                 if (e.key.mod & SDL_KMOD_CTRL || e.key.mod & SDL_KMOD_LCTRL || e.key.mod & SDL_KMOD_RCTRL) {
                     SignalManager::GetInstance()->Send(std::make_shared<AppToggleImGui>());
                 }
-            break;
+
+            return KeyDownEvent{};
+        case SDL_EVENT_KEY_UP:
+            return KeyUpEvent{};
         case SDL_EVENT_MOUSE_MOTION:
             return MouseMovedEvent{{ static_cast<int>(e.motion.x), static_cast<int>(e.motion.y) }};
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
@@ -282,6 +307,16 @@ Optional<Base::Event> SDLWindow::PollEvent() {
                 }
                 return MouseButtonUpEvent{btn, { static_cast<int>(e.button.x), static_cast<int>(e.button.y) }};
             }
+        case SDL_EVENT_MOUSE_WHEEL:
+            return MouseWheelEvent{};
+        case SDL_EVENT_GAMEPAD_AXIS_MOTION:
+            return GamepadAxisMotionEvent{};
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+            return GamepadButtonDownEvent{};
+        case SDL_EVENT_GAMEPAD_BUTTON_UP:
+            return GamepadButtonUpEvent{};
+        case SDL_EVENT_GAMEPAD_SENSOR_UPDATE:
+            return GamepadSensorUpdateEvent{};
         }
     } 
 

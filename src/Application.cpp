@@ -90,9 +90,7 @@ void Application::Run() {
             }
             m_Renderer->ProcessEvent(event);
             m_GlobalLayers.OnEvent(event);
-            if (viewMgr.OnEvent(event)) {
-                break;
-            }
+            m_Running = viewMgr.OnEvent(event);
         }
 
         Update();
